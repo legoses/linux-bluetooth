@@ -1,3 +1,0 @@
-/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles/dbus-ble.dir
-/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles/edit_cache.dir
-/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles/rebuild_cache.dir
