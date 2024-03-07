@@ -4,14 +4,15 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <parse_dbus.h>
+//#include <parse_dbus.h>
+#include <local_adapter.h>
 
 /*
  * Create class that holds information found ble adatpers
  * Reformat this file to keep track of object interfaces as well as paths
  * Create method proxy to start and stop scanning for devcies
  */
-
+    
 //Holds return value of GetManagedObjects()
 typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>> BLEDeviceObject;
 //adapter for each path
@@ -46,7 +47,7 @@ void listen_for_device_added(BLEObject object, std::shared_ptr<DBus::Connection>
     }
 }
 
-
+//Change to use local adapter class
 BLEObject extract_info(BLEDeviceObject object, std::string base_path) {
     //Class to handle adapter information
     BLEObject deviceAdapter;
