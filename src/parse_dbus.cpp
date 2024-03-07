@@ -27,6 +27,6 @@ void BLEObject::set_object(std::shared_ptr<DBus::ObjectProxy> object) {
 }
 
 
-std::shared_ptr<DBus::ObjectProxy> get_object() {
+std::shared_ptr<DBus::ObjectProxy> BLEObject::get_object() {
     return this->object;
 }

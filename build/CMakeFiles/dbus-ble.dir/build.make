@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/kyle/Documents/dbus_practice/linux-bluetooth
+CMAKE_SOURCE_DIR = /home/kyle/Documents/dbus_practice/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/kyle/Documents/dbus_practice/linux-bluetooth/build
+CMAKE_BINARY_DIR = /home/kyle/Documents/dbus_practice/cpp/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/dbus-ble.dir/depend.make
@@ -70,46 +70,62 @@ include CMakeFiles/dbus-ble.dir/progress.make
 include CMakeFiles/dbus-ble.dir/flags.make
 
 CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o: CMakeFiles/dbus-ble.dir/flags.make
-CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o: /home/kyle/Documents/dbus_practice/linux-bluetooth/src/ble_test.cpp
+CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o: /home/kyle/Documents/dbus_practice/cpp/src/ble_test.cpp
 CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o: CMakeFiles/dbus-ble.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o -MF CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o.d -o CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o -c /home/kyle/Documents/dbus_practice/linux-bluetooth/src/ble_test.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o -MF CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o.d -o CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o -c /home/kyle/Documents/dbus_practice/cpp/src/ble_test.cpp
 
 CMakeFiles/dbus-ble.dir/src/ble_test.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbus-ble.dir/src/ble_test.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kyle/Documents/dbus_practice/linux-bluetooth/src/ble_test.cpp > CMakeFiles/dbus-ble.dir/src/ble_test.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kyle/Documents/dbus_practice/cpp/src/ble_test.cpp > CMakeFiles/dbus-ble.dir/src/ble_test.cpp.i
 
 CMakeFiles/dbus-ble.dir/src/ble_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbus-ble.dir/src/ble_test.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kyle/Documents/dbus_practice/linux-bluetooth/src/ble_test.cpp -o CMakeFiles/dbus-ble.dir/src/ble_test.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kyle/Documents/dbus_practice/cpp/src/ble_test.cpp -o CMakeFiles/dbus-ble.dir/src/ble_test.cpp.s
 
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: CMakeFiles/dbus-ble.dir/flags.make
-CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: /home/kyle/Documents/dbus_practice/linux-bluetooth/src/parse_dbus.cpp
+CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: CMakeFiles/dbus-ble.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o -MF CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o.d -o CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o -c /home/kyle/Documents/dbus_practice/linux-bluetooth/src/parse_dbus.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o -MF CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o.d -o CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o -c /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp
 
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kyle/Documents/dbus_practice/linux-bluetooth/src/parse_dbus.cpp > CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp > CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.i
 
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kyle/Documents/dbus_practice/linux-bluetooth/src/parse_dbus.cpp -o CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp -o CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.s
+
+CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o: CMakeFiles/dbus-ble.dir/flags.make
+CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o: /home/kyle/Documents/dbus_practice/cpp/src/local_adapter.cpp
+CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o: CMakeFiles/dbus-ble.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o -MF CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o.d -o CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o -c /home/kyle/Documents/dbus_practice/cpp/src/local_adapter.cpp
+
+CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/kyle/Documents/dbus_practice/cpp/src/local_adapter.cpp > CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.i
+
+CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/kyle/Documents/dbus_practice/cpp/src/local_adapter.cpp -o CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.s
 
 # Object files for target dbus-ble
 dbus__ble_OBJECTS = \
 "CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o" \
-"CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o"
+"CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o" \
+"CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o"
 
 # External object files for target dbus-ble
 dbus__ble_EXTERNAL_OBJECTS =
 
 dbus-ble: CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o
 dbus-ble: CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o
+dbus-ble: CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o
 dbus-ble: CMakeFiles/dbus-ble.dir/build.make
 dbus-ble: CMakeFiles/dbus-ble.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable dbus-ble"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable dbus-ble"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/dbus-ble.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -121,6 +137,6 @@ CMakeFiles/dbus-ble.dir/clean:
 .PHONY : CMakeFiles/dbus-ble.dir/clean
 
 CMakeFiles/dbus-ble.dir/depend:
-	cd /home/kyle/Documents/dbus_practice/linux-bluetooth/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/kyle/Documents/dbus_practice/linux-bluetooth /home/kyle/Documents/dbus_practice/linux-bluetooth /home/kyle/Documents/dbus_practice/linux-bluetooth/build /home/kyle/Documents/dbus_practice/linux-bluetooth/build /home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles/dbus-ble.dir/DependInfo.cmake "--color=$(COLOR)"
+	cd /home/kyle/Documents/dbus_practice/cpp/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/kyle/Documents/dbus_practice/cpp /home/kyle/Documents/dbus_practice/cpp /home/kyle/Documents/dbus_practice/cpp/build /home/kyle/Documents/dbus_practice/cpp/build /home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles/dbus-ble.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/dbus-ble.dir/depend
 

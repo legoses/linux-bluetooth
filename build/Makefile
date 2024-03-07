@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/kyle/Documents/dbus_practice/linux-bluetooth
+CMAKE_SOURCE_DIR = /home/kyle/Documents/dbus_practice/cpp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/kyle/Documents/dbus_practice/linux-bluetooth/build
+CMAKE_BINARY_DIR = /home/kyle/Documents/dbus_practice/cpp/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles /home/kyle/Documents/dbus_practice/linux-bluetooth/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles /home/kyle/Documents/dbus_practice/cpp/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/linux-bluetooth/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -153,6 +153,30 @@ src/ble_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/src/ble_test.cpp.s
 .PHONY : src/ble_test.cpp.s
 
+src/local_adapter.o: src/local_adapter.cpp.o
+.PHONY : src/local_adapter.o
+
+# target to build an object file
+src/local_adapter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o
+.PHONY : src/local_adapter.cpp.o
+
+src/local_adapter.i: src/local_adapter.cpp.i
+.PHONY : src/local_adapter.i
+
+# target to preprocess a source file
+src/local_adapter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.i
+.PHONY : src/local_adapter.cpp.i
+
+src/local_adapter.s: src/local_adapter.cpp.s
+.PHONY : src/local_adapter.s
+
+# target to generate assembly for a file
+src/local_adapter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.s
+.PHONY : src/local_adapter.cpp.s
+
 src/parse_dbus.o: src/parse_dbus.cpp.o
 .PHONY : src/parse_dbus.o
 
@@ -189,6 +213,9 @@ help:
 	@echo "... src/ble_test.o"
 	@echo "... src/ble_test.i"
 	@echo "... src/ble_test.s"
+	@echo "... src/local_adapter.o"
+	@echo "... src/local_adapter.i"
+	@echo "... src/local_adapter.s"
 	@echo "... src/parse_dbus.o"
 	@echo "... src/parse_dbus.i"
 	@echo "... src/parse_dbus.s"

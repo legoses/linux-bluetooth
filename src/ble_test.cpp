@@ -25,7 +25,7 @@ void test_sig(std::string str) {
 
 
 //Listen for device added signal emmited on dbus
-void listen_for_device_added(BLEObject object, std::shared_ptr<DBus::Connection> connection) {
+void listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
     std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
         connection->create_free_signal_proxy<void(std::string)>(
                 DBus::MatchRuleBuilder::create()
@@ -47,39 +47,48 @@ void listen_for_device_added(BLEObject object, std::shared_ptr<DBus::Connection>
     }
 }
 
-//Change to use local adapter class
-BLEObject extract_info(BLEDeviceObject object, std::string base_path) {
-    //Class to handle adapter information
-    BLEObject deviceAdapter;
+//create method proxies for StartDiscovery and StopDiscovery 
+DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> object, std::string interface, std::string function) {
+    DBus::MethodProxy<void()>& funcProx = *(object->create_method<void()>(interface, function));
 
-    BLEDeviceObject::iterator it = object.begin();
+    return funcProx;
+}
+
+//Change to use local adapter class
+LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceObject devObject, std::string base_path) {
+    //Class to handle adapter information
+    //LocalAdapter deviceAdapter;
+
+    BLEDeviceObject::iterator it = devObject.begin();
     std::string pth;
     //Represents adapters the system has
     const std::string adapter = "org.bluez.Adapter1";
 
     //it->first is the path of the object
     //Im only looking for the first available bluetooth device, so if the path is longer than base_path return path as string
-    while(it != object.end()) {
+    while(it != devObject.end()) {
         pth = (std::string)it->first;
-
         //Represents the nested map in BLEDeviceObject containing interfaces
         BLEDeviceInterface::iterator itr = it->second.begin();
 
         std::cout << "Printing interfaces:\n";
         while(itr != it->second.end()) {
             if(itr->first == adapter) {
+                LocalAdapter local(create_scan_meth(object, itr->first, "StartDiscovery"), create_scan_meth(object, itr->first, "StopDiscovery"));
                 std::cout << "Adapter found: " << itr->first << "\n";
-                deviceAdapter.set_interface(itr->first);
-                deviceAdapter.set_path(pth);
-                return deviceAdapter;
+                //deviceAdapter.set_interface(itr->first);
+                //deviceAdapter.set_path(pth);
+                //deviceAdapter.create_adapter(object, pth, itr->first);
+                return local;
             }
             itr++;
         }
         it++;
     }
 
-    //return empty string if device is not found
-    return deviceAdapter;
+    //Return object without method proxies if device is not found
+    LocalAdapter local(create_scan_meth(object, "NULL", "NULL"), create_scan_meth(object, NULL, NULL));
+    return local;
 }
 
 
@@ -107,11 +116,16 @@ int main() {
     //it++;
     //DBus::Path devPath = it->first;
 
-    BLEObject ble_object = extract_info(answer, "/org/bluez");
+    //BLEObject ble_object = extract_info(answer, "/org/bluez");
 
+    //LocalAdapter local = extract_info(answer, "/org/bluez");
+    LocalAdapter local = extract_info(object, answer, "/org/bluez");
+    //local.create_adapter(object, "/org/blues")
+    local.start_scan();
+    std::cout << "Enabling discovery\n";
 
     //listen_for_device_added(connection, ble_object);
-    listen_for_device_added(ble_object, connection);
+    listen_for_device_added(local, connection);
 
     return 0;
 }

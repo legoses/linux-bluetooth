@@ -1,4 +1,4 @@
-# Install script for directory: /home/kyle/Documents/dbus_practice/linux-bluetooth
+# Install script for directory: /home/kyle/Documents/dbus_practice/cpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/kyle/Documents/dbus_practice/linux-bluetooth/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/kyle/Documents/dbus_practice/cpp/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

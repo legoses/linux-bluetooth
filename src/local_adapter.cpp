@@ -1,5 +1,17 @@
 #include <local_adapter.h>
 
+
+LocalAdapter::LocalAdapter(DBus::MethodProxy<void()>& scanStart, DBus::MethodProxy<void()>& scanStop)
+    : start_scan_proxy(scanStart) 
+    , stop_scan_proxy(scanStop) //initialize variables
+{
+    this->scan_start_proxy_set = 0;
+    this->scan_stop_proxy_set = 0;
+    //start_scan_proxy = (DBus::MethodProxy<void()>&)malloc(sizeof(DBus::MethodProxy<void()>));
+    //stop_scan_proxy = (DBus::MethodProxy<void()>&)malloc(sizeof(DBus::MethodProxy<void()>));
+}
+
+
 void LocalAdapter::create_adapter(std::shared_ptr<DBus::ObjectProxy> object, std::string path, std::string interface) {
     //set name, interface path
     //create method proxies for scanning
@@ -8,6 +20,26 @@ void LocalAdapter::create_adapter(std::shared_ptr<DBus::ObjectProxy> object, std
     set_interface(interface);
 
     //create proxy objects
-    this->start_scan_proxy = *(object->create_method<void()>(interface, "StartDiscovery"));
-    this->stop_scan_proxy = *(object->create_method<void()>(interface, "StopDiscovery"));
+}
+
+
+int LocalAdapter::start_scan() {
+    if(this->scan_start_proxy_set == 0) {
+        return 1;
+    }
+
+    //begin listening for discovery events
+    start_scan_proxy();
+    return 0;
+}
+
+
+int LocalAdapter::stop_scan() {
+    if(this->scan_stop_proxy_set == 0) {
+        return 1;
+    }
+
+    //begin listening for discovery events
+    stop_scan_proxy();
+    return 0;
 }

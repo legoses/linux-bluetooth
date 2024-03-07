@@ -1,7 +1,7 @@
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
- /home/kyle/Documents/dbus_practice/linux-bluetooth/src/parse_dbus.cpp \
+ /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp \
  /usr/include/stdc-predef.h \
- /home/kyle/Documents/dbus_practice/linux-bluetooth/include/parse_dbus.h \
+ /home/kyle/Documents/dbus_practice/cpp/include/parse_dbus.h \
  /usr/include/c++/13.2.1/string \
  /usr/include/c++/13.2.1/bits/requires_hosted.h \
  /usr/include/c++/13.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
