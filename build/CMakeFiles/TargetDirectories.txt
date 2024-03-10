@@ -1,3 +1,0 @@
-/home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles/dbus-ble.dir
-/home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles/edit_cache.dir
-/home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles/rebuild_cache.dir
