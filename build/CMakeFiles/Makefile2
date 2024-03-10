@@ -54,10 +54,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/kyle/Documents/dbus_practice/cpp
+CMAKE_SOURCE_DIR = /home/kyle/Documents/cpp/linux-bluetooth
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/kyle/Documents/dbus_practice/cpp/build
+CMAKE_BINARY_DIR = /home/kyle/Documents/cpp/linux-bluetooth/build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -81,14 +81,14 @@ clean: CMakeFiles/dbus-ble.dir/clean
 CMakeFiles/dbus-ble.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/dbus-ble.dir/build.make CMakeFiles/dbus-ble.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles --progress-num=1,2,3,4 "Built target dbus-ble"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles --progress-num=1,2,3,4 "Built target dbus-ble"
 .PHONY : CMakeFiles/dbus-ble.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/dbus-ble.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles 4
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles 4
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/dbus-ble.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/dbus_practice/cpp/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/kyle/Documents/cpp/linux-bluetooth/build/CMakeFiles 0
 .PHONY : CMakeFiles/dbus-ble.dir/rule
 
 # Convenience name for target.

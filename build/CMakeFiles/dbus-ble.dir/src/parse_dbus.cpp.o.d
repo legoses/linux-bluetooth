@@ -1,7 +1,7 @@
 CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
- /home/kyle/Documents/dbus_practice/cpp/src/parse_dbus.cpp \
+ /home/kyle/Documents/cpp/linux-bluetooth/src/parse_dbus.cpp \
  /usr/include/stdc-predef.h \
- /home/kyle/Documents/dbus_practice/cpp/include/parse_dbus.h \
+ /home/kyle/Documents/cpp/linux-bluetooth/include/parse_dbus.h \
  /usr/include/c++/13.2.1/string \
  /usr/include/c++/13.2.1/bits/requires_hosted.h \
  /usr/include/c++/13.2.1/x86_64-pc-linux-gnu/bits/c++config.h \
@@ -102,22 +102,22 @@ CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
  /usr/include/c++/13.2.1/cstddef \
  /usr/include/c++/13.2.1/bits/uses_allocator.h \
  /usr/include/c++/13.2.1/bits/uses_allocator_args.h \
- /usr/include/c++/13.2.1/tuple /usr/local/include/dbus-cxx-2.0/dbus-cxx.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/dbus-cxx-config.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/callmessage.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/message.h \
+ /usr/include/c++/13.2.1/tuple /usr/include/dbus-cxx-2.0/dbus-cxx.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/dbus-cxx-config.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/callmessage.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/message.h \
  /usr/lib/gcc/x86_64-pc-linux-gnu/13.2.1/include/stdint.h \
  /usr/include/stdint.h /usr/include/bits/stdint-uintn.h \
  /usr/include/bits/stdint-least.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/error.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/error.h \
  /usr/include/c++/13.2.1/exception \
  /usr/include/c++/13.2.1/bits/exception_ptr.h \
  /usr/include/c++/13.2.1/bits/cxxabi_init_exception.h \
  /usr/include/c++/13.2.1/typeinfo \
  /usr/include/c++/13.2.1/bits/nested_exception.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/dbus-error.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/messageappenditerator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/enums.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/dbus-error.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/messageappenditerator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/enums.h \
  /usr/include/c++/13.2.1/cstdint /usr/include/c++/13.2.1/ostream \
  /usr/include/c++/13.2.1/ios /usr/include/c++/13.2.1/bits/ios_base.h \
  /usr/include/c++/13.2.1/ext/atomicity.h \
@@ -148,14 +148,13 @@ CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
  /usr/include/c++/13.2.1/bits/locale_facets.tcc \
  /usr/include/c++/13.2.1/bits/basic_ios.tcc \
  /usr/include/c++/13.2.1/bits/ostream.tcc \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signature.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/path.h \
- /usr/include/c++/13.2.1/vector \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signature.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/path.h /usr/include/c++/13.2.1/vector \
  /usr/include/c++/13.2.1/bits/stl_uninitialized.h \
  /usr/include/c++/13.2.1/bits/stl_vector.h \
  /usr/include/c++/13.2.1/bits/stl_bvector.h \
  /usr/include/c++/13.2.1/bits/vector.tcc \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signatureiterator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signatureiterator.h \
  /usr/include/c++/13.2.1/memory \
  /usr/include/c++/13.2.1/bits/stl_tempbuf.h \
  /usr/include/c++/13.2.1/bits/stl_raw_storage_iter.h \
@@ -181,29 +180,29 @@ CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
  /usr/include/c++/13.2.1/deque /usr/include/c++/13.2.1/bits/stl_deque.h \
  /usr/include/c++/13.2.1/bits/deque.tcc \
  /usr/include/c++/13.2.1/bits/stl_stack.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/enums.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/marshaling.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/error.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/path.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/variant.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/variantappenditerator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/filedescriptor.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/variantiterator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/types.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/messageiterator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/demangle.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/variant.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/demarshaling.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/headerlog.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/enums.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/marshaling.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/error.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/path.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/variant.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/variantappenditerator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/filedescriptor.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/variantiterator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/types.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/messageiterator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/demangle.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/variant.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/demarshaling.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/headerlog.h \
  /usr/include/c++/13.2.1/sstream /usr/include/c++/13.2.1/istream \
  /usr/include/c++/13.2.1/bits/istream.tcc \
  /usr/include/c++/13.2.1/bits/sstream.tcc \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/simplelogger_defs.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signature.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/connection.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signal.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/utility.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/returnmessage.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/simplelogger_defs.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signature.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/connection.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signal.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/utility.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/returnmessage.h \
  /usr/include/c++/13.2.1/functional \
  /usr/include/c++/13.2.1/bits/std_function.h \
  /usr/include/c++/13.2.1/unordered_map \
@@ -264,15 +263,15 @@ CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
  /usr/include/c++/13.2.1/ratio /usr/include/c++/13.2.1/limits \
  /usr/include/c++/13.2.1/ctime \
  /usr/include/c++/13.2.1/bits/parse_numbers.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/multiplereturn.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signalbase.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/headerlog.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signalmessage.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/signalproxy.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/messageiterator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/matchrule.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/threaddispatcher.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/errormessage.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/multiplereturn.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signalbase.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/headerlog.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signalmessage.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/signalproxy.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/messageiterator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/matchrule.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/threaddispatcher.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/errormessage.h \
  /usr/include/c++/13.2.1/future /usr/include/c++/13.2.1/mutex \
  /usr/include/c++/13.2.1/bits/std_mutex.h \
  /usr/include/c++/13.2.1/bits/unique_lock.h \
@@ -280,19 +279,19 @@ CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o: \
  /usr/include/c++/13.2.1/bits/atomic_futex.h \
  /usr/include/c++/13.2.1/atomic /usr/include/c++/13.2.1/bits/std_thread.h \
  /usr/include/c++/13.2.1/queue /usr/include/c++/13.2.1/bits/stl_queue.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/dispatcher.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/interface.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/methodbase.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/property.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/dispatcher.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/interface.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/methodbase.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/property.h \
  /usr/include/c++/13.2.1/set /usr/include/c++/13.2.1/bits/stl_set.h \
  /usr/include/c++/13.2.1/bits/stl_multiset.h \
  /usr/include/c++/13.2.1/shared_mutex \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/interfaceproxy.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/methodproxybase.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/messageappenditerator.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/propertyproxy.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/object.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/objectproxy.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/pendingcall.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/standalonedispatcher.h \
- /usr/local/include/dbus-cxx-2.0/dbus-cxx/dispatcher.h
+ /usr/include/dbus-cxx-2.0/dbus-cxx/interfaceproxy.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/methodproxybase.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/messageappenditerator.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/propertyproxy.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/object.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/objectproxy.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/pendingcall.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/standalonedispatcher.h \
+ /usr/include/dbus-cxx-2.0/dbus-cxx/dispatcher.h

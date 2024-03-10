@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/usr/local/include/dbus-cxx-2.0 -I/usr/include/sigc++-3.0 -I/usr/lib/sigc++-3.0/include -I/home/kyle/Documents/dbus_practice/cpp/include
+CXX_INCLUDES = -I/usr/include/dbus-cxx-2.0 -I/usr/include/sigc++-3.0 -I/usr/lib/sigc++-3.0/include -I/home/kyle/Documents/cpp/linux-bluetooth/include
 
 CXX_FLAGS = 
 

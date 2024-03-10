@@ -1,1 +1,1 @@
-/usr/bin/c++ "CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o" "CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o" "CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o" -o dbus-ble  -L/usr/local/lib -ldbus-cxx -L/usr/lib -lsigc-3.0 
+/usr/bin/c++ "CMakeFiles/dbus-ble.dir/src/ble_test.cpp.o" "CMakeFiles/dbus-ble.dir/src/parse_dbus.cpp.o" "CMakeFiles/dbus-ble.dir/src/local_adapter.cpp.o" -o dbus-ble  -L/usr/lib -ldbus-cxx -lsigc-3.0 
