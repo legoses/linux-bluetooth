@@ -25,7 +25,8 @@ void test_sig(std::string str) {
 
 
 //Listen for device added signal emmited on dbus
-void listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
+std::shared_ptr<DBus::SignalProxy<void(std::string)>> listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
+/*
     std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
         connection->create_free_signal_proxy<void(std::string)>(
                 DBus::MatchRuleBuilder::create()
@@ -35,23 +36,35 @@ void listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connecti
                 .as_signal_match(),
                 DBus::ThreadForCalling::DispatcherThread
                 );
-
+*/
+    //Temporary signal test using hard coded paths
+    std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
+        connection->create_free_signal_proxy<void(std::string)>(
+                DBus::MatchRuleBuilder::create()
+                .set_path("/") //path this devices adapter
+                .set_interface("org.freedesktop.DBus.ObjectManager") //That emits device added signal
+                .set_member("InterfacesAdded") //signal to listen for
+                .as_signal_match(),
+                DBus::ThreadForCalling::DispatcherThread
+                );
     //Create callback function to be called when signal is recieved
     signal->connect(sigc::ptr_fun(test_sig));
 
     std::cout << "Running" << std::flush;
+    return signal;
 
-    for(int i = 0; i < 10; i++) {
-        std::cout << "." << std::flush;
-        sleep(1);
-    }
+    //for(int i = 0; i < 10; i++) {
+        //std::cout << "." << std::flush;
+        //sleep(1);
+    //}
 }
 
 //create method proxies for StartDiscovery and StopDiscovery 
 DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> object, std::string interface, std::string function) {
     DBus::MethodProxy<void()>& funcProx = *(object->create_method<void()>(interface, function));
+     return *(object->create_method<void()>(interface, function));
 
-    return funcProx;
+    //return funcProx;
 }
 
 //Change to use local adapter class
@@ -125,7 +138,22 @@ int main() {
     std::cout << "Enabling discovery\n";
 
     //listen_for_device_added(connection, ble_object);
-    listen_for_device_added(local, connection);
+    std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = listen_for_device_added(local, connection);
+    
+    for(int i = 0; i < 10; i++) {
+        std::cout << "." << std::flush;
+        sleep(1);
+    }
+
+    connection->remove_free_signal_proxy(signal);
+    std::cout << "Testing after free\n";
+    
+    for(int i = 0; i < 10; i++) {
+        std::cout << "." << std::flush;
+        sleep(1);
+    }
+    
+    local.stop_scan();
 
     return 0;
 }
