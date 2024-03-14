@@ -2,13 +2,12 @@
 
 
 LocalAdapter::LocalAdapter(DBus::MethodProxy<void()>& scanStart, DBus::MethodProxy<void()>& scanStop)
-    : start_scan_proxy(scanStart) 
+    : start_scan_proxy(scanStart)
     , stop_scan_proxy(scanStop) //initialize variables
 {
     this->scan_start_proxy_set = 0;
     this->scan_stop_proxy_set = 0;
-    //start_scan_proxy = (DBus::MethodProxy<void()>&)malloc(sizeof(DBus::MethodProxy<void()>));
-    //stop_scan_proxy = (DBus::MethodProxy<void()>&)malloc(sizeof(DBus::MethodProxy<void()>));
+    std::cout << "setting methids\n";
 }
 
 

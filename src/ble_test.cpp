@@ -12,20 +12,53 @@
  * Reformat this file to keep track of object interfaces as well as paths
  * Create method proxy to start and stop scanning for devcies
  */
+
     
 //Holds return value of GetManagedObjects()
 typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>> BLEDeviceObject;
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
+void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other) {
+    std::cout << "Signal " << path << " recieved\n";
+    std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
+    std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
 
-void test_sig(std::string str) {
-    std::cout << "Signal " << str << " recieved\n";
+    while(it != itEnd) {
+        std::cout << "Map string: " << it->first << "\n";
+       
+        if(it->second.size() > 0) {
+            std::map<std::string, DBus::Variant>::iterator itr = it->second.begin();
+            std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
+            std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
+            std::cout << "Adapter Address: " << it->second["Address"].to_string() << "\n";
+            std::cout << "Adapter UUIDs: " << it->second["UUIDs"] << "\n";
+            std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n";
+
+            while(itr != itrEnd) {
+                std::cout << "Nested Map String: " << itr->first << "\n";
+                itr++;
+            }
+        }
+        std::cout << "\n";
+        it++;
+
+    }
+
+    std::cout << "\n\n--------------------------\n\n";
+}
+
+
+void get_interface_removed(DBus::Path path, std::vector<std::string>) {
+    std::cout << "Signal " << path << " removed\n";
 }
 
 
 //Listen for device added signal emmited on dbus
-std::shared_ptr<DBus::SignalProxy<void(std::string)>> listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
+//massive function definition for creating signal to listen for interfaces added
+std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
+        std::map<std::string, std::map<std::string, DBus::Variant>>)>> 
+ listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
 /*
     std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
         connection->create_free_signal_proxy<void(std::string)>(
@@ -38,8 +71,8 @@ std::shared_ptr<DBus::SignalProxy<void(std::string)>> listen_for_device_added(Lo
                 );
 */
     //Temporary signal test using hard coded paths
-    std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
-        connection->create_free_signal_proxy<void(std::string)>(
+    std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>> signal = 
+        connection->create_free_signal_proxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>(
                 DBus::MatchRuleBuilder::create()
                 .set_path("/") //path this devices adapter
                 .set_interface("org.freedesktop.DBus.ObjectManager") //That emits device added signal
@@ -48,16 +81,34 @@ std::shared_ptr<DBus::SignalProxy<void(std::string)>> listen_for_device_added(Lo
                 DBus::ThreadForCalling::DispatcherThread
                 );
     //Create callback function to be called when signal is recieved
-    signal->connect(sigc::ptr_fun(test_sig));
+    signal->connect(sigc::ptr_fun(get_interface_added));
 
-    std::cout << "Running" << std::flush;
+    std::cout << "Running\n" << std::flush;
     return signal;
 
-    //for(int i = 0; i < 10; i++) {
-        //std::cout << "." << std::flush;
-        //sleep(1);
-    //}
 }
+
+
+std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(LocalAdapter object, 
+        std::shared_ptr<DBus::Connection> connection) {
+    //Temporary signal test using hard coded paths
+    std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> signal = 
+        connection->create_free_signal_proxy<void(DBus::Path, std::vector<std::string>)>(
+                DBus::MatchRuleBuilder::create()
+                .set_path("/") //path this devices adapter
+                .set_interface("org.freedesktop.DBus.ObjectManager") //That emits device added signal
+                .set_member("InterfacesRemoved") //signal to listen for
+                .as_signal_match(),
+                DBus::ThreadForCalling::DispatcherThread
+                );
+    //Create callback function to be called when signal is recieved
+    signal->connect(sigc::ptr_fun(get_interface_removed));
+
+    std::cout << "Running\n" << std::flush;
+    return signal;
+
+}
+
 
 //create method proxies for StartDiscovery and StopDiscovery 
 DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> object, std::string interface, std::string function) {
@@ -68,7 +119,7 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> o
 }
 
 //Change to use local adapter class
-LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceObject devObject, std::string base_path) {
+LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceObject devObject, std::string adapterPath) {
     //Class to handle adapter information
     //LocalAdapter deviceAdapter;
 
@@ -87,11 +138,13 @@ LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceOb
         std::cout << "Printing interfaces:\n";
         while(itr != it->second.end()) {
             if(itr->first == adapter) {
-                LocalAdapter local(create_scan_meth(object, itr->first, "StartDiscovery"), create_scan_meth(object, itr->first, "StopDiscovery"));
+                //DBus::MethodProxy<void()>& startScanMeth = create_scan_meth(object, itr->first, "StartDiscovery");
+                DBus::MethodProxy<void()>& startScanMeth = *(object->create_method<void()>(itr->first, "StartDiscovery"));
+                std::cout << "Start sccan test\n";
+                startScanMeth();
+
+                LocalAdapter local(startScanMeth, create_scan_meth(object, itr->first, "StopDiscovery"));
                 std::cout << "Adapter found: " << itr->first << "\n";
-                //deviceAdapter.set_interface(itr->first);
-                //deviceAdapter.set_path(pth);
-                //deviceAdapter.create_adapter(object, pth, itr->first);
                 return local;
             }
             itr++;
@@ -100,8 +153,36 @@ LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceOb
     }
 
     //Return object without method proxies if device is not found
+    std::cout << "Adapter not found. Returning NULL\n";
     LocalAdapter local(create_scan_meth(object, "NULL", "NULL"), create_scan_meth(object, NULL, NULL));
     return local;
+}
+
+
+std::string get_local_adapter_path(BLEDeviceObject obj) {
+    BLEDeviceObject::iterator it = obj.begin();
+    BLEDeviceObject::iterator end = obj.end();
+    std::cout << "Getting local adapter\n"; 
+    std::string pth;
+    //Represents adapters the system has
+    const std::string adapter = "org.bluez.Adapter1";
+
+    //loop through each object path
+    while(it != end) {
+        BLEDeviceInterface::iterator itr = it->second.begin(); //loop through nested map
+        BLEDeviceInterface::iterator itrEnd= it->second.end(); //loop through nested map
+
+        //loop through interfaces of each object. Return value should usually be /org/bluez/hci0
+        while(itr != itrEnd) {
+            if(itr->first == adapter) {
+                pth = it->first;
+                return pth;
+            }
+            itr++;
+        }
+        it++;
+    }
+    return "";
 }
 
 
@@ -114,46 +195,63 @@ int main() {
     std::shared_ptr<DBus::Connection> connection = dispatcher->create_connection(DBus::BusType::SYSTEM);
 
     std::cout << "Creating object\n";
-    std::shared_ptr<DBus::ObjectProxy> object = connection->create_object_proxy("org.bluez", "/");
+    std::shared_ptr<DBus::ObjectProxy> baseObject = connection->create_object_proxy("org.bluez", "/");
 
     std::cout << "Creating proxy\n";
     //method returns a dict, which this library converts to a map
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
-    DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(object->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
+    DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer;
-    std::cout << "Answer size before: " << answer.size() << "\n";
-    std::cout << "Calling method\n";
+    std::cout << "Getting Managed BLE Devices\n";
     answer = method_proxy();
 
+
+
     BLEDeviceObject::iterator it = answer.begin();
-    //it++;
-    //DBus::Path devPath = it->first;
-
-    //BLEObject ble_object = extract_info(answer, "/org/bluez");
-
-    //LocalAdapter local = extract_info(answer, "/org/bluez");
-    LocalAdapter local = extract_info(object, answer, "/org/bluez");
-    //local.create_adapter(object, "/org/blues")
-    local.start_scan();
-    std::cout << "Enabling discovery\n";
-
-    //listen_for_device_added(connection, ble_object);
-    std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = listen_for_device_added(local, connection);
     
-    for(int i = 0; i < 10; i++) {
-        std::cout << "." << std::flush;
-        sleep(1);
+    //create new object for the found adapter
+    //create if statment to check if exists
+    std::string adapterPath = get_local_adapter_path(answer);
+
+    //Make sure a ble device is found
+    if(adapterPath != "") {
+        std::cout << "test path: " << adapterPath << "\n";
+
+        std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", adapterPath);
+
+        LocalAdapter local = extract_info(adapterObject, answer, it->first);
+        
+        std::cout << "Enabling discovery\n";
+        local.start_scan();
+
+        //create listener for device added
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, 
+                std::map<std::string, std::map<std::string, DBus::Variant>>)>> addSignal =
+            listen_for_device_added(local, connection);
+       
+        //Add reciever to listen for device removed signal
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection); 
+       
+        //do not continue for the moment
+        while(true) {
+            sleep(1);
+        }
+
+        //remove recievers when no longer needed
+        connection->remove_free_signal_proxy(addSignal);
+        connection->remove_free_signal_proxy(removeSignal);
+        std::cout << "Testing after free\n";
+        
+        for(int i = 0; i < 10; i++) {
+            std::cout << "." << std::flush;
+            sleep(1);
+        }
+        
+        local.stop_scan();
     }
-
-    connection->remove_free_signal_proxy(signal);
-    std::cout << "Testing after free\n";
-    
-    for(int i = 0; i < 10; i++) {
-        std::cout << "." << std::flush;
-        sleep(1);
+    else {
+        std::cout << "Bluetooth device not found\n";
     }
-    
-    local.stop_scan();
 
     return 0;
 }
