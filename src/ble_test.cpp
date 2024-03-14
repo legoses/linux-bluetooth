@@ -4,7 +4,6 @@
 #include <string>
 #include <map>
 #include <vector>
-//#include <parse_dbus.h>
 #include <local_adapter.h>
 
 /*
@@ -59,19 +58,9 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>) {
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
         std::map<std::string, std::map<std::string, DBus::Variant>>)>> 
  listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
-/*
-    std::shared_ptr<DBus::SignalProxy<void(std::string)>> signal = 
-        connection->create_free_signal_proxy<void(std::string)>(
-                DBus::MatchRuleBuilder::create()
-                .set_path(object.get_path()) //path this devices adapter
-                .set_interface(object.get_interface()) //That emits device added signal
-                .set_member("InterfacesAdded") //signal to listen for
-                .as_signal_match(),
-                DBus::ThreadForCalling::DispatcherThread
-                );
-*/
-    //Temporary signal test using hard coded paths
-    std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>> signal = 
+
+     //Create a listener for the InterfacesAdded signal and call get_interface_added()
+     std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>(
                 DBus::MatchRuleBuilder::create()
                 .set_path("/") //path this devices adapter
@@ -91,7 +80,7 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
 
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(LocalAdapter object, 
         std::shared_ptr<DBus::Connection> connection) {
-    //Temporary signal test using hard coded paths
+    //Create a listener for InterfacesRemoved signal and call get_interface_removed()
     std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::vector<std::string>)>(
                 DBus::MatchRuleBuilder::create()
@@ -204,8 +193,6 @@ int main() {
     BLEDeviceObject answer;
     std::cout << "Getting Managed BLE Devices\n";
     answer = method_proxy();
-
-
 
     BLEDeviceObject::iterator it = answer.begin();
     
