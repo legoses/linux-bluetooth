@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <local_adapter.h>
+#include <dbus-cxx/variant.h>
 
 /*
  * Create class that holds information found ble adatpers
@@ -27,15 +28,32 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
         std::cout << "Map string: " << it->first << "\n";
        
         if(it->second.size() > 0) {
+
+            //uuid may be returning cchar array?
+            //std::vector<char[32]> varVect = var.to_vector<char[32]>();
+            //std::cout << varVect[0] << "\n";
+            //std::cout << "vect test: " << varVect.size() << "\n";
+
             std::map<std::string, DBus::Variant>::iterator itr = it->second.begin();
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
+
             std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
             std::cout << "Adapter Address: " << it->second["Address"].to_string() << "\n";
-            std::cout << "Adapter UUIDs: " << it->second["UUIDs"] << "\n";
+           
+            std::cout << "UUID " << it->second["UUIDs"] << "\n";
             std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n";
+            std::cout << "\n\n";
 
             while(itr != itrEnd) {
+                //DBus::Variant var(itr->second["UUIDs"]);
+                std::vector<std::string> uuid = 
+                    itr->second["UUIDs"].to_vector<std::vector<std::string>>();
+                //DBus::Variant var(it->second["UUIDs"]);
+                //std::cout << "Var test: " << uuid.size() << "\n";
+
                 std::cout << "Nested Map String: " << itr->first << "\n";
+                std::cout << "\n\n--------------------------\n\n";
+
                 itr++;
             }
         }
