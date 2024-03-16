@@ -40,18 +40,19 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
             std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
             std::cout << "Adapter Address: " << it->second["Address"].to_string() << "\n";
            
-            std::cout << "UUID " << it->second["UUIDs"] << "\n";
+            //std::cout << "UUID " << it->second["UUIDs"] << "\n";
             std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n";
             std::cout << "\n\n";
 
             while(itr != itrEnd) {
+                std::cout << itr->first << "\n";
                 //DBus::Variant var(itr->second["UUIDs"]);
-                std::vector<std::string> uuid = 
-                    itr->second["UUIDs"].to_vector<std::vector<std::string>>();
+                //std::vector<std::string> uuid = 
+                //    itr->second["UUIDs"].to_vector<std::vector<std::string>>();
                 //DBus::Variant var(it->second["UUIDs"]);
                 //std::cout << "Var test: " << uuid.size() << "\n";
 
-                std::cout << "Nested Map String: " << itr->first << "\n";
+                //std::cout << "Nested Map String: " << itr->first << "\n";
                 std::cout << "\n\n--------------------------\n\n";
 
                 itr++;
