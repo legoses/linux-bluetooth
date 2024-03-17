@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 #include <local_adapter.h>
-#include <dbus-cxx/variant.h>
+//#include <dbus-cxx/variant.h>
 
 /*
  * Create class that holds information found ble adatpers
@@ -26,7 +26,8 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
 
     while(it != itEnd) {
         std::cout << "Map string: " << it->first << "\n";
-       
+      
+        //Handles string, dict(string, dict{string, variant})
         if(it->second.size() > 0) {
 
             //uuid may be returning cchar array?
@@ -38,22 +39,34 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
 
             std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
-            std::cout << "Adapter Address: " << it->second["Address"].to_string() << "\n";
+            std::string address = it->second["Address"].to_string();
+            std::cout << "Adapter Address: " << address << "\n" << std::flush; 
            
-            //std::cout << "UUID " << it->second["UUIDs"] << "\n";
-            std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n";
+            std::cout << "UUID " << it->second["UUIDs"] << "\n" << std::flush;
+            //std::vector<DBus::Variant> vect = it->second["UUIDs"].to_vector<DBus::Variant>();
+            std::vector<std::string> vect = it->second["UUIDs"].to_vector<std::string>();
+
+            std::cout << "new crazy test: ";
+            std::cout << vect.size() << "\n" << std::flush;
+            //if(address == "84:FC:E6:64:2A:8D") {
+            //    std::cout << "new crazy test: " << vect.size() << "\n" << std::flush;
+            // }
+
+            if(vect.size() > 0) {
+                std::cout << "test size: " << vect[0] << "\n" << std::flush;
+            }
+            else {
+                std::cout << "UUID not found\n";
+            }
+
+            std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n" << std::flush;
             std::cout << "\n\n";
+            
 
+            //handles {string, dict{string, variant}}
             while(itr != itrEnd) {
-                std::cout << itr->first << "\n";
-                //DBus::Variant var(itr->second["UUIDs"]);
-                //std::vector<std::string> uuid = 
-                //    itr->second["UUIDs"].to_vector<std::vector<std::string>>();
-                //DBus::Variant var(it->second["UUIDs"]);
-                //std::cout << "Var test: " << uuid.size() << "\n";
-
-                //std::cout << "Nested Map String: " << itr->first << "\n";
-                std::cout << "\n\n--------------------------\n\n";
+                std::cout << itr->first << "\n" << std::flush;
+                //std::vector<std::vector<char>> vect = it->second["UUIDs"].to_vector<std::vector<char>>();
 
                 itr++;
             }
