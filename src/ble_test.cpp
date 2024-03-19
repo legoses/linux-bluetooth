@@ -5,8 +5,7 @@
 #include <map>
 #include <vector>
 #include <local_adapter.h>
-//#include <dbus-cxx/variant.h>
-
+#include <found_ble.h>
 /*
  * Create class that holds information found ble adatpers
  * Reformat this file to keep track of object interfaces as well as paths
@@ -19,7 +18,7 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
-void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other) {
+FoundBLE get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other) {
     std::cout << "Signal " << path << " recieved\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
@@ -29,12 +28,6 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
       
         //Handles string, dict(string, dict{string, variant})
         if(it->second.size() > 0) {
-
-            //uuid may be returning cchar array?
-            //std::vector<char[32]> varVect = var.to_vector<char[32]>();
-            //std::cout << varVect[0] << "\n";
-            //std::cout << "vect test: " << varVect.size() << "\n";
-
             std::map<std::string, DBus::Variant>::iterator itr = it->second.begin();
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
 
@@ -46,29 +39,29 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
             //std::vector<DBus::Variant> vect = it->second["UUIDs"].to_vector<DBus::Variant>();
             std::vector<std::string> vect = it->second["UUIDs"].to_vector<std::string>();
 
-            std::cout << "new crazy test: ";
-            std::cout << vect.size() << "\n" << std::flush;
-            //if(address == "84:FC:E6:64:2A:8D") {
-            //    std::cout << "new crazy test: " << vect.size() << "\n" << std::flush;
-            // }
+            //get the size of array holding UUIDs
+            int UUIDCount = vect.size();
 
-            if(vect.size() > 0) {
-                std::cout << "test size: " << vect[0] << "\n" << std::flush;
+            if(UUIDCount > 0) {
+                //Create object, signify that it is ble
+                FoundBLE bleObj(1);
+                for(int i = 0; i < UUIDCount; i++) {
+                    std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
+                    bleObj.add_UUID(vect[i]);
+
+                }
+                return bleObj;
             }
             else {
+                FoundBLE bleObj(0);
                 std::cout << "UUID not found\n";
+
+                return bleObj;
             }
 
             std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n" << std::flush;
             std::cout << "\n\n";
-            
 
-            //handles {string, dict{string, variant}}
-            while(itr != itrEnd) {
-                std::cout << itr->first << "\n" << std::flush;
-                //std::vector<std::vector<char>> vect = it->second["UUIDs"].to_vector<std::vector<char>>();
-
-                itr++;
             }
         }
         std::cout << "\n";
