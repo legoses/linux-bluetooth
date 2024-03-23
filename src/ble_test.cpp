@@ -18,7 +18,8 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
-FoundBLE get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other) {
+
+void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other, std::vector<FoundBLE> *knownBleObj) {
     std::cout << "Signal " << path << " recieved\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
@@ -48,21 +49,22 @@ FoundBLE get_interface_added(DBus::Path path, std::map<std::string, std::map<std
                 for(int i = 0; i < UUIDCount; i++) {
                     std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
                     bleObj.add_UUID(vect[i]);
-
+                    
                 }
-                return bleObj;
+
+                knownBleObj->push_back(bleObj);
             }
             else {
                 FoundBLE bleObj(0);
                 std::cout << "UUID not found\n";
-
-                return bleObj;
+            
+                knownBleObj->push_back(bleObj);
             }
 
             std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n" << std::flush;
             std::cout << "\n\n";
 
-            }
+            
         }
         std::cout << "\n";
         it++;
@@ -82,8 +84,7 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>) {
 //massive function definition for creating signal to listen for interfaces added
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
         std::map<std::string, std::map<std::string, DBus::Variant>>)>> 
- listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection) {
-
+ listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> *foundBleObj) {
      //Create a listener for the InterfacesAdded signal and call get_interface_added()
      std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>(
@@ -95,7 +96,9 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
                 DBus::ThreadForCalling::DispatcherThread
                 );
     //Create callback function to be called when signal is recieved
-    signal->connect(sigc::ptr_fun(get_interface_added));
+    //sigc::bind allows me to pass an additional argument
+    signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), foundBleObj));
+
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -201,6 +204,9 @@ std::string get_local_adapter_path(BLEDeviceObject obj) {
 
 
 int main() {
+    //allocate memory for pointer vector
+    std::vector<FoundBLE> *knownBleDevices = new std::vector<FoundBLE>;
+
     std::cout << "Creating dispatcher\n";
     //The dispatcher is what reads from and write to the bus
     std::shared_ptr<DBus::Dispatcher> dispatcher = DBus::StandaloneDispatcher::create();
@@ -239,13 +245,16 @@ int main() {
         //create listener for device added
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, 
                 std::map<std::string, std::map<std::string, DBus::Variant>>)>> addSignal =
-            listen_for_device_added(local, connection);
+            listen_for_device_added(local, connection, knownBleDevices);
        
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection); 
-       
+      
         //do not continue for the moment
         while(true) {
+
+            std::cout << "test\n";
+            std::cout << "vect size: " << knownBleDevices->size() << "\n";
             sleep(1);
         }
 
