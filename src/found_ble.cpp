@@ -6,7 +6,8 @@ FoundBLE::FoundBLE(int a)
 
 }
 
-const std::map<std::string, std::string> bleUUID = {
+
+static const std::map<std::string, std::string> bleUUID = {
     {"0000180a-0000-1000-8000-00805f9b34fb", "device information service"},
     {"e95d93b0-251d-470a-a062-fa1922dfa9a8", "dfu control service"},
     {"e95d93af-251d-470a-a062-fa1922dfa9a8", "event service"},
@@ -44,3 +45,4 @@ int FoundBLE::add_UUID(std::string uuid) {
 int FoundBLE::get_type() {
     return this->isBLE;
 }
+

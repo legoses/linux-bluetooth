@@ -7,9 +7,8 @@
 #include <local_adapter.h>
 #include <found_ble.h>
 /*
- * Create class that holds information found ble adatpers
- * Reformat this file to keep track of object interfaces as well as paths
- * Create method proxy to start and stop scanning for devcies
+ * TODO:
+ * Possible change KnownBLE to be stored as a pointer, so it can be deleted before removing from vector
  */
 
     
@@ -19,7 +18,7 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
 
-void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other, std::vector<FoundBLE> *knownBleObj) {
+void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Signal " << path << " recieved\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
@@ -36,13 +35,13 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
             std::string address = it->second["Address"].to_string();
             std::cout << "Adapter Address: " << address << "\n" << std::flush; 
            
-            std::cout << "UUID " << it->second["UUIDs"] << "\n" << std::flush;
             //std::vector<DBus::Variant> vect = it->second["UUIDs"].to_vector<DBus::Variant>();
             std::vector<std::string> vect = it->second["UUIDs"].to_vector<std::string>();
 
             //get the size of array holding UUIDs
             int UUIDCount = vect.size();
 
+            std::cout << "Adding device\n";
             if(UUIDCount > 0) {
                 //Create object, signify that it is ble
                 FoundBLE bleObj(1);
@@ -52,13 +51,15 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
                     
                 }
 
-                knownBleObj->push_back(bleObj);
+                bleObj.set_path(path);
+                knownBleObj.push_back(bleObj);
+                std::cout << "test size: " << knownBleObj.size() << "\n";
             }
             else {
                 FoundBLE bleObj(0);
                 std::cout << "UUID not found\n";
             
-                knownBleObj->push_back(bleObj);
+                knownBleObj.push_back(bleObj);
             }
 
             std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n" << std::flush;
@@ -75,8 +76,26 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
 }
 
 
-void get_interface_removed(DBus::Path path, std::vector<std::string>) {
-    std::cout << "Signal " << path << " removed\n";
+void get_interface_removed(DBus::Path path, std::vector<std::string>, std::vector<FoundBLE> &knownBleObj) {
+    //convert path to string to it can be compared to stored object path
+    std::string pathStr = path;
+
+    //Check for race conditions later
+    //remove device that is no longer seen
+    for(int i = 0; i < knownBleObj.size(); i++) {
+        if(pathStr == knownBleObj[i].get_path()) {
+            //create iterator based on current
+            std::vector<FoundBLE>::iterator it = knownBleObj.begin() + i;
+
+            //delete knownBleObj[i];
+            
+            knownBleObj.erase(it);
+            std::cout << "Signal " << path << " removed\n";
+            return;
+        }
+    }
+
+    std::cout << "Error: Tried to remove device at path: '" << path << "' but device was not found.\n";
 }
 
 
@@ -84,7 +103,7 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>) {
 //massive function definition for creating signal to listen for interfaces added
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
         std::map<std::string, std::map<std::string, DBus::Variant>>)>> 
- listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> *foundBleObj) {
+ listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> &foundBleObj) {
      //Create a listener for the InterfacesAdded signal and call get_interface_added()
      std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>)>(
@@ -97,7 +116,8 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
                 );
     //Create callback function to be called when signal is recieved
     //sigc::bind allows me to pass an additional argument
-    signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), foundBleObj));
+    //std::ref must be used, otherwise a copy of vector will be passed, instead of a reference
+    signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), std::ref(foundBleObj)));
 
 
     std::cout << "Running\n" << std::flush;
@@ -106,8 +126,13 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path,
 }
 
 
-std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(LocalAdapter object, 
-        std::shared_ptr<DBus::Connection> connection) {
+//listen for devices removed signal
+std::shared_ptr<DBus::SignalProxy<void(
+        DBus::Path, 
+        std::vector<std::string>)>> listen_for_device_removed(
+            LocalAdapter object, 
+        std::shared_ptr<DBus::Connection> connection,
+        std::vector<FoundBLE> &foundBleObj) {
     //Create a listener for InterfacesRemoved signal and call get_interface_removed()
     std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::vector<std::string>)>(
@@ -118,8 +143,9 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
                 .as_signal_match(),
                 DBus::ThreadForCalling::DispatcherThread
                 );
+
     //Create callback function to be called when signal is recieved
-    signal->connect(sigc::ptr_fun(get_interface_removed));
+    signal->connect(sigc::bind(sigc::ptr_fun(get_interface_removed), std::ref(foundBleObj)));
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -205,7 +231,8 @@ std::string get_local_adapter_path(BLEDeviceObject obj) {
 
 int main() {
     //allocate memory for pointer vector
-    std::vector<FoundBLE> *knownBleDevices = new std::vector<FoundBLE>;
+    //std::vector<FoundBLE> *knownBleDevices = new std::vector<FoundBLE>;
+    std::vector<FoundBLE> knownBleDevices;
 
     std::cout << "Creating dispatcher\n";
     //The dispatcher is what reads from and write to the bus
@@ -248,13 +275,15 @@ int main() {
             listen_for_device_added(local, connection, knownBleDevices);
        
         //Add reciever to listen for device removed signal
-        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection); 
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
       
         //do not continue for the moment
         while(true) {
 
-            std::cout << "test\n";
-            std::cout << "vect size: " << knownBleDevices->size() << "\n";
+            std::cout << "vect size: " << knownBleDevices.size() << "\n";
+            if(knownBleDevices.size() > 0) {
+                std::cout << "vect item test: " << knownBleDevices[0].get_path() << "\n";
+            }
             sleep(1);
         }
 
