@@ -8,7 +8,7 @@
 #include <found_ble.h>
 /*
  * TODO:
- * Possible change KnownBLE to be stored as a pointer, so it can be deleted before removing from vector
+ * Unify parsing functions, streamline process. Figure out what info I need to store
  */
 
     
@@ -58,6 +58,7 @@ void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::st
             else {
                 FoundBLE bleObj(0);
                 std::cout << "UUID not found\n";
+                bleObj.set_path(path);
             
                 knownBleObj.push_back(bleObj);
             }

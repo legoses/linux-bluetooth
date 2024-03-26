@@ -14,7 +14,7 @@ class FoundBLE : public BLEObject {
 
     public:
         //determine if object is ble or classic bluetooth
-        const int isBLE;
+        int isBLE;
         FoundBLE(int a);
 
         int add_UUID(std::string uuid);
