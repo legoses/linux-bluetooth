@@ -8,8 +8,7 @@
 #include <found_ble.h>
 /*
  * TODO:
- * Possibly move parsing of found devices into class
- * Find out why program is crashing with error DBus::ErrorBadVariantCast
+ * Move dbus objects into top class as static object. I think this is required to make dbus functions work
  */
 
     
@@ -26,15 +25,17 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
 
     while(it != itEnd) {
-        std::cout << "Map string: " << it->first << "\n";
+        std::string mapString = it->first;
+        std::cout << "Interface: " << mapString << "\n";
       
         //Handles string, dict(string, dict{string, variant})
-        if(it->second.size() > 0) {
+        if(it->second.size() > 0 && mapString == "org.bluez.Device1") {
             std::map<std::string, DBus::Variant>::iterator itr = it->second.begin();
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
 
+            //Crash happens after this line
             std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
-            std::string address = it->second["Address"].to_string();
+            std::string address = it->second["Address"];
             std::cout << "Adapter Address: " << address << "\n" << std::flush; 
            
             //std::vector<DBus::Variant> vect = it->second["UUIDs"].to_vector<DBus::Variant>();
@@ -45,7 +46,6 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
 
             std::cout << "Adding device\n";
             if(UUIDCount > 0) {
-                std::cout << "BLE\n";
                 //Create object, signify that it is ble
                 FoundBLE bleObj(1);
                 for(int i = 0; i < UUIDCount; i++) {
@@ -59,7 +59,6 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                 std::cout << "test size: " << knownBleObj.size() << "\n";
             }
             else {
-                std::cout << "NOT BLE\n";
                 FoundBLE bleObj(0);
                 std::cout << "UUID not found\n";
                 bleObj.set_path(path);
@@ -153,82 +152,13 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
 
 
 //create method proxies for StartDiscovery and StopDiscovery 
-DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> object, std::string interface, std::string function) {
-    DBus::MethodProxy<void()>& funcProx = *(object->create_method<void()>(interface, function));
+DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &object, std::string interface, std::string function) {
+    //DBus::MethodProxy<void()>& funcProx = *(object->create_method<void()>(interface, function));
      return *(object->create_method<void()>(interface, function));
 }
 
 
-//these two functions are staged for deletion
-/*
-std::string get_local_adapter_path(BLEDeviceObject obj) {
-    BLEDeviceObject::iterator it = obj.begin();
-    BLEDeviceObject::iterator end = obj.end();
-    std::cout << "Getting local adapter\n"; 
-    std::string pth;
-    //Represents adapters the system has
-    const std::string adapter = "org.bluez.Adapter1";
-
-    //loop through each object path
-    while(it != end) {
-        BLEDeviceInterface::iterator itr = it->second.begin(); //loop through nested map
-        BLEDeviceInterface::iterator itrEnd= it->second.end(); //loop through nested map
-
-        //loop through interfaces of each object. Return value should usually be /org/bluez/hci0
-        while(itr != itrEnd) {
-            if(itr->first == adapter) {
-                pth = it->first;
-                return pth;
-            }
-            itr++;
-        }
-        it++;
-    }
-    return "";
-}
-
-
-//Change to use local adapter class
-LocalAdapter extract_info(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceObject devObject, std::string adapterPath) {
-    //Class to handle adapter information
-    //LocalAdapter deviceAdapter;
-
-    BLEDeviceObject::iterator it = devObject.begin();
-    std::string pth;
-    //Represents adapters the system has
-    const std::string adapter = "org.bluez.Adapter1";
-
-    //it->first is the path of the object
-    //Im only looking for the first available bluetooth device, so if the path is longer than base_path return path as string
-    while(it != devObject.end()) {
-        pth = (std::string)it->first;
-        //Represents the nested map in BLEDeviceObject containing interfaces
-        BLEDeviceInterface::iterator itr = it->second.begin();
-
-        std::cout << "Printing interfaces:\n";
-        while(itr != it->second.end()) {
-            if(itr->first == adapter) {
-                DBus::MethodProxy<void()>& startScanMeth = *(object->create_method<void()>(itr->first, "StartDiscovery"));
-                std::cout << "Start sccan test\n";
-                startScanMeth();
-
-                LocalAdapter local(startScanMeth, create_scan_meth(object, itr->first, "StopDiscovery"));
-                std::cout << "Adapter found: " << itr->first << "\n";
-                return local;
-            }
-            itr++;
-        }
-        it++;
-    }
-
-    //Return object without method proxies if device is not found
-    std::cout << "Adapter not found. Returning NULL\n";
-    LocalAdapter local(create_scan_meth(object, "NULL", "NULL"), create_scan_meth(object, NULL, NULL));
-    return local;
-}
-*/
-
-LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> object, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices) {
+LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> &object, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices) {
     BLEDeviceObject::iterator it = devices.begin();
     BLEDeviceObject::iterator itEnd = devices.end();
 
@@ -249,17 +179,22 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> object, BLED
                 std::cout << "Adapter found\n";
                 break;
             }
-            else {
+            else if(itr->first == "org.bluez.Device1") {
                 get_interface_added(it->first, it->second, knownBleDevices);
+                break;
             }
             itr++;
         }
         it++;
     }
-    
     //Create class with ability to start and stop scan
-    LocalAdapter adapter(create_scan_meth(object, pth, "StartDiscovery"), create_scan_meth(object, pth, "StopDiscovery"));
+    DBus::MethodProxy<void()> &scanStart = *(object->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+    DBus::MethodProxy<void()> &scanStop = *(object->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
+    //scanStart();
+
+    LocalAdapter adapter(scanStart, scanStop);
     adapter.set_path(pth);
+    //scanStart();
 
     return adapter;
 }
@@ -287,27 +222,26 @@ int main() {
 
     //parse info from answer. Get local adapter object 
     LocalAdapter local = parse_known_devices(baseObject, answer, knownBleDevices);
+    std::cout << "Get path test: " << local.get_path() << "\n";
 
     //Make sure a ble device is found
     if(local.get_path() != "") {
         std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", local.get_path());
 
-        std::cout << "Enabling discovery\n";
-        local.start_scan();
+        //local.start_scan();
 
         //create listener for device added
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(local, connection, knownBleDevices);
        
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
+        //local.start_scan();
+
+        DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+        scanStart();
       
         //do not continue for the moment
         while(true) {
-
-            std::cout << "vect size: " << knownBleDevices.size() << "\n";
-            if(knownBleDevices.size() > 0) {
-                std::cout << "vect item test: " << knownBleDevices[0].get_path() << "\n";
-            }
             sleep(1);
         }
 

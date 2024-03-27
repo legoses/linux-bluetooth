@@ -5,10 +5,6 @@
 class LocalAdapter : public BLEObject {
     DBus::MethodProxy<void()>& start_scan_proxy;
     DBus::MethodProxy<void()>& stop_scan_proxy;
-    //DBus::MethodProxy<void()> start_scan_proxy;
-    //DBus::MethodProxy<void()> stop_scan_proxy;
-    int scan_start_proxy_set;
-    int scan_stop_proxy_set; 
 
 
     public:
