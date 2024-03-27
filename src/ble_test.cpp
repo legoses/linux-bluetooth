@@ -8,7 +8,7 @@
 #include <found_ble.h>
 /*
  * TODO:
- * Move dbus objects into top class as static object. I think this is required to make dbus functions work
+ * Figure out what do actually do with this program
  */
 
     
@@ -188,8 +188,8 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> &object, BLE
         it++;
     }
     //Create class with ability to start and stop scan
-    DBus::MethodProxy<void()> &scanStart = *(object->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
-    DBus::MethodProxy<void()> &scanStop = *(object->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
+    DBus::MethodProxy<void()> scanStart = *(object->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+    DBus::MethodProxy<void()> scanStop = *(object->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
     //scanStart();
 
     LocalAdapter adapter(scanStart, scanStop);
