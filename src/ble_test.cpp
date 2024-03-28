@@ -18,7 +18,6 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
 
-//void get_interface_added(DBus::Path path, std::map<std::string, std::map<std::string, DBus::Variant>> other, std::vector<FoundBLE> &knownBleObj) {
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Device at: " << path << " found\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
@@ -38,7 +37,6 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             std::string address = it->second["Address"];
             std::cout << "Adapter Address: " << address << "\n" << std::flush; 
            
-            //std::vector<DBus::Variant> vect = it->second["UUIDs"].to_vector<DBus::Variant>();
             std::vector<std::string> vect = it->second["UUIDs"].to_vector<std::string>();
 
             //get the size of array holding UUIDs
@@ -65,10 +63,6 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             
                 knownBleObj.push_back(bleObj);
             }
-            
-            std::cout << "After for loop test\n";
-
-            //std::cout << "Adapter Connected: " << it->second["Connected"].to_bool() << "\n" << std::flush;
             std::cout << "\n\n";
 
             
@@ -153,18 +147,18 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
 
 //create method proxies for StartDiscovery and StopDiscovery 
 DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &object, std::string interface, std::string function) {
-    //DBus::MethodProxy<void()>& funcProx = *(object->create_method<void()>(interface, function));
      return *(object->create_method<void()>(interface, function));
 }
 
 
-LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> &object, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices) {
+LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices) {
     BLEDeviceObject::iterator it = devices.begin();
     BLEDeviceObject::iterator itEnd = devices.end();
 
     //Initialize to empty path
     //this requires other values to be initialized
     std::string pth = "";
+    std::shared_ptr<DBus::ObjectProxy> adapterObject = NULL;
 
     //ble adapter of local device
     std::string adapterName = "org.bluez.Adapter1"; 
@@ -172,6 +166,8 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> &object, BLE
     while(it != itEnd) {
         BLEDeviceInterface::iterator itr = it->second.begin();
         BLEDeviceInterface::iterator itrEnd = it->second.end();
+        std::cout << "adapter made with path: " << pth << "\n";
+        adapterObject = connection->create_object_proxy(adapterName, pth);
 
         while(itr != itrEnd) {
             if(itr->first == adapterName) {
@@ -188,13 +184,17 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::ObjectProxy> &object, BLE
         it++;
     }
     //Create class with ability to start and stop scan
-    DBus::MethodProxy<void()> scanStart = *(object->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
-    DBus::MethodProxy<void()> scanStop = *(object->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
-    //scanStart();
+    if(adapterObject != NULL) {
+        DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+        DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
+        LocalAdapter adapter(scanStart, scanStop);
+        adapter.set_path(pth);
+        return adapter;
+    }
+    DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("null", "null"));
+    DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("null", "null"));
 
     LocalAdapter adapter(scanStart, scanStop);
-    adapter.set_path(pth);
-    //scanStart();
 
     return adapter;
 }
@@ -219,26 +219,24 @@ int main() {
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
     DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer = method_proxy();
+    LocalAdapter local = parse_known_devices(connection, answer, knownBleDevices);
 
     //parse info from answer. Get local adapter object 
-    LocalAdapter local = parse_known_devices(baseObject, answer, knownBleDevices);
     std::cout << "Get path test: " << local.get_path() << "\n";
 
     //Make sure a ble device is found
     if(local.get_path() != "") {
         std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", local.get_path());
 
-        //local.start_scan();
-
         //create listener for device added
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(local, connection, knownBleDevices);
        
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
-        //local.start_scan();
 
-        DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
-        scanStart();
+        //DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+        //scanStart();
+        local.start_scan();
       
         //do not continue for the moment
         while(true) {
