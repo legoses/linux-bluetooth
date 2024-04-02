@@ -8,7 +8,8 @@
 #include <found_ble.h>
 /*
  * TODO:
- * Figure out what do actually do with this program
+ * Find a way to interact remotely. Probably web interface
+ * Figure out process flow now that user interaction is required
  */
 
     
@@ -51,7 +52,6 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                     bleObj.add_UUID(vect[i]);
                 }
 
-
                 bleObj.set_path(path);
                 knownBleObj.push_back(bleObj);
                 std::cout << "test size: " << knownBleObj.size() << "\n";
@@ -64,12 +64,10 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                 knownBleObj.push_back(bleObj);
             }
             std::cout << "\n\n";
-
             
         }
         std::cout << "\n";
         it++;
-
     }
 
     std::cout << "\n\n--------------------------\n\n";
@@ -86,8 +84,6 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>, std::vecto
         if(pathStr == knownBleObj[i].get_path()) {
             //create iterator based on current
             std::vector<FoundBLE>::iterator it = knownBleObj.begin() + i;
-
-            //delete knownBleObj[i];
             
             knownBleObj.erase(it);
             std::cout << "Signal " << path << " removed\n";
@@ -114,7 +110,6 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
     //sigc::bind allows me to pass an additional argument
     //std::ref must be used, otherwise a copy of vector will be passed, instead of a reference
     signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), std::ref(foundBleObj)));
-
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -198,12 +193,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
     DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("null", "null"));
     DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("null", "null"));
 
-    scanStart();
-    while(true) {
-        std::cout << "testing scn start\n";
-        sleep(1);
-    }
-
     LocalAdapter adapter(scanStart, scanStop);
 
     return adapter;
@@ -245,21 +234,15 @@ int main() {
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
         local.start_scan();
-      
-        //do not continue for the moment
-        while(true) {
+     
+        //scan for 10 seconds
+        for(int i = 0; i < 10; i++) {
             sleep(1);
         }
-
         //remove recievers when no longer needed
         connection->remove_free_signal_proxy(addSignal);
         connection->remove_free_signal_proxy(removeSignal);
         std::cout << "Testing after free\n";
-        
-        for(int i = 0; i < 10; i++) {
-            std::cout << "." << std::flush;
-            sleep(1);
-        }
         
         local.stop_scan();
     }
