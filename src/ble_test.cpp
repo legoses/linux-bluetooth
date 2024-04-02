@@ -167,7 +167,7 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
         BLEDeviceInterface::iterator itr = it->second.begin();
         BLEDeviceInterface::iterator itrEnd = it->second.end();
         std::cout << "adapter made with path: " << pth << "\n";
-        adapterObject = connection->create_object_proxy(adapterName, pth);
+        adapterObject = connection->create_object_proxy("org.bluez", pth);
 
         while(itr != itrEnd) {
             if(itr->first == adapterName) {
@@ -185,14 +185,24 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
     }
     //Create class with ability to start and stop scan
     if(adapterObject != NULL) {
+        std::cout << "Creating scan method proxies\n";
         DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
         DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
+        
         LocalAdapter adapter(scanStart, scanStop);
         adapter.set_path(pth);
         return adapter;
     }
+
+    sleep(1);
     DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("null", "null"));
     DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("null", "null"));
+
+    scanStart();
+    while(true) {
+        std::cout << "testing scn start\n";
+        sleep(1);
+    }
 
     LocalAdapter adapter(scanStart, scanStop);
 
@@ -234,8 +244,6 @@ int main() {
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
-        //DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
-        //scanStart();
         local.start_scan();
       
         //do not continue for the moment
