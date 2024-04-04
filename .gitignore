@@ -1,2 +1,4 @@
 /.git
 /build
+/site/a.out
+/site/sockets.py
