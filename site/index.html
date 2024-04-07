@@ -4,16 +4,12 @@
         <h1>Found devices:</h1>
         </br>
         <script>
-           var ws = new WebSocket("ws://127.0.0.1:8080"),
-               messages = document.createElement('ul');
-           ws.onmessage = function (event) {
-               var messages document.getElementByTagName('ul')[0],
-                   message = document.createElement(li),
-                   content = document.createTextNode(event.data);
-               message.appendChild(content);
-               messages.appendChild(message);
-           };
-           document.body.appendChild(messages);
+           var ws = new WebSocket("ws://127.0.0.1:8080");
+           while(ws.readystate == "CONNECTING") {
+               sleep(1000);
+               console.log(ws.readystate);
+           }
+           ws.send("Test message");
         </script>
     </body>
 </html>
