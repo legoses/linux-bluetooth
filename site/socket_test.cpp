@@ -4,9 +4,17 @@
 #include <cstring>
 #include <unistd.h>
 #include <string>
-//#include <boost/uuid/sha1.hpp>
 #include <openssl/sha.h>
+#include <stdint.h>
 
+
+char constexpr encode_table[] {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
+    'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+    'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+    'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+    's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
+    '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
 
 int get_websocket_key(char header[], int headerSize, unsigned char buffer[], int bufferSize) {
@@ -39,6 +47,39 @@ int get_websocket_key(char header[], int headerSize, unsigned char buffer[], int
     }
     std::cout << "websocket key not found\n";
     return ret;
+}
+
+
+uint8_t *gen_base64(char digest[], int digestSize) {
+    uint8_t *base64 = (uint8_t*)malloc(60*sizeof(uint8_t));
+    int base64i = 0;
+    int i = 0;
+    
+    std::cout << "Converting to base64\n";
+    //use 3 bytes at a time to convert into base64
+    while(i < digestSize) {
+        uint32_t bits = (digest[i] << 16) | (digest[i+1] << 8) | (digest[i+2]);
+        base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
+        base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
+        base64[base64i+2] = encode_table[(bits >> 6) & 0b0011'1111];
+        base64[base64i+3] = encode_table[bits & 0b0011'1111];
+        base64i+=4;
+        i+=3;
+    }
+
+    //convert the remaining 2 bits
+    if(digestSize-(i-2) == 1) {
+        i-=3;
+        base64-=4;
+        uint32_t bits = (digest[i] << 16) | 0x00 << 8 | 0x00;
+        
+        base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
+        base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
+        base64[base64i+2] = '=';
+        base64[base64i+3] = '=';
+    }
+
+    return base64;
 }
 
 
@@ -97,15 +138,17 @@ int main() {
         char hashBuf[SHA_DIGEST_LENGTH*2 + 1];
 
         gen_sha_hash(webkey, sizeof(webkey), hashBuf);
-        std::cout << "sha string: " << hashBuf << "\n";
-    
+        uint8_t *base64 = gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char));
+        std::cout << sizeof(hashBuf) << "\n";
 
+        //make sure to send to client before freeing memory
+        free(base64);
         recv(serverSocket, buffer, sizeof(buffer), 0);
+
 
 
         std::cout << "\n";
     }
-
 
     close(serverSocket);
     return 0;
