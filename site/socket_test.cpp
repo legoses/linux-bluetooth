@@ -3,8 +3,13 @@
 #include <netinet/in.h>
 #include <cstring>
 #include <unistd.h>
+#include <string>
+//#include <boost/uuid/sha1.hpp>
+#include <openssl/sha.h>
 
-int get_websocket_key(char header[], int headerSize, char buffer[], int bufferSize) {
+
+
+int get_websocket_key(char header[], int headerSize, unsigned char buffer[], int bufferSize) {
     std::cout << "websocket key called\n";
 
     char searchStr[] = "Sec-WebSocket-Key: ";
@@ -22,17 +27,12 @@ int get_websocket_key(char header[], int headerSize, char buffer[], int bufferSi
                 ret = 0;
                 int pos = i+j;
                 int k = 1;
+                
+                unsigned char uuid[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
-                //get length of key
-                while(k+pos < headerSize && k < bufferSize) {
-                    if(header[k+pos] == '\n') {
-                        break;
-                    }
-                    k++; 
-                } 
-                //copy key from header to buffer usign key length and starting point
-                memcpy(buffer, &header[pos+1], k*sizeof(char));
-
+                memcpy(buffer, &header[pos+1], 24*sizeof(char));
+                memcpy(&buffer[24], uuid, 36*sizeof(char)); 
+                
                 return ret;
             }
         }
@@ -40,6 +40,18 @@ int get_websocket_key(char header[], int headerSize, char buffer[], int bufferSi
     std::cout << "websocket key not found\n";
     return ret;
 }
+
+
+void gen_sha_hash(const unsigned char input[], int inputSize, char hashBuf[])  {
+    unsigned char digest[SHA_DIGEST_LENGTH] = {0};
+    unsigned char *sha = SHA1(input, inputSize, digest);
+
+    for(int i = 0; i < SHA_DIGEST_LENGTH; i++) {
+        sprintf(&hashBuf[i*2], "%02x", (unsigned int)digest[i]);
+    }
+
+}
+
 
 int main() {
     //steps:
@@ -72,7 +84,7 @@ int main() {
 
     char buffer[1024] = {0};
     char readBuffer[1024] = {0};
-    char webkey[30];
+    unsigned char webkey[60];
     memset(webkey, '\0', sizeof(webkey));
 
     if(read(clientSocket, readBuffer, sizeof(readBuffer)) == 0) {
@@ -80,27 +92,20 @@ int main() {
     }
 
     std::cout << "\n\n\n";
-
     //get websocket key
     if(get_websocket_key(readBuffer, sizeof(readBuffer), webkey, sizeof(webkey)) == 0) {
-        std::cout << "Webkey:\n";
-        std::cout << webkey << "\n";
-    }
-    else {
-        std::cout << "returned -1\n";
+        char hashBuf[SHA_DIGEST_LENGTH*2 + 1];
+
+        gen_sha_hash(webkey, sizeof(webkey), hashBuf);
+        std::cout << "sha string: " << hashBuf << "\n";
+    
+
+        recv(serverSocket, buffer, sizeof(buffer), 0);
+
+
+        std::cout << "\n";
     }
 
-    for(int i = 0; i < sizeof(readBuffer); i++) {
-        std::cout << readBuffer[i];
-    }
-
-    recv(serverSocket, buffer, sizeof(buffer), 0);
-
-    std::cout << "Client message:\n";
-    for(int i = 0; i < sizeof(buffer); i++) {
-        std::cout << buffer[i];
-    }
-    std::cout << "\n";
 
     close(serverSocket);
     return 0;
