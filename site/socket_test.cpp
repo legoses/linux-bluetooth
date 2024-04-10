@@ -17,12 +17,13 @@ char constexpr encode_table[] {
     '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
 
-int get_websocket_key(char header[], int headerSize, unsigned char buffer[], int bufferSize) {
+int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
     std::cout << "websocket key called\n";
 
     char searchStr[] = "Sec-WebSocket-Key: ";
     int searchSize = sizeof(searchStr); //counts null terminator. Subtract by 2 to offset
     int ret = -1; //return value
+    std::cout << searchSize << "\n";
 
     for(int i = 0; i <= headerSize - searchSize; i++) {
         for(int j = 0; j <= searchSize; j++) {
@@ -50,8 +51,7 @@ int get_websocket_key(char header[], int headerSize, unsigned char buffer[], int
 }
 
 
-uint8_t *gen_base64(char digest[], int digestSize) {
-    uint8_t *base64 = (uint8_t*)malloc(60*sizeof(uint8_t));
+void gen_base64(char *digest, int digestSize, uint8_t *base64) {
     int base64i = 0;
     int i = 0;
     
@@ -78,12 +78,10 @@ uint8_t *gen_base64(char digest[], int digestSize) {
         base64[base64i+2] = '=';
         base64[base64i+3] = '=';
     }
-
-    return base64;
 }
 
 
-void gen_sha_hash(const unsigned char input[], int inputSize, char hashBuf[])  {
+void gen_sha_hash(const unsigned char input[], int inputSize, char *hashBuf)  {
     unsigned char digest[SHA_DIGEST_LENGTH] = {0};
     unsigned char *sha = SHA1(input, inputSize, digest);
 
@@ -91,6 +89,33 @@ void gen_sha_hash(const unsigned char input[], int inputSize, char hashBuf[])  {
         sprintf(&hashBuf[i*2], "%02x", (unsigned int)digest[i]);
     }
 
+}
+
+
+int upgrade_to_ws(char *readBuffer, const int bufSize) {
+    std::cout << "Upgrading connection\n";
+    unsigned char webkey[60];
+    memset(webkey, '\0', sizeof(webkey));
+
+    if(get_websocket_key(readBuffer, bufSize, webkey, sizeof(webkey)) == 0) {
+        std::cout << webkey << "\n";
+        uint8_t *base64 = (uint8_t*)malloc(60*sizeof(uint8_t));
+        int hashSize = SHA_DIGEST_LENGTH*2+1;
+        //char hashBuf[SHA_DIGEST_LENGTH*2 + 1];
+        char *hashBuf = (char*)malloc(hashSize*sizeof(char));
+
+        gen_sha_hash(webkey, sizeof(webkey), hashBuf);
+        std::cout << "Hash buf: " << hashBuf << "\n";
+        //gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char), base64);
+        gen_base64(hashBuf, hashSize, base64);
+        std::cout << "Base64: " << base64 << "\n";
+
+        //make sure to send to client before freeing memory
+        free(base64);
+        free(hashBuf);
+        return 0;
+    }
+    return -1;
 }
 
 
@@ -123,33 +148,30 @@ int main() {
 
     int clientSocket = accept(serverSocket, nullptr, nullptr);
 
-    char buffer[1024] = {0};
-    char readBuffer[1024] = {0};
-    unsigned char webkey[60];
-    memset(webkey, '\0', sizeof(webkey));
-
-    if(read(clientSocket, readBuffer, sizeof(readBuffer)) == 0) {
+    const int bufSize = 1024;
+    char *buffer = (char*)malloc(bufSize*sizeof(char));
+    char *readBuffer = (char*)malloc(bufSize*sizeof(char));
+   
+    std::cout << "Reading input\n";
+    std::cout << sizeof(readBuffer);
+    if(read(clientSocket, readBuffer, bufSize) == 0) {
         std::cout << "Read does not wokr?\n";
     }
+    std::cout << "print test: \n";
+    std::cout << readBuffer << "\n";
 
-    std::cout << "\n\n\n";
     //get websocket key
-    if(get_websocket_key(readBuffer, sizeof(readBuffer), webkey, sizeof(webkey)) == 0) {
-        char hashBuf[SHA_DIGEST_LENGTH*2 + 1];
-
-        gen_sha_hash(webkey, sizeof(webkey), hashBuf);
-        uint8_t *base64 = gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char));
-        std::cout << sizeof(hashBuf) << "\n";
-
-        //make sure to send to client before freeing memory
-        free(base64);
+    //upgrade http connection to websocket
+    if(upgrade_to_ws(readBuffer, bufSize) == 0) {
         recv(serverSocket, buffer, sizeof(buffer), 0);
 
-
-
-        std::cout << "\n";
     }
 
+        std::cout << "\n";
+    //}
+
+    free(buffer);
+    free(readBuffer);
     close(serverSocket);
     return 0;
 }
