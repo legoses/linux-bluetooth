@@ -92,26 +92,44 @@ void gen_sha_hash(const unsigned char input[], int inputSize, char *hashBuf)  {
 }
 
 
-int upgrade_to_ws(char *readBuffer, const int bufSize) {
+int upgrade_to_ws(char *readBuffer, const int bufSize, int *conn) {
     std::cout << "Upgrading connection\n";
     unsigned char webkey[60];
     memset(webkey, '\0', sizeof(webkey));
 
+    char initReg[] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
+
     if(get_websocket_key(readBuffer, bufSize, webkey, sizeof(webkey)) == 0) {
         std::cout << webkey << "\n";
-        uint8_t *base64 = (uint8_t*)malloc(60*sizeof(uint8_t));
+        //allocate 2 more than needed forr \r\n return characters
+        //uint8_t *base64 = (uint8_t*)malloc(62*sizeof(uint8_t));
+        int baseSize = 62;
+        uint8_t base64[baseSize];
         int hashSize = SHA_DIGEST_LENGTH*2+1;
-        //char hashBuf[SHA_DIGEST_LENGTH*2 + 1];
         char *hashBuf = (char*)malloc(hashSize*sizeof(char));
 
         gen_sha_hash(webkey, sizeof(webkey), hashBuf);
         std::cout << "Hash buf: " << hashBuf << "\n";
         //gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char), base64);
         gen_base64(hashBuf, hashSize, base64);
+        memcpy(&base64[60], "\r\n", 2);
         std::cout << "Base64: " << base64 << "\n";
 
+        int headerSize = sizeof(initReg) + baseSize;
+        
+        char *wsHeader = (char*)malloc(headerSize);
+        //copy header and base64 code into string
+        memcpy(wsHeader, initReg, sizeof(initReg));
+        //make sure there is enough room to store base64
+        if(headerSize - sizeof(initReg) >= baseSize) {
+            std::cout << "copying text\n";
+            memcpy(&wsHeader[sizeof(initReg)], &base64[0], baseSize);
+        }
+
+        std::cout << "final header\n " << wsHeader << "\n";
+        free(wsHeader);
+
         //make sure to send to client before freeing memory
-        free(base64);
         free(hashBuf);
         return 0;
     }
@@ -135,18 +153,21 @@ int main() {
         std::cout << "reuse addt failed\n";
     }
 
-
     //Soecify listening details
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(8080);
-    //serverAddress.sin_addr.s_addr = INADDR_LOOPBACK;
     serverAddress.sin_addr.s_addr = INADDR_ANY;
+
+    struct sockaddr clientAddr;
+    int clientAddrSize = sizeof(clientAddr);
     
     bind(serverSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
     listen(serverSocket, 5);
 
-    int clientSocket = accept(serverSocket, nullptr, nullptr);
+    int clientSocket = accept(serverSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+
+    std::cout << "Client addr: " << clientAddr.sa_data << "\n";
 
     const int bufSize = 1024;
     char *buffer = (char*)malloc(bufSize*sizeof(char));
@@ -162,13 +183,12 @@ int main() {
 
     //get websocket key
     //upgrade http connection to websocket
-    if(upgrade_to_ws(readBuffer, bufSize) == 0) {
+    if(upgrade_to_ws(readBuffer, bufSize, &clientSocket) == 0) {
         recv(serverSocket, buffer, sizeof(buffer), 0);
 
     }
 
-        std::cout << "\n";
-    //}
+    std::cout << "\n";
 
     free(buffer);
     free(readBuffer);
