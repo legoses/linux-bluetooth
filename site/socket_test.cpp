@@ -92,7 +92,7 @@ void gen_sha_hash(const unsigned char input[], int inputSize, char *hashBuf)  {
 }
 
 
-int upgrade_to_ws(char *readBuffer, const int bufSize, int *conn) {
+int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     std::cout << "Upgrading connection\n";
     unsigned char webkey[60];
     memset(webkey, '\0', sizeof(webkey));
@@ -102,8 +102,7 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int *conn) {
     if(get_websocket_key(readBuffer, bufSize, webkey, sizeof(webkey)) == 0) {
         std::cout << webkey << "\n";
         //allocate 2 more than needed forr \r\n return characters
-        //uint8_t *base64 = (uint8_t*)malloc(62*sizeof(uint8_t));
-        int baseSize = 62;
+        int baseSize = 60; //figure out a way to calculate this instead of hard coding
         uint8_t base64[baseSize];
         int hashSize = SHA_DIGEST_LENGTH*2+1;
         char *hashBuf = (char*)malloc(hashSize*sizeof(char));
@@ -112,21 +111,23 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int *conn) {
         std::cout << "Hash buf: " << hashBuf << "\n";
         //gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char), base64);
         gen_base64(hashBuf, hashSize, base64);
-        memcpy(&base64[60], "\r\n", 2);
-        std::cout << "Base64: " << base64 << "\n";
+        memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
+        
 
         int headerSize = sizeof(initReg) + baseSize;
-        
-        char *wsHeader = (char*)malloc(headerSize);
+        char *wsHeader = (char*)malloc(headerSize*sizeof(char));
         //copy header and base64 code into string
         memcpy(wsHeader, initReg, sizeof(initReg));
         //make sure there is enough room to store base64
+        std::cout << "Base64: " << base64 << "\n";
         if(headerSize - sizeof(initReg) >= baseSize) {
-            std::cout << "copying text\n";
-            memcpy(&wsHeader[sizeof(initReg)], &base64[0], baseSize);
+            std::cout << "copying text to: " << sizeof(initReg) << "\n";
+            memcpy(&wsHeader[sizeof(initReg)-1], &base64, (baseSize*sizeof(uint8_t))-1);
         }
 
-        std::cout << "final header\n " << wsHeader << "\n";
+        //send header to client to complete upgrade
+        send(conn, wsHeader, headerSize-2, 0);
+
         free(wsHeader);
 
         //make sure to send to client before freeing memory
@@ -183,7 +184,7 @@ int main() {
 
     //get websocket key
     //upgrade http connection to websocket
-    if(upgrade_to_ws(readBuffer, bufSize, &clientSocket) == 0) {
+    if(upgrade_to_ws(readBuffer, bufSize, clientSocket) == 0) {
         recv(serverSocket, buffer, sizeof(buffer), 0);
 
     }
