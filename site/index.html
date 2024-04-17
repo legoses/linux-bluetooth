@@ -4,12 +4,31 @@
         <h1>Found devices:</h1>
         </br>
         <script>
+
+            function sleep(ms) {
+                var date = new Date();
+                var time = date.getTime();
+                while(date.getTime() - time < ws) {
+                    console.log("wat");
+                }
+            }
            var ws = new WebSocket("ws://127.0.0.1:8080");
-           while(ws.readystate == "CONNECTING") {
-               sleep(1000);
-               console.log(ws.readystate);
-           }
-           ws.send("Test message");
+           console.log("test log");
+
+           ws.onopen = function(e) {
+              console.log("Socket opened");
+              alert("[open] Connection established");
+              alert("Sending to server");
+              ws.send("My name is John");
+            };
+
+            ws.onclose = function(e) {
+                console.log("Connection closed");
+            }
+
+            ws.onerror = function(error) {
+                console.log(error);
+            };
         </script>
     </body>
 </html>

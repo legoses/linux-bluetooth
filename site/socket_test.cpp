@@ -51,7 +51,7 @@ int get_websocket_key(char *header, const int headerSize, unsigned char buffer[]
 }
 
 
-void gen_base64(char *digest, int digestSize, uint8_t *base64) {
+void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64) {
     int base64i = 0;
     int i = 0;
     
@@ -81,20 +81,24 @@ void gen_base64(char *digest, int digestSize, uint8_t *base64) {
 }
 
 
-void gen_sha_hash(const unsigned char input[], int inputSize, char *hashBuf)  {
+void gen_sha_hash(const unsigned char input[], int inputSize, uint8_t *hashBuf)  {
     unsigned char digest[SHA_DIGEST_LENGTH] = {0};
-    unsigned char *sha = SHA1(input, inputSize, digest);
-
+    //unsigned char *sha = SHA1(input, inputSize, digest);
+    unsigned char *sha = SHA1(input, inputSize, hashBuf);
+    /*
     for(int i = 0; i < SHA_DIGEST_LENGTH; i++) {
+        std::cout << "testone: " << digest << "\n";
         sprintf(&hashBuf[i*2], "%02x", (unsigned int)digest[i]);
+        std::cout << "test two: " << hashBuf << "\n";
     }
+    */
 
 }
 
 
 int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     std::cout << "Upgrading connection\n";
-    unsigned char webkey[60];
+    uint8_t webkey[60];
     memset(webkey, '\0', sizeof(webkey));
 
     char initReg[] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
@@ -105,14 +109,14 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
         int baseSize = 60; //figure out a way to calculate this instead of hard coding
         uint8_t base64[baseSize];
         int hashSize = SHA_DIGEST_LENGTH*2+1;
-        char *hashBuf = (char*)malloc(hashSize*sizeof(char));
+        uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
 
-        gen_sha_hash(webkey, sizeof(webkey), hashBuf);
+        gen_sha_hash(webkey, sizeof(webkey)-1, hashBuf);
+
         std::cout << "Hash buf: " << hashBuf << "\n";
         //gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char), base64);
         gen_base64(hashBuf, hashSize, base64);
         memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
-        
 
         int headerSize = sizeof(initReg) + baseSize;
         char *wsHeader = (char*)malloc(headerSize*sizeof(char));
@@ -168,8 +172,6 @@ int main() {
 
     int clientSocket = accept(serverSocket, &clientAddr, (socklen_t*)&clientAddrSize);
 
-    std::cout << "Client addr: " << clientAddr.sa_data << "\n";
-
     const int bufSize = 1024;
     char *buffer = (char*)malloc(bufSize*sizeof(char));
     char *readBuffer = (char*)malloc(bufSize*sizeof(char));
@@ -186,9 +188,21 @@ int main() {
     //upgrade http connection to websocket
     if(upgrade_to_ws(readBuffer, bufSize, clientSocket) == 0) {
         recv(serverSocket, buffer, sizeof(buffer), 0);
-
+        std::cout << "Socket upgraded\n";
     }
 
+    while(true) {
+        free(buffer);
+        buffer = (char*)malloc(bufSize*sizeof(char));
+        recv(serverSocket, buffer, bufSize, 0);
+        std::cout << "Message from client:\n";
+        for(int i = 0; i < bufSize; i++) {
+            std::cout << (uint8_t)buffer[i];
+        }
+        std::cout << "\n";
+        break;
+
+    }
     std::cout << "\n";
 
     free(buffer);
