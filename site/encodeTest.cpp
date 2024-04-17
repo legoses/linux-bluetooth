@@ -42,6 +42,7 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64) {
         base64[base64i+3] = encode_table[bits & 0b0011'1111];
         base64i+=4;
         i+=3;
+        std::cout << "I: " << i << "\n";
     }
 
     //convert the remaining 2 bits
@@ -73,11 +74,29 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64) {
 }
 
 
+int base64_length(int len) {
+    if(len%3 != 0) {
+        if((len-1)%3 == 0) {
+            return len + ((len-1)/3)+1;
+        }
+        else if((len-2)%3 == 0) {
+            return len + ((len-2)/3)+2;
+        }
+    }
+
+    return len + len/3;
+}
+
+
 int main() {
-    int hashSize = SHA_DIGEST_LENGTH*2+1;
-    uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
+    //int hashSize = SHA_DIGEST_LENGTH*2+1;
+    //sha1 hash is 20 btyes
+    uint8_t *hashBuf = (uint8_t*)malloc(20*sizeof(uint8_t));
     uint8_t testStr[] = "dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    uint8_t base64[60];
+    //uint8_t base64[60];
+    uint8_t *base64 = (uint8_t*)malloc(base64_len(20)*sizeof(uint8_t));
+    double finalSize = hashSize/3;
+    std::cout << "Final size: " << finalSize << " " << hashSize << "\n";
 
     gen_sha_hash(testStr, sizeof(testStr)-1, hashBuf);
     std::cout << "Hash generated: " << hashBuf << "\n";
@@ -87,6 +106,7 @@ int main() {
     for(int i = 0; i < 28; i++) {
         std::cout << base64[i];
     }
+    free(hashBuf);
     std::cout << "\n";
     return 0;
 }
