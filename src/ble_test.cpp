@@ -6,10 +6,12 @@
 #include <vector>
 #include <local_adapter.h>
 #include <found_ble.h>
+#include <web_socket.h>
+#include <encode.h>
 /*
  * TODO:
- * Find a way to interact remotely. Probably web interface
- * Figure out process flow now that user interaction is required
+ * Make sure web socket library actually works before going further with this.
+ * Think through how each componnent will interact with each other
  */
 
     
