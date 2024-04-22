@@ -6,15 +6,8 @@
 #include <string>
 #include <openssl/sha.h>
 #include <stdint.h>
+#include "encodeTest.cpp"
 
-
-char constexpr encode_table[] {
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-    'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-    'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-    'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-    's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2',
-    '3', '4', '5', '6', '7', '8', '9', '+', '/'};
 
 
 int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
@@ -51,51 +44,6 @@ int get_websocket_key(char *header, const int headerSize, unsigned char buffer[]
 }
 
 
-void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64) {
-    int base64i = 0;
-    int i = 0;
-    
-    std::cout << "Converting to base64\n";
-    //use 3 bytes at a time to convert into base64
-    while(i < digestSize) {
-        uint32_t bits = (digest[i] << 16) | (digest[i+1] << 8) | (digest[i+2]);
-        base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
-        base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
-        base64[base64i+2] = encode_table[(bits >> 6) & 0b0011'1111];
-        base64[base64i+3] = encode_table[bits & 0b0011'1111];
-        base64i+=4;
-        i+=3;
-    }
-
-    //convert the remaining 2 bits
-    if(digestSize-(i-2) == 1) {
-        i-=3;
-        base64-=4;
-        uint32_t bits = (digest[i] << 16) | 0x00 << 8 | 0x00;
-        
-        base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
-        base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
-        base64[base64i+2] = '=';
-        base64[base64i+3] = '=';
-    }
-}
-
-
-void gen_sha_hash(const unsigned char input[], int inputSize, uint8_t *hashBuf)  {
-    unsigned char digest[SHA_DIGEST_LENGTH] = {0};
-    //unsigned char *sha = SHA1(input, inputSize, digest);
-    unsigned char *sha = SHA1(input, inputSize, hashBuf);
-    /*
-    for(int i = 0; i < SHA_DIGEST_LENGTH; i++) {
-        std::cout << "testone: " << digest << "\n";
-        sprintf(&hashBuf[i*2], "%02x", (unsigned int)digest[i]);
-        std::cout << "test two: " << hashBuf << "\n";
-    }
-    */
-
-}
-
-
 int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     std::cout << "Upgrading connection\n";
     uint8_t webkey[60];
@@ -106,17 +54,21 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     if(get_websocket_key(readBuffer, bufSize, webkey, sizeof(webkey)) == 0) {
         std::cout << webkey << "\n";
         //allocate 2 more than needed forr \r\n return characters
-        int baseSize = 60; //figure out a way to calculate this instead of hard coding
+        //int baseSize = 60; //figure out a way to calculate this instead of hard coding
+        int baseSize = base64_length(20) + 4; //add 4 to include space for \r\n\r\n packet ender
+        
         uint8_t base64[baseSize];
+        std::cout << "post base test: " << baseSize << "\n";
         int hashSize = SHA_DIGEST_LENGTH*2+1;
         uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
 
         gen_sha_hash(webkey, sizeof(webkey)-1, hashBuf);
 
         std::cout << "Hash buf: " << hashBuf << "\n";
-        //gen_base64(hashBuf, sizeof(hashBuf)/sizeof(char), base64);
         gen_base64(hashBuf, hashSize, base64);
+        std::cout << "memcpy: " << baseSize << "\n";
         memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
+        std::cout << "post memcpy:\n";
 
         int headerSize = sizeof(initReg) + baseSize;
         char *wsHeader = (char*)malloc(headerSize*sizeof(char));

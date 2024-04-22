@@ -81,7 +81,7 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64) {
     }
 }
 
-
+/*
 int main() {
     //int hashSize = SHA_DIGEST_LENGTH*2+1;
     //sha1 hash is 20 btyes
@@ -106,3 +106,4 @@ int main() {
     std::cout << "\n";
     return 0;
 }
+*/
