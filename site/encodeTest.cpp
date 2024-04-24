@@ -45,44 +45,31 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
         base64i+=4;
         i+=3;
     }
-    std::cout << "quick math: " << digestSize%3 << "\n";
     i-=3;
-    base64-=4;
+    base64i-=4;
+    std::cout << "quick math: " << i << "\n";
+    std::cout << "quick math: " << base64i+3 << "\n";
 
     //convert the remaining 2 bits
-    if(digestSize%3 == 2) {
+    if(digestSize%3 == 1) {
         uint32_t bits = (digest[i] << 16) | 0x00 << 8 | 0x00;
        
-        if(base64i+3 < baseSize) {
+        if(base64i+3 <= baseSize) {
             std::cout << "rightious brother\n";
             base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
             base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
             base64[base64i+2] = '=';
             base64[base64i+3] = '=';
-            std::cout << "base64i test:\n";
-            std::cout << base64i+2 << "\n";
-            std::cout << base64i+3 << "\n";
-            
-            //base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
-            //base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
-            //base64[baseSize-1] = '=';
-            //base64[baseSize] = '=';
         }
     }
-    //else if((i-2) - digestSize == -1){
-    else if(digestSize%3 == 1) {
+    else if(digestSize%3 == 2) {
         uint32_t bits = (digest[i] << 16) | digest[i+1] << 8 | 0x00;
         
-
-        if(base64i+3 < baseSize) {
+        if(base64i+3 <= baseSize) {
             base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
             base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
             base64[base64i+2] = encode_table[(bits >> 6) & 0b0011'1111];
             base64[base64i+3] = '=';
-            //base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
-            //base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
-            //base64[baseSize-1] = '=';
-            //base64[baseSize] = '=';
         }
     }
 }
