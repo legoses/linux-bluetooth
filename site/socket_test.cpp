@@ -58,14 +58,16 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
         int baseSize = base64_length(20) + 4; //add 4 to include space for \r\n\r\n packet ender
         
         uint8_t base64[baseSize];
-        int hashSize = SHA_DIGEST_LENGTH*2+1;
+        //int hashSize = SHA_DIGEST_LENGTH*2+1;
+        int hashSize = SHA_DIGEST_LENGTH;
         uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
 
         gen_sha_hash(webkey, sizeof(webkey)-1, hashBuf);
 
         std::cout << "Hash buf: " << hashBuf << "\n";
         std::cout << "post base test: " << baseSize << "\n";
-        gen_base64(hashBuf, hashSize, base64);
+        gen_base64(hashBuf, hashSize, base64, baseSize-4);
+        
         std::cout << "memcpy: " << baseSize << "\n";
         memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
         std::cout << "post memcpy:\n";
