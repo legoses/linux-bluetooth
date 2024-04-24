@@ -22,11 +22,24 @@ int base64_length(int len) {
 }
 
 
+int calc_utf_size(int strSize) {
+    return (4*strSize)+1;
+}
+
+
+void char_to_utf8(char *utfString, int utfSize, char *asciiString, int asciiStringSize) {
+    if(asciiString != NULL) {
+        if(utf8proc_utf8fromu(asciiString, asciiStringSize, utfString, utfSize) != 0) {
+            std::cout << "UTF-8 conversion failed\n";
+        }
+    } 
+}
+
+
 void gen_sha_hash(const uint8_t input[], int inputSize, uint8_t *hashBuf)  {
     unsigned char digest[SHA_DIGEST_LENGTH] = {0};
     //unsigned char *sha = SHA1(input, inputSize, digest);
     unsigned char *sha = SHA1(input, inputSize, hashBuf);
-
 }
 
 

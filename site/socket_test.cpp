@@ -7,6 +7,11 @@
 #include <stdint.h>
 #include "encodeTest.cpp"
 
+/*
+ * TODO:
+ * Encode text to utf-8 before upgrading to websocket
+ */
+
 
 
 int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
@@ -82,6 +87,12 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
             memcpy(&wsHeader[sizeof(initReg)-1], &base64, (baseSize*sizeof(uint8_t))-1);
         }
 
+        int utfSize = calc_utf_size(headerSize);
+        char *wsUTF8 = (char*)malloc(utfSize);
+
+        char_to_utf8(wsUTF8, utfSize, &wsHeader, headerSize);
+
+
         //send header to client to complete upgrade
         send(conn, wsHeader, headerSize-2, 0);
 
@@ -89,6 +100,7 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
 
         //make sure to send to client before freeing memory
         free(hashBuf);
+        free(wsUTF8);
         return 0;
     }
     return -1;
