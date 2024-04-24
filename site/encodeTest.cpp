@@ -45,50 +45,46 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
         base64i+=4;
         i+=3;
     }
+    std::cout << "quick math: " << digestSize%3 << "\n";
+    i-=3;
+    base64-=4;
 
     //convert the remaining 2 bits
-    std::cout << "base size: " << baseSize << "\n";
-    std::cout << "base64i: " << base64i << "\n";
     if(digestSize%3 == 2) {
-        i-=3;
-        base64-=4;
         uint32_t bits = (digest[i] << 16) | 0x00 << 8 | 0x00;
-        std::cout << "base64i: " << base64i << "\n";
        
         if(base64i+3 < baseSize) {
-            //base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
-            //base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
-            //base64[base64i+2] = '=';
-            //base64[base64i+3] = '=';
+            std::cout << "rightious brother\n";
+            base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
+            base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
+            base64[base64i+2] = '=';
+            base64[base64i+3] = '=';
+            std::cout << "base64i test:\n";
+            std::cout << base64i+2 << "\n";
+            std::cout << base64i+3 << "\n";
             
-            base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
-            base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
-            base64[baseSize-1] = '=';
-            base64[baseSize] = '=';
+            //base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
+            //base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
+            //base64[baseSize-1] = '=';
+            //base64[baseSize] = '=';
         }
     }
     //else if((i-2) - digestSize == -1){
-    else if(digestSize%3 == 2) {
-        i-=3;
-        base64-=4;
+    else if(digestSize%3 == 1) {
         uint32_t bits = (digest[i] << 16) | digest[i+1] << 8 | 0x00;
         
-        std::cout << "base64i: lower " << base64i+3 << "\n";
 
         if(base64i+3 < baseSize) {
-            //base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
-            //base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
-            //base64[base64i+2] = encode_table[(bits >> 6) & 0b0011'1111];
-            //base64[base64i+3] = '=';
-            base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
-            base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
-            base64[baseSize-1] = '=';
-            base64[baseSize] = '=';
+            base64[base64i] = encode_table[(bits >> 18) & 0b0011'1111];
+            base64[base64i+1] = encode_table[(bits >> 12) & 0b0011'1111];
+            base64[base64i+2] = encode_table[(bits >> 6) & 0b0011'1111];
+            base64[base64i+3] = '=';
+            //base64[baseSize-3] = encode_table[(bits >> 18) & 0b0011'1111];
+            //base64[baseSize-2] = encode_table[(bits >> 12) & 0b0011'1111];
+            //base64[baseSize-1] = '=';
+            //base64[baseSize] = '=';
         }
     }
-    std::cout << "Digest size: " << digestSize << "\n";
-    std::cout << "i: " << i+3 << "\n";
-    std::cout << "base64i: " << base64i+3 << "\n";
 }
 
 /*
