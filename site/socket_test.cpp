@@ -87,20 +87,17 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
             memcpy(&wsHeader[sizeof(initReg)-1], &base64, (baseSize*sizeof(uint8_t))-1);
         }
 
-        int utfSize = calc_utf_size(headerSize);
-        char *wsUTF8 = (char*)malloc(utfSize);
 
-        char_to_utf8(wsUTF8, utfSize, &wsHeader, headerSize);
-
-
+        std::cout << "Sending header\n";
         //send header to client to complete upgrade
         send(conn, wsHeader, headerSize-2, 0);
+
 
         free(wsHeader);
 
         //make sure to send to client before freeing memory
         free(hashBuf);
-        free(wsUTF8);
+        //free(wsUTF8);
         return 0;
     }
     return -1;
@@ -155,6 +152,7 @@ int main() {
         recv(serverSocket, buffer, sizeof(buffer), 0);
         std::cout << "Socket upgraded\n";
     }
+        
 
     while(true) {
         free(buffer);

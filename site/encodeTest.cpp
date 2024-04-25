@@ -2,6 +2,12 @@
 #include <openssl/sha.h>
 #include <stdint.h>
 
+//typedef uint32_t u8chr_t;
+
+//static uint8_t const u8_length[] = {1,1,1,1,1,1,1,1,0,0,0,0,2,2,3,4};
+
+//#define u8length(s) u8_length[(((uint8_t*)(s))[0] & 0xFF) >> 4];
+
 
 char constexpr encode_table[] {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
@@ -27,13 +33,13 @@ int calc_utf_size(int strSize) {
 }
 
 
-void char_to_utf8(char *utfString, int utfSize, char *asciiString, int asciiStringSize) {
-    if(asciiString != NULL) {
-        if(utf8proc_utf8fromu(asciiString, asciiStringSize, utfString, utfSize) != 0) {
-            std::cout << "UTF-8 conversion failed\n";
-        }
-    } 
-}
+//void char_to_utf8(char *utfString, int utfSize, char *asciiString, int asciiStringSize) {
+//   if(asciiString != NULL) {
+//        if(utf8proc_utf8fromu(asciiString, asciiStringSize, utfString, utfSize) != 0) {
+//            std::cout << "UTF-8 conversion failed\n";
+//        }
+//    } 
+//}
 
 
 void gen_sha_hash(const uint8_t input[], int inputSize, uint8_t *hashBuf)  {
