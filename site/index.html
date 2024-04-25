@@ -30,6 +30,7 @@
             }
 
             ws.onerror = (error) => {
+                console.log("Error code ", error.code)
                 console.log("Error ", error.stack);
                 console.log("Error ", error.name);
                 console.log("Error ", error.message);

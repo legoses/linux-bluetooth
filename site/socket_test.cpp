@@ -9,7 +9,8 @@
 
 /*
  * TODO:
- * Encode text to utf-8 before upgrading to websocket
+ * Re work to either user a pointer to socket descriptor
+ * or send ws upgrade frame in main function
  */
 
 
@@ -58,7 +59,6 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     if(get_websocket_key(readBuffer, bufSize, webkey, sizeof(webkey)) == 0) {
         std::cout << webkey << "\n";
         //allocate 2 more than needed forr \r\n return characters
-        //int baseSize = 60; //figure out a way to calculate this instead of hard coding
         int baseSize = base64_length(20) + 4; //add 4 to include space for \r\n\r\n packet ender
         
         uint8_t base64[baseSize];
@@ -90,7 +90,24 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
 
         std::cout << "Sending header\n";
         //send header to client to complete upgrade
+
+        std::cout << wsHeader << "\n";
+        /*
+        for(int i = 0; i < headerSize-2; i++) {
+            std::cout << wsHeader[i];
+            if(wsHeader[i] == '\0') {
+                std::cout << "\nNull terminator found at " << i << "\n";
+                break;
+            }
+            std::cout << "\n";
+        }
+        */
+
+        //headerSize-2 to avoid sending null terminators
         send(conn, wsHeader, headerSize-2, 0);
+       
+        char testBuf[1024];
+        recv(conn, testBuf, 1024, 0);
 
 
         free(wsHeader);
