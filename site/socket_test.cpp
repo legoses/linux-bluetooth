@@ -1,16 +1,18 @@
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <cstring>
 #include <unistd.h>
 #include <string>
 #include <openssl/sha.h>
 #include <stdint.h>
+#include <unistd.h>
 #include "encodeTest.cpp"
+
 
 /*
  * TODO:
  * Re work to either user a pointer to socket descriptor
  * or send ws upgrade frame in main function
+ * Handle sizing of header init frame better
  */
 
 
@@ -49,10 +51,52 @@ int get_websocket_key(char *header, const int headerSize, unsigned char buffer[]
 }
 
 
-int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
-    std::cout << "Upgrading connection\n";
+char *create_ws_header(char *buf, int size, int &hSize) {
+    char initReg[] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
     uint8_t webkey[60];
     memset(webkey, '\0', sizeof(webkey));
+    char *wsHeader;
+
+    if(get_websocket_key(buf, size, webkey, sizeof(webkey)) == 0) {
+        int baseSize = base64_length(20) + 4; //add 4 to include space for \r\n\r\n packet ender
+        
+        uint8_t base64[baseSize];
+        int hashSize = SHA_DIGEST_LENGTH;
+        uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
+
+        gen_sha_hash(webkey, sizeof(webkey)-1, hashBuf);
+
+        gen_base64(hashBuf, hashSize, base64, baseSize-4);
+        
+        memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
+
+        int headerSize = sizeof(initReg) + baseSize;
+        if(headerSize < 1024) {
+            wsHeader = (char*)malloc(headerSize*sizeof(char));
+            hSize = headerSize;
+            //copy header and base64 code into string
+            memcpy(wsHeader, initReg, sizeof(initReg));
+        
+            if(headerSize - sizeof(initReg) >= baseSize) {
+                std::cout << "copying text to: " << sizeof(initReg) << "\n";
+                memcpy(&wsHeader[sizeof(initReg)-1], &base64, (baseSize*sizeof(uint8_t))-1);
+            }
+            
+            return wsHeader;
+        }
+        else {
+            std::cout << "Size of header too large\n";
+        }
+    }
+    wsHeader = NULL;
+    return wsHeader;
+}
+
+/*
+int upgrade_to_ws(char *readBuffer, const int bufSize, int &conn) {
+    std::cout << "Upgrading connection\n";
+    //uint8_t webkey[60];
+    //memset(webkey, '\0', sizeof(webkey));
 
     char initReg[] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
 
@@ -92,24 +136,10 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
         //send header to client to complete upgrade
 
         std::cout << wsHeader << "\n";
-        /*
-        for(int i = 0; i < headerSize-2; i++) {
-            std::cout << wsHeader[i];
-            if(wsHeader[i] == '\0') {
-                std::cout << "\nNull terminator found at " << i << "\n";
-                break;
-            }
-            std::cout << "\n";
-        }
-        */
 
         //headerSize-2 to avoid sending null terminators
         send(conn, wsHeader, headerSize-2, 0);
        
-        char testBuf[1024];
-        recv(conn, testBuf, 1024, 0);
-
-
         free(wsHeader);
 
         //make sure to send to client before freeing memory
@@ -119,6 +149,7 @@ int upgrade_to_ws(char *readBuffer, const int bufSize, int conn) {
     }
     return -1;
 }
+*/
 
 
 int main() {
@@ -163,31 +194,36 @@ int main() {
     std::cout << "print test: \n";
     std::cout << readBuffer << "\n";
 
+
+    /*------------create ws header----------*/
+    int headerSize;
+    char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
+
+    //test free
     //get websocket key
     //upgrade http connection to websocket
+    /*
     if(upgrade_to_ws(readBuffer, bufSize, clientSocket) == 0) {
+        std::cout << "upgrade success\n";
         recv(serverSocket, buffer, sizeof(buffer), 0);
         std::cout << "Socket upgraded\n";
     }
-        
-
-    while(true) {
+    */   
+    if(wsHeader != NULL) {
+        send(clientSocket, wsHeader, headerSize-2, 0);
         free(buffer);
         buffer = (char*)malloc(bufSize*sizeof(char));
         recv(serverSocket, buffer, bufSize, 0);
-        std::cout << "Message from client:\n";
-        for(int i = 0; i < bufSize; i++) {
-            std::cout << (uint8_t)buffer[i];
-        }
-        std::cout << "\n";
-        break;
-
     }
-    std::cout << "\n";
+
+    while(true) {
+        sleep(10);
+    }
 
     free(buffer);
     free(readBuffer);
     close(serverSocket);
+    free(wsHeader);
     return 0;
 }
 
