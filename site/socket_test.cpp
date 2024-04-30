@@ -1,4 +1,3 @@
-#include <netinet/in.h>
 #include <cstring>
 #include <unistd.h>
 #include <string>
@@ -199,16 +198,6 @@ int main() {
     int headerSize;
     char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
 
-    //test free
-    //get websocket key
-    //upgrade http connection to websocket
-    /*
-    if(upgrade_to_ws(readBuffer, bufSize, clientSocket) == 0) {
-        std::cout << "upgrade success\n";
-        recv(serverSocket, buffer, sizeof(buffer), 0);
-        std::cout << "Socket upgraded\n";
-    }
-    */   
     if(wsHeader != NULL) {
         send(clientSocket, wsHeader, headerSize-2, 0);
         free(buffer);
