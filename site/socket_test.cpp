@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <string>
 #include <openssl/sha.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <stdint.h>
 #include <unistd.h>
 #include "encodeTest.cpp"
@@ -78,7 +80,7 @@ char *create_ws_header(char *buf, int size, int &hSize) {
         
             if(headerSize - sizeof(initReg) >= baseSize) {
                 std::cout << "copying text to: " << sizeof(initReg) << "\n";
-                memcpy(&wsHeader[sizeof(initReg)-1], &base64, (baseSize*sizeof(uint8_t))-1);
+                memcpy(&wsHeader[sizeof(initReg)-1], base64, (baseSize*sizeof(uint8_t)));
             }
             
             return wsHeader;
@@ -199,9 +201,9 @@ int main() {
     char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
 
     if(wsHeader != NULL) {
-        send(clientSocket, wsHeader, headerSize-2, 0);
         free(buffer);
         buffer = (char*)malloc(bufSize*sizeof(char));
+        send(clientSocket, wsHeader, headerSize, 0);
         recv(serverSocket, buffer, bufSize, 0);
     }
 
