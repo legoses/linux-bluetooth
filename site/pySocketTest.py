@@ -1,4 +1,6 @@
 #!/bin/python3
+import hashlib, base64
+'''
 import asyncio
 from websockets.server import serve
 
@@ -11,3 +13,9 @@ async def main():
         await asyncio.Future()
 
 asyncio.run(main())
+'''
+h = hashlib.sha1(b"dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+
+print("digest:", h.digest())
+print()
+print("right result:", base64.b64encode(h.digest()).decode())

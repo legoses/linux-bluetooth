@@ -66,8 +66,6 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
     }
     i-=3;
     base64i-=4;
-    std::cout << "quick math: " << i << "\n";
-    std::cout << "quick math: " << base64i+3 << "\n";
 
     //convert the remaining 2 bits
     if(digestSize%3 == 1) {
@@ -91,6 +89,7 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
             base64[base64i+3] = '=';
         }
     }
+    std::cout << "init base 64: " << base64;
 }
 
 /*
