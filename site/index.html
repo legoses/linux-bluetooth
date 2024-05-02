@@ -23,6 +23,7 @@
            // };
             ws.onopen = (event) => {
                 console.log("Websocket opened");
+                ws.send("Test message");
             }
 
             ws.onclose = (event) => {

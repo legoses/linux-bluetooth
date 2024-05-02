@@ -15,7 +15,6 @@
  */
 
 
-
 int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
     std::cout << "websocket key called\n";
 
@@ -92,6 +91,24 @@ char *create_ws_header(char *buf, int size, int &hSize) {
 }
 
 
+void recv_data(char *buffer, int bufSize) {
+    //std::cout << "bytes test:\n";
+    //std::cout << (buffer[0]&0b10000001) << "\n";
+    if((buffer[0]&0b10000001) == 0b10000001) {
+        std::cout << "129 detected\n";
+    }
+    else {
+        std::cout << "No 129\n";
+    }
+    std::cout << "first bit: " << (buffer[0] >> 7) << "\n";
+    for(int i = 0; i < bufSize; i++) {
+        //std::cout << (buffer[i] | 0b00000000) << " ";
+        printf("%02x ", buffer[i]);
+    }
+    std::cout << "\n";
+}
+
+
 int main() {
     //steps:
     // 1. Listen for http connection from client
@@ -137,13 +154,27 @@ int main() {
     char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
 
     if(wsHeader != NULL) {
-        free(buffer);
-        buffer = (char*)malloc(bufSize*sizeof(char));
         send(clientSocket, wsHeader, headerSize-1, 0);
-    }
+        memset(buffer, '\0', bufSize);
+        recv(clientSocket, buffer, bufSize, 0);
+        //read(clientSocket, buffer)
+       
+        uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
+        //detect if websocket connection was successful
+        if(buffer[0] != 0) {
+            std::cout << "Websocket Connection Successful\n";
+            while(true) {
+                recv_data(buffer, bufSize);
+                memset(connBuf, '\0', bufSize);
+                recv(clientSocket, connBuf, bufSize, 0);
 
-    while(true) {
-        sleep(10);
+                sleep(1);
+            }
+            free(connBuf);
+        }
+        else {
+            std::cout << "Error: Connection failed\n";
+        }
     }
 
     free(buffer);
