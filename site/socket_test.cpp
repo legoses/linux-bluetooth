@@ -11,9 +11,7 @@
 
 /*
  * TODO:
- * Re work to either user a pointer to socket descriptor
- * or send ws upgrade frame in main function
- * Handle sizing of header init frame better
+ * Handle incoming data from websocket, possible via function callback
  */
 
 
@@ -60,19 +58,16 @@ char *create_ws_header(char *buf, int size, int &hSize) {
 
     if(get_websocket_key(buf, size, webkey, sizeof(webkey)) == 0) {
         int baseSize = base64_length(SHA_DIGEST_LENGTH)+4; //add 4 to include space for \r\n\r\n packet ender
-        std::cout << "web key: " << sizeof(webkey) << "\n";
         
         uint8_t base64[baseSize];
         int hashSize = SHA_DIGEST_LENGTH;
         uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
 
-        std::cout << "webkey: " << webkey << "\n";
         gen_sha_hash(webkey, sizeof(webkey), hashBuf);
 
         gen_base64(hashBuf, hashSize, base64, baseSize-4);
         
         memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
-        std::cout << "Base64 Test: " << base64;
 
         int headerSize = sizeof(initReg) + baseSize;
         if(headerSize < 1024) {
@@ -136,9 +131,6 @@ int main() {
     if(read(clientSocket, readBuffer, bufSize) == 0) {
         std::cout << "Read does not wokr?\n";
     }
-    std::cout << "print test: \n";
-    std::cout << readBuffer << "\n";
-
 
     /*------------create ws header----------*/
     int headerSize;
@@ -148,7 +140,6 @@ int main() {
         free(buffer);
         buffer = (char*)malloc(bufSize*sizeof(char));
         send(clientSocket, wsHeader, headerSize-1, 0);
-        //recv(serverSocket, buffer, bufSize, 0);
     }
 
     while(true) {
