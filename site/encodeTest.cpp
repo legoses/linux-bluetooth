@@ -54,7 +54,7 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
     int i = 0;
     //printf("Printing hash: %x\n", digest);
     std::cout << "Printing hex: ";
-    std::cout << std::hex << digest;
+    std::cout << digest;
     std::cout << "\n";
     std::cout << "Converting to base64\n";
     //use 3 bytes at a time to convert into base64

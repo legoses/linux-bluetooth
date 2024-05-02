@@ -66,7 +66,8 @@ char *create_ws_header(char *buf, int size, int &hSize) {
         int hashSize = SHA_DIGEST_LENGTH;
         uint8_t *hashBuf = (uint8_t*)malloc(hashSize*sizeof(uint8_t));
 
-        gen_sha_hash(webkey, sizeof(webkey)-1, hashBuf);
+        std::cout << "webkey: " << webkey << "\n";
+        gen_sha_hash(webkey, sizeof(webkey), hashBuf);
 
         gen_base64(hashBuf, hashSize, base64, baseSize-4);
         
