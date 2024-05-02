@@ -92,20 +92,40 @@ char *create_ws_header(char *buf, int size, int &hSize) {
 
 
 void recv_data(char *buffer, int bufSize) {
-    //std::cout << "bytes test:\n";
-    //std::cout << (buffer[0]&0b10000001) << "\n";
-    if((buffer[0]&0b10000001) == 0b10000001) {
+    //check if this contains a message, and is final packet in stream
+    if((((buffer[0]&0b10000001) == 0b10000001)) && (((unsigned char)buffer[1] >> 7) == 1)) {
         std::cout << "129 detected\n";
+
+        //get length of message
+        int len = (unsigned char)buffer[1]-128;
+        if(len <= 125) {
+            uint8_t key[4];
+            uint8_t encoded[len];
+            uint8_t decoded[len];
+            
+            //memcpy(key, &buffer[2], 4);
+            //memcpy(key, &buffer[6], len);
+            memcpy(key, &buffer[2], 4);
+            memcpy(encoded, &buffer[6], len);
+
+            for(int i = 0; i < len; i++) {
+                decoded[i] = (encoded[i] ^ key[i & 0x3]);
+            }
+            std::cout << "decoded message: " << decoded << "\n";
+
+        }
+        std::cout << "Length: " << len << "\n";
+        
+
     }
     else {
         std::cout << "No 129\n";
     }
-    std::cout << "first bit: " << (buffer[0] >> 7) << "\n";
-    for(int i = 0; i < bufSize; i++) {
-        //std::cout << (buffer[i] | 0b00000000) << " ";
-        printf("%02x ", buffer[i]);
-    }
-    std::cout << "\n";
+    std::cout << "first bit: " << ((unsigned char)buffer[1] >> 7) << "\n";
+    //for(int i = 0; i < bufSize; i++) {
+    //    printf("%02x ", buffer[i]);
+    // }
+    // std::cout << "\n";
 }
 
 
@@ -159,18 +179,18 @@ int main() {
         recv(clientSocket, buffer, bufSize, 0);
         //read(clientSocket, buffer)
        
-        uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
+        //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
         //detect if websocket connection was successful
         if(buffer[0] != 0) {
             std::cout << "Websocket Connection Successful\n";
             while(true) {
                 recv_data(buffer, bufSize);
-                memset(connBuf, '\0', bufSize);
-                recv(clientSocket, connBuf, bufSize, 0);
+                memset(buffer, '\0', bufSize);
+                recv(clientSocket, buffer, bufSize, 0);
 
                 sleep(1);
             }
-            free(connBuf);
+            //free(connBuf);
         }
         else {
             std::cout << "Error: Connection failed\n";
