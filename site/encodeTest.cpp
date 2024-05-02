@@ -42,7 +42,7 @@ int calc_utf_size(int strSize) {
 //}
 
 
-void gen_sha_hash(const uint8_t input[], int inputSize, uint8_t *hashBuf)  {
+void gen_sha_hash(uint8_t input[], int inputSize, uint8_t *hashBuf)  {
     unsigned char digest[SHA_DIGEST_LENGTH] = {0};
     //unsigned char *sha = SHA1(input, inputSize, digest);
     unsigned char *sha = SHA1(input, inputSize, hashBuf);
@@ -52,7 +52,10 @@ void gen_sha_hash(const uint8_t input[], int inputSize, uint8_t *hashBuf)  {
 void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) {
     int base64i = 0;
     int i = 0;
-    
+    //printf("Printing hash: %x\n", digest);
+    std::cout << "Printing hex: ";
+    std::cout << std::hex << digest;
+    std::cout << "\n";
     std::cout << "Converting to base64\n";
     //use 3 bytes at a time to convert into base64
     while(i < digestSize) {
@@ -89,7 +92,7 @@ void gen_base64(uint8_t *digest, int digestSize, uint8_t *base64, int baseSize) 
             base64[base64i+3] = '=';
         }
     }
-    std::cout << "init base 64: " << base64;
+    std::cout << "init base 64: " << base64 << "\n";
 }
 
 /*

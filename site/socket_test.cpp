@@ -59,8 +59,8 @@ char *create_ws_header(char *buf, int size, int &hSize) {
     char *wsHeader;
 
     if(get_websocket_key(buf, size, webkey, sizeof(webkey)) == 0) {
-        int baseSize = base64_length(20)+4; //add 4 to include space for \r\n\r\n packet ender
-        std::cout << "base size: " << baseSize << "\n";
+        int baseSize = base64_length(SHA_DIGEST_LENGTH)+4; //add 4 to include space for \r\n\r\n packet ender
+        std::cout << "web key: " << sizeof(webkey) << "\n";
         
         uint8_t base64[baseSize];
         int hashSize = SHA_DIGEST_LENGTH;

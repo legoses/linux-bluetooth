@@ -14,7 +14,8 @@ async def main():
 
 asyncio.run(main())
 '''
-h = hashlib.sha1(b"dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+h = hashlib.sha1(b"mKPB16b7FjtoEz/tVSGuUQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+#h = hashlib.sha1(b"mKPB16b7FjtoEz/tVSGuUQ==")
 
 print("digest:", h.digest())
 print()

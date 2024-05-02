@@ -6,13 +6,14 @@ int main() {
     //uint8_t test[] = "this is a 20 charact";
     int testSize = sizeof(hashtxt)-1;
     
-    int total = base64_length(testSize);
+    int total = base64_length(SHA_DIGEST_LENGTH);
     uint8_t base[total];
     uint8_t *digest = (uint8_t*)malloc(SHA_DIGEST_LENGTH*sizeof(uint8_t));
 
 
     gen_sha_hash(hashtxt, testSize, digest);
-    gen_base64(hashtxt, SHA_DIGEST_LENGTH, base, total);
+    //gen_base64(hashtxt, SHA_DIGEST_LENGTH, base, total);
+    gen_base64(digest, SHA_DIGEST_LENGTH, base, total);
     std::cout << "total: " << total << "\n";
     for(int i = 0; i < total; i++) {
         std::cout << base[i];
