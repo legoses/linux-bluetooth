@@ -12,6 +12,7 @@
 /*
  * TODO:
  * Handle incoming data from websocket, possible via function callback
+ * Implement handling messages longer than 125 characters
  */
 
 
