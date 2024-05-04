@@ -92,41 +92,61 @@ char *create_ws_header(char *buf, int size, int &hSize) {
 }
 
 
-void recv_data(char *buffer, int bufSize) {
+int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
     //check if this contains a message, and is final packet in stream
+    int len;
     if((((buffer[0]&0b10000001) == 0b10000001)) && (((unsigned char)buffer[1] >> 7) == 1)) {
         std::cout << "129 detected\n";
 
         //get length of message
-        int len = (unsigned char)buffer[1]-128;
-        if(len <= 125) {
-            uint8_t key[4];
-            uint8_t encoded[len];
-            uint8_t decoded[len];
-            
-            //memcpy(key, &buffer[2], 4);
-            //memcpy(key, &buffer[6], len);
-            memcpy(key, &buffer[2], 4);
-            memcpy(encoded, &buffer[6], len);
+        int lenIndic = (unsigned char)buffer[1]-128;
+       
+        //Hold th ekey and encoded date. Decoded data will be stored in msg param
+        uint8_t key[4];
+        uint8_t *encoded;
 
-            for(int i = 0; i < len; i++) {
-                decoded[i] = (encoded[i] ^ key[i & 0x3]);
+        if(lenIndic <= 125 && lenIndic >= 0) {
+            memcpy(key, &buffer[2], 4);
+            len = lenIndic;
+           
+            if(lenIndic < 255) {
+                encoded = (uint8_t*)malloc(len*sizeof(uint8_t));
+                memcpy(encoded, &buffer[6], len);
             }
-            std::cout << "decoded message: " << decoded << "\n";
+
 
         }
-        std::cout << "Length: " << len << "\n";
-        
+        else if(lenIndic == 126) {
+            memcpy(key, &buffer[4], 4);
+            len = (unsigned char)buffer[2] << 8 | (unsigned char)buffer[3];
+           
+            //make sure len is not larger than msg buffer
+            if(len < msgSize) {
+                encoded = (uint8_t*)malloc(len*sizeof(uint8_t));
+                memcpy(encoded, &buffer[8], len);
+            }
+        }
+        else if(lenIndic == 127) { //MSB must be 0. Will most likely not be called
+            std::cout << "Recieved Message too large\n";
+            return -1;
+        }
+        else {
+            std::cout << "Unable to decode message\n";
+            return -1;
+        }
 
+        for(int i = 0; i < len; i++) {
+            std::cout << "i\n";
+            msg[i] = (encoded[i] ^ key[i & 0x3]);
+        }
+        std::cout << "decoded message: " << msg << "\n";
+        free(encoded);
+        std::cout << "Length: " << len << "\n";
     }
     else {
         std::cout << "No 129\n";
     }
-    std::cout << "first bit: " << ((unsigned char)buffer[1] >> 7) << "\n";
-    //for(int i = 0; i < bufSize; i++) {
-    //    printf("%02x ", buffer[i]);
-    // }
-    // std::cout << "\n";
+    return len;
 }
 
 
@@ -184,9 +204,11 @@ int main() {
         //detect if websocket connection was successful
         if(buffer[0] != 0) {
             std::cout << "Websocket Connection Successful\n";
+            uint8_t msg[bufSize];
+
             while(true) {
-                recv_data(buffer, bufSize);
-                memset(buffer, '\0', bufSize);
+                int msgLen = recv_data(buffer, bufSize, msg, bufSize);
+                memset(buffer, '\0', msgLen);
                 recv(clientSocket, buffer, bufSize, 0);
 
                 sleep(1);

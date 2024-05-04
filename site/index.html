@@ -15,15 +15,10 @@
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
 
-           //ws.onopen = function(e) {
-           //   console.log("Socket opened");
-           //   alert("[open] Connection established");
-           //   alert("Sending to server");
-           //   ws.send("My name is John");
-           // };
             ws.onopen = (event) => {
                 console.log("Websocket opened");
-                ws.send("Test messages");
+                //ws.send("Another test message dfgdfgdfg");
+                ws.send("fesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879p");
             }
 
             ws.onclose = (event) => {
