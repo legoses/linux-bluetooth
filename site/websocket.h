@@ -12,19 +12,23 @@
 #include <iostream>
 
 class WebsocketServer : public Encode {
-    const char *ipAddr;
-    const int port;
     int listenSocket;
-
-    public:
-    WebsocketServer(char addr[], int port);
-    ~WebsocketServer();
+    sockaddr_in serverAddr;
+    struct sockaddr clientAddr;
+    int clientAddrSize;
+    int clientSocket;
 
     int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
     char *create_ws_header(char *buf, int size, int &hSize); 
 
     int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-};
 
+    public:
+    WebsocketServer(int port);
+    ~WebsocketServer();
+
+
+    void begin();
+};
 #endif

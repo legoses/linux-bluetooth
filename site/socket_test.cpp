@@ -2,12 +2,13 @@
 
 /*
  * TODO:
- * Handle incoming data from websocket, possible via function callback
+ * Websocket will have callback on data recieve. This will take data and act on bluetooth portion of program.
+ * This will likely be some sort of async or threaded processes
  */
 
 int main() {
-    char serverListen[] = "local";
-    WebsocketServer server(serverListen, 8080);
+    uint8_t serverListen[] = "0.0.0.0";
+    WebsocketServer server(8080);
     
     return 0;
 }

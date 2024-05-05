@@ -24,7 +24,7 @@ int Encode::calc_utf_size(int strSize) {
 //}
 
 
-void Encode::gen_sha_hash(uint8_t input[], int inputSize, uint8_t *hashBuf)  {
+void Encode::gen_sha_hash(uint8_t input[], int inputSize, uint8_t *hashBuf) {
     unsigned char digest[SHA_DIGEST_LENGTH] = {0};
     //unsigned char *sha = SHA1(input, inputSize, digest);
     unsigned char *sha = SHA1(input, inputSize, hashBuf);

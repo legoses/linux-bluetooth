@@ -1,20 +1,86 @@
 #include "websocket.h"
 //#include <websocket.h>
 
-WebsocketServer::WebsocketServer(char addr[], int port)
-    : ipAddr{addr}
-    , port(port) {
+//create socket
+WebsocketServer::WebsocketServer(int port) {
 
-    int listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
 
     //allow program use reuse address
-    if(setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, 1, sizeof(int)) < 0) {
+    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEADDR, (const void*)1, sizeof(int)) < 0) {
         std::cout << "reuse addt failed\n";
     }
-    if(setsockopt(listenSocket, SOL_SOCKET, SO_REUSEPORT, 1, sizeof(int)) < 0) {
+    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEPORT, (const void*)1, sizeof(int)) < 0) {
         std::cout << "reuse addt failed\n";
     }
     
+    this->serverAddr.sin_family = AF_INET;
+    this->serverAddr.sin_port = htons(8080);
+
+    this->serverAddr.sin_addr.s_addr = INADDR_ANY;
+    this->clientAddrSize = sizeof(clientAddr);
+}
+
+WebsocketServer::~WebsocketServer() {
+    close(this->listenSocket);
+}
+
+
+//begin connection to websocket server
+//have this return some kind of value (bool, int) to signify value recieved
+void WebsocketServer::begin() {
+    bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
+    listen(this->listenSocket, 5);
+
+    this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+
+    const int bufSize = 1024;
+    char *buffer = (char*)malloc(bufSize*sizeof(char));
+    char *readBuffer = (char*)malloc(bufSize*sizeof(char));
+      
+    std::cout << "Reading input\n";
+    std::cout << sizeof(readBuffer);
+    if(read(clientSocket, readBuffer, bufSize) == 0) {
+        std::cout << "Read does not wokr?\n";
+    }
+
+    int headerSize;
+    char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
+
+    if(wsHeader != NULL) {
+        send(clientSocket, wsHeader, headerSize-1, 0);
+        memset(buffer, '\0', bufSize);
+        recv(clientSocket, buffer, bufSize, 0);
+        //read(clientSocket, buffer)
+       
+        //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
+        //detect if websocket connection was successful
+        if(buffer[0] != 0) {
+            std::cout << "Websocket Connection Successful\n";
+            uint8_t msg[bufSize];
+            memset(msg, '\0', bufSize);
+
+            while(true) {
+                int msgLen = recv_data(buffer, bufSize, msg, bufSize);
+                if(msgLen != -1) {
+                    std::cout << "Recieved message: " << msg << "\n";
+                    memset(msg, '\0', msgLen);
+                }
+                recv(clientSocket, buffer, bufSize, 0);
+
+                sleep(1);
+            }
+            //free(connBuf);
+        }
+        else {
+            std::cout << "Error: Connection failed\n";
+        }
+    }
+
+    free(buffer);
+    free(readBuffer);
+    free(wsHeader);
+
 }
 
 int WebsocketServer::get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
