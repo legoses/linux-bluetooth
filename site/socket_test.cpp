@@ -136,10 +136,9 @@ int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
         }
 
         for(int i = 0; i < len; i++) {
-            std::cout << "i\n";
+            //decode message
             msg[i] = (encoded[i] ^ key[i & 0x3]);
         }
-        std::cout << "decoded message: " << msg << "\n";
         free(encoded);
         std::cout << "Length: " << len << "\n";
     }
@@ -205,10 +204,14 @@ int main() {
         if(buffer[0] != 0) {
             std::cout << "Websocket Connection Successful\n";
             uint8_t msg[bufSize];
+            memset(msg, '\0', bufSize);
 
             while(true) {
                 int msgLen = recv_data(buffer, bufSize, msg, bufSize);
-                memset(buffer, '\0', msgLen);
+                if(msgLen != -1) {
+                    std::cout << "Recieved message: " << msg << "\n";
+                    memset(msg, '\0', msgLen);
+                }
                 recv(clientSocket, buffer, bufSize, 0);
 
                 sleep(1);
