@@ -1,14 +1,38 @@
 #include "websocket.h"
+#include <future>
 
 /*
  * TODO:
  * Websocket will have callback on data recieve. This will take data and act on bluetooth portion of program.
  * This will likely be some sort of async or threaded processes
+ *
+ * Create process to encode sent information and create frame
  */
 
+void listener(Web::WebsocketServer &server) {
+    std::cout << "Listening...\n"; 
+
+    int bufSize = 1024;
+    uint8_t buf[bufSize];
+    int msgSize = server.listener(buf, bufSize);
+    if(msgSize != -1) {
+        for(int i = 0; i < msgSize; i++) {
+            std::cout << buf[i];
+        }
+        std::cout << "\n";
+    }
+}
+
 int main() {
+    //set up async listener outsize of class. Listener will call function pointer as async function
     uint8_t serverListen[] = "0.0.0.0";
-    WebsocketServer server(8080);
+    Web::WebsocketServer server(8080);
+
+    //std::string tst = "this is a test";
+    char tst[] = "this is a test";
+    server.begin();
+    std::cout << "Sending info\n";
+    server.send_data(tst, sizeof(tst));
     
     return 0;
 }

@@ -2,16 +2,20 @@
 //#include <websocket.h>
 
 //create socket
-WebsocketServer::WebsocketServer(int port) {
+Web::WebsocketServer::WebsocketServer(int port) {
 
-    this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
+    this->listenSocket = (int)socket(AF_INET, SOCK_STREAM, 0);
+    if(this->listenSocket < 0) {
+        std::cout << "Error opening socket\n";
+    }
+    int reuse = 1;
 
     //allow program use reuse address
-    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEADDR, (const void*)1, sizeof(int)) < 0) {
+    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) < 0) {
         std::cout << "reuse addt failed\n";
     }
-    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEPORT, (const void*)1, sizeof(int)) < 0) {
-        std::cout << "reuse addt failed\n";
+    if(setsockopt(this->listenSocket, SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(int)) < 0) {
+        std::cout << "reuse port failed\n";
     }
     
     this->serverAddr.sin_family = AF_INET;
@@ -21,14 +25,14 @@ WebsocketServer::WebsocketServer(int port) {
     this->clientAddrSize = sizeof(clientAddr);
 }
 
-WebsocketServer::~WebsocketServer() {
+Web::WebsocketServer::~WebsocketServer() {
     close(this->listenSocket);
 }
 
 
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
-void WebsocketServer::begin() {
+void Web::WebsocketServer::begin() {
     bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
     listen(this->listenSocket, 5);
 
@@ -48,9 +52,9 @@ void WebsocketServer::begin() {
     char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
 
     if(wsHeader != NULL) {
-        send(clientSocket, wsHeader, headerSize-1, 0);
+        send(this->clientSocket, wsHeader, headerSize-1, 0);
         memset(buffer, '\0', bufSize);
-        recv(clientSocket, buffer, bufSize, 0);
+        recv(this->clientSocket, buffer, bufSize, 0);
         //read(clientSocket, buffer)
        
         //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
@@ -60,16 +64,21 @@ void WebsocketServer::begin() {
             uint8_t msg[bufSize];
             memset(msg, '\0', bufSize);
 
+            //this function just establishes connection
+            //listening should be handled elsewhere
+            /*
             while(true) {
                 int msgLen = recv_data(buffer, bufSize, msg, bufSize);
                 if(msgLen != -1) {
                     std::cout << "Recieved message: " << msg << "\n";
+                    break;
                     memset(msg, '\0', msgLen);
                 }
                 recv(clientSocket, buffer, bufSize, 0);
 
                 sleep(1);
             }
+            */
             //free(connBuf);
         }
         else {
@@ -83,7 +92,7 @@ void WebsocketServer::begin() {
 
 }
 
-int WebsocketServer::get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
+int Web::WebsocketServer::get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
     std::cout << "websocket key called\n";
 
     char searchStr[] = "Sec-WebSocket-Key: ";
@@ -113,11 +122,12 @@ int WebsocketServer::get_websocket_key(char *header, const int headerSize, unsig
         }
     }
     std::cout << "websocket key not found\n";
+
     return ret;
 }
 
 
-char *WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
+char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
     char initReg[] = "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ";
     uint8_t webkey[60];
     memset(webkey, '\0', sizeof(webkey));
@@ -159,7 +169,7 @@ char *WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
 }
 
 
-int WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
+int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
     //check if this contains a message, and is final packet in stream
     int len;
     if((((buffer[0]&0b10000001) == 0b10000001)) && (((unsigned char)buffer[1] >> 7) == 1)) {
@@ -213,4 +223,31 @@ int WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msg
         std::cout << "No 129\n";
     }
     return len;
+}
+
+
+//create frame before sending to client
+void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
+    //add check for packet size later
+   uint8_t header[] = {b'0001', } 
+}
+
+
+//send packet to client
+void Web::WebsocketServer::send_data(char msg[], int size) {
+    
+    uint8_t packet[this->maxPktSize];
+    create_frame(packet, msg, size);
+    send(this->clientSocket, msg, size, 0);
+}
+
+
+int Web::WebsocketServer::listener(uint8_t buf[], int bufSize) {
+    char *rawBuf = (char*)malloc(bufSize*sizeof(char));
+    recv(this->clientSocket, rawBuf, bufSize, 0);
+    
+    int getData = recv_data(rawBuf, bufSize, buf, bufSize);
+
+    free(rawBuf);
+    return getData;
 }

@@ -17,12 +17,16 @@
 
             ws.onopen = (event) => {
                 console.log("Websocket opened");
-                //ws.send("Another test message dfgdfgdfg");
-                ws.send("fesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879p");
+                ws.send("Another test message dfgdfgdfg");
+                //ws.send("fesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879p");
             }
 
             ws.onclose = (event) => {
                 console.log("Connection closed");
+            }
+            
+            ws.onmessage = (event) => {
+                console.log(event.data);
             }
 
             ws.onerror = (error) => {

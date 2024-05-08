@@ -11,24 +11,31 @@
 #include "encode.h"
 #include <iostream>
 
-class WebsocketServer : public Encode {
-    int listenSocket;
-    sockaddr_in serverAddr;
-    struct sockaddr clientAddr;
-    int clientAddrSize;
-    int clientSocket;
+namespace Web {
+    class WebsocketServer : public Encode {
+        int listenSocket;
+        sockaddr_in serverAddr;
+        struct sockaddr clientAddr;
+        int clientAddrSize;
+        int clientSocket;
+        int maxPktSize = 2000;
 
-    int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
+        int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
-    char *create_ws_header(char *buf, int size, int &hSize); 
+        char *create_ws_header(char *buf, int size, int &hSize); 
 
-    int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
+        //parses data recieved
+        int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
+        void create_frame(char buf[], char msg[], int msgLen);
 
-    public:
-    WebsocketServer(int port);
-    ~WebsocketServer();
+        public:
+        WebsocketServer(int port);
+        ~WebsocketServer();
 
+        void begin();
+        void send_data(char msg[], int size);
+        int listener(uint8_t buf[], int bufSize);
+    };
 
-    void begin();
 };
 #endif
