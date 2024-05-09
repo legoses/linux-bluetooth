@@ -4,7 +4,7 @@
 //create socket
 Web::WebsocketServer::WebsocketServer(int port) {
 
-    this->listenSocket = (int)socket(AF_INET, SOCK_STREAM, 0);
+    this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(this->listenSocket < 0) {
         std::cout << "Error opening socket\n";
     }
@@ -229,7 +229,16 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 //create frame before sending to client
 void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
     //add check for packet size later
-   uint8_t header[] = {b'0001', } 
+    if(msgLen < 126) {
+        //uint8_t header[this->maxPktSize];
+        //snprintf(buf, 200, "%d%d%d\r\n\r\n", 129, msgLen, msg);
+        buf[0] = 129; //indicate this is the final frame, and that it contains text
+        buf[1] = msgLen; //set mask bit to 0, and indicate message length
+        memcpy(&buf[2], msg, msgLen); //copy message to buffer
+        memcpy(&buf[2+msgLen], "\r\n\r\n", 4); //end the packet
+        std::cout << "Frame created\n";
+
+    }
 }
 
 
@@ -238,7 +247,7 @@ void Web::WebsocketServer::send_data(char msg[], int size) {
     
     uint8_t packet[this->maxPktSize];
     create_frame(packet, msg, size);
-    send(this->clientSocket, msg, size, 0);
+    send(this->clientSocket, msg, size+2, 0);
 }
 
 

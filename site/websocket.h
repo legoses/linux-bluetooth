@@ -10,15 +10,17 @@
 #include <unistd.h>
 #include "encode.h"
 #include <iostream>
+#include <future>
+
 
 namespace Web {
     class WebsocketServer : public Encode {
-        int listenSocket;
+        static int listenSocket;
         sockaddr_in serverAddr;
         struct sockaddr clientAddr;
         int clientAddrSize;
         int clientSocket;
-        int maxPktSize = 2000;
+        //int maxPktSize = 2000;
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
@@ -26,13 +28,13 @@ namespace Web {
 
         //parses data recieved
         int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-        void create_frame(char buf[], char msg[], int msgLen);
+        void create_frame(uint8_t buf[], char msg[], int msgLen);
 
         public:
         WebsocketServer(int port);
         ~WebsocketServer();
 
-        void begin();
+        void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
         int listener(uint8_t buf[], int bufSize);
     };
