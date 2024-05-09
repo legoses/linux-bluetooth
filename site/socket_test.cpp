@@ -10,24 +10,21 @@
  * Create function pointer to pass to class. This can be called from inside the class
  */
 
-void listener(Web::WebsocketServer &server) {
-    std::cout << "Listening...\n"; 
-
-    int bufSize = 1024;
-    uint8_t buf[bufSize];
-    int msgSize = server.listener(buf, bufSize);
-    if(msgSize != -1) {
-        for(int i = 0; i < msgSize; i++) {
-            std::cout << buf[i];
-        }
-        std::cout << "\n";
+void websocket_cb(uint8_t msg[], int size) {
+    for(int i = 0; i < size; i++) {
+        std::cout << msg[i];
     }
+    std::cout << "\n";
 }
+
 
 int main() {
     //set up async listener outsize of class. Listener will call function pointer as async function
     uint8_t serverListen[] = "0.0.0.0";
     Web::WebsocketServer server(8080);
+    //void (*callback)(uint8_t[], int);
+    //callback = websocket_cb;
+    server.set_cb(websocket_cb);
 
     server.begin();
     

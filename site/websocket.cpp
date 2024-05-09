@@ -64,22 +64,7 @@ void Web::WebsocketServer::begin() {
             uint8_t msg[bufSize];
             memset(msg, '\0', bufSize);
 
-            //this function just establishes connection
-            //listening should be handled elsewhere
-            /*
-            while(true) {
-                int msgLen = recv_data(buffer, bufSize, msg, bufSize);
-                if(msgLen != -1) {
-                    std::cout << "Recieved message: " << msg << "\n";
-                    break;
-                    memset(msg, '\0', msgLen);
-                }
-                recv(clientSocket, buffer, bufSize, 0);
-
-                sleep(1);
-            }
-            */
-            //free(connBuf);
+            listener();
         }
         else {
             std::cout << "Error: Connection failed\n";
@@ -170,6 +155,7 @@ char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
 
 
 int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
+    std::cout << "Data recieved\n";
     //check if this contains a message, and is final packet in stream
     int len;
     if((((buffer[0]&0b10000001) == 0b10000001)) && (((unsigned char)buffer[1] >> 7) == 1)) {
@@ -250,13 +236,24 @@ void Web::WebsocketServer::send_data(char msg[], int size) {
     send(this->clientSocket, msg, size+2, 0);
 }
 
+//listen for incoming messages
+int Web::WebsocketServer::listener() {
+    std::cout << "Listening for messages...\n";
+    int bufSize = 1024;
+    char *buffer = (char*)malloc(bufSize*sizeof(char));
+    uint8_t msg[bufSize];
+    while(true) {
+        //reset buffers
+        memset(msg, '\0', bufSize);
+        memset(buffer, '\0', bufSize);
 
-int Web::WebsocketServer::listener(uint8_t buf[], int bufSize) {
-    char *rawBuf = (char*)malloc(bufSize*sizeof(char));
-    recv(this->clientSocket, rawBuf, bufSize, 0);
-    
-    int getData = recv_data(rawBuf, bufSize, buf, bufSize);
+        recv(this->clientSocket, buffer, bufSize, 0);
+        int size = recv_data(buffer, bufSize, msg, bufSize);
+        func_cb(msg, size);
+    }
+}
 
-    free(rawBuf);
-    return getData;
+
+void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t[], int)) {
+   this->func_cb = funcptr; 
 }

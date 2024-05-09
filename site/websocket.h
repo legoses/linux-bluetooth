@@ -15,12 +15,13 @@
 
 namespace Web {
     class WebsocketServer : public Encode {
-        static int listenSocket;
+        int listenSocket;
         sockaddr_in serverAddr;
         struct sockaddr clientAddr;
         int clientAddrSize;
         int clientSocket;
-        //int maxPktSize = 2000;
+        int maxPktSize = 2000;
+        void (*func_cb)(uint8_t[], int);
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
@@ -36,8 +37,9 @@ namespace Web {
 
         void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
-        int listener(uint8_t buf[], int bufSize);
+        //int listener(uint8_t buf[], int bufSize);
+        int listener();
+        void set_cb(void (*funcptr)(uint8_t[], int));
     };
-
 };
 #endif
