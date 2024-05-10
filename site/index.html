@@ -8,46 +8,24 @@
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
 
+
             //while(true) {
                 //sleep(1000).then(() => { console.log("sleep test"); });
             //}
 
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
+            
+            function button_click() {
+                ws.send("Button click");
+            }
 
             ws.onopen = (event) => {
                 console.log("Websocket opened");
            
                 //doesn't work because functions are async. Each function wait for one second before executing, causing them to all execute
                 //more or less at the same time
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
-                sleep(1000).then(() => { ws.send("sleep test"); });
-                sleep(1000).then(() => { console.log("sleep test"); });
+                //sleep(1000).then(() => { console.log("sleep test"); });
 
                 //ws.send("fesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879pfesfeghuioiwuehfoiqubnwdkjflhjkldhof7ui34h879p");
             }
@@ -67,5 +45,6 @@
                 console.log("Error ", error.message);
             };
         </script>
+        <button onclick="button_click()">Button test</button>
     </body>
 </html>

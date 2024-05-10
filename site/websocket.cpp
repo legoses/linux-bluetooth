@@ -25,6 +25,7 @@ Web::WebsocketServer::WebsocketServer(int port) {
     this->clientAddrSize = sizeof(clientAddr);
 }
 
+
 Web::WebsocketServer::~WebsocketServer() {
     close(this->listenSocket);
 }
@@ -33,7 +34,7 @@ Web::WebsocketServer::~WebsocketServer() {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    if (this->cbSet != 1){
+    if (this->cbSet == 1){
         bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
         listen(this->listenSocket, 5);
 
@@ -79,8 +80,8 @@ void Web::WebsocketServer::begin() {
     else {
         std::cout << "Error: callback function not set\n";
     }
-
 }
+
 
 int Web::WebsocketServer::get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize) {
     std::cout << "websocket key called\n";
@@ -162,6 +163,7 @@ char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
 //convert websocket data into readable format
 int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
     std::cout << "Data recieved\n";
+
     //check if this contains a message, and is final packet in stream
     int len;
     if((((buffer[0]&0b10000001) == 0b10000001)) && (((unsigned char)buffer[1] >> 7) == 1)) {
@@ -174,7 +176,7 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
         uint8_t key[4];
         uint8_t *encoded;
 
-        if(lenIndic <= 125 && lenIndic >= 0) {
+        if(lenIndic <= 125 && lenIndic >= 0) { //Check if length is stored as a single byte
             memcpy(key, &buffer[2], 4);
             len = lenIndic;
            
@@ -183,17 +185,17 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
                 memcpy(encoded, &buffer[6], len);
             }
         }
-        else if(lenIndic == 126) {
+        else if(lenIndic == 126) { // Check if length is stored as two bytes
             memcpy(key, &buffer[4], 4);
             len = (unsigned char)buffer[2] << 8 | (unsigned char)buffer[3];
            
             //make sure len is not larger than msg buffer
-            if(len < msgSize) {
+            if(len < msgSize) { 
                 encoded = (uint8_t*)malloc(len*sizeof(uint8_t));
                 memcpy(encoded, &buffer[8], len);
             }
         }
-        else if(lenIndic == 127) { //MSB must be 0. Will most likely not be called
+        else if(lenIndic == 127) { // Check if length is stored as 3 bytes
             std::cout << "Recieved Message too large\n";
             return -1;
         }
@@ -203,7 +205,7 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
         }
 
         for(int i = 0; i < len; i++) {
-            //decode message
+            //decode message using mask bits
             msg[i] = (encoded[i] ^ key[i & 0x3]);
         }
         free(encoded);
@@ -224,8 +226,6 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
     //add check for packet size later
     if(msgLen < 126) {
-        //uint8_t header[this->maxPktSize];
-        //snprintf(buf, 200, "%d%d%d\r\n\r\n", 129, msgLen, msg);
         buf[0] = 129; //indicate this is the final frame, and that it contains text
         buf[1] = msgLen; //set mask bit to 0, and indicate message length
         memcpy(&buf[2], msg, msgLen); //copy message to buffer
