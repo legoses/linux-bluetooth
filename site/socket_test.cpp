@@ -10,6 +10,8 @@
  * Create function pointer to pass to class. This can be called from inside the class
  *
  * Need uniform const to set max packet size
+ *
+ * figure out why msg length is being overidden after socket is spammed by javascript
  */
 
 void websocket_cb(uint8_t msg[], int size) {

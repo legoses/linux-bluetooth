@@ -22,6 +22,7 @@ namespace Web {
         int clientSocket;
         int maxPktSize = 2000;
         void (*func_cb)(uint8_t[], int);
+        int cbSet = 0;
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 

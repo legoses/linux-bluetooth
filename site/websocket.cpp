@@ -33,47 +33,52 @@ Web::WebsocketServer::~WebsocketServer() {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
-    listen(this->listenSocket, 5);
+    if (this->cbSet != 1){
+        bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
+        listen(this->listenSocket, 5);
 
-    this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+        this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
 
-    const int bufSize = 1024;
-    char *buffer = (char*)malloc(bufSize*sizeof(char));
-    char *readBuffer = (char*)malloc(bufSize*sizeof(char));
-      
-    std::cout << "Reading input\n";
-    std::cout << sizeof(readBuffer);
-    if(read(clientSocket, readBuffer, bufSize) == 0) {
-        std::cout << "Read does not wokr?\n";
-    }
-
-    int headerSize;
-    char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
-
-    if(wsHeader != NULL) {
-        send(this->clientSocket, wsHeader, headerSize-1, 0);
-        memset(buffer, '\0', bufSize);
-        recv(this->clientSocket, buffer, bufSize, 0);
-        //read(clientSocket, buffer)
-       
-        //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
-        //detect if websocket connection was successful
-        if(buffer[0] != 0) {
-            std::cout << "Websocket Connection Successful\n";
-            uint8_t msg[bufSize];
-            memset(msg, '\0', bufSize);
-
-            listener();
+        const int bufSize = 1024;
+        char *buffer = (char*)malloc(bufSize*sizeof(char));
+        char *readBuffer = (char*)malloc(bufSize*sizeof(char));
+          
+        std::cout << "Reading input\n";
+        std::cout << sizeof(readBuffer);
+        if(read(clientSocket, readBuffer, bufSize) == 0) {
+            std::cout << "Read does not wokr?\n";
         }
-        else {
-            std::cout << "Error: Connection failed\n";
-        }
-    }
 
-    free(buffer);
-    free(readBuffer);
-    free(wsHeader);
+        int headerSize;
+        char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
+
+        if(wsHeader != NULL) {
+            send(this->clientSocket, wsHeader, headerSize-1, 0);
+            memset(buffer, '\0', bufSize);
+            recv(this->clientSocket, buffer, bufSize, 0);
+            //read(clientSocket, buffer)
+           
+            //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
+            //detect if websocket connection was successful
+            if(buffer[0] != 0) {
+                std::cout << "Websocket Connection Successful\n";
+                uint8_t msg[bufSize];
+                memset(msg, '\0', bufSize);
+
+                listener();
+            }
+            else {
+                std::cout << "Error: Connection failed\n";
+            }
+        }
+
+        free(buffer);
+        free(readBuffer);
+        free(wsHeader);
+    }
+    else {
+        std::cout << "Error: callback function not set\n";
+    }
 
 }
 
@@ -154,6 +159,7 @@ char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
 }
 
 
+//convert websocket data into readable format
 int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
     std::cout << "Data recieved\n";
     //check if this contains a message, and is final packet in stream
@@ -176,8 +182,6 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
                 encoded = (uint8_t*)malloc(len*sizeof(uint8_t));
                 memcpy(encoded, &buffer[6], len);
             }
-
-
         }
         else if(lenIndic == 126) {
             memcpy(key, &buffer[4], 4);
@@ -204,15 +208,14 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
         }
         free(encoded);
         std::cout << "Length: " << len << "\n";
+        //Moved to inside the if statment to prevent large unchecked values from being returned
+        return len; 
     }
     else {
         std::cout << "No 129\n";
     }
     std::cout << "Length 2: " << len << "\n";
 
-    if(len < maxPktSize) {
-        return len;
-    }
     return -2;
 }
 
@@ -268,6 +271,7 @@ int Web::WebsocketServer::listener() {
 
 void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t[], int)) {
    this->func_cb = funcptr; 
+   this->cbSet = 1;
 }
 
 
