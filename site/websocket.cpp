@@ -208,7 +208,12 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
     else {
         std::cout << "No 129\n";
     }
-    return len;
+    std::cout << "Length 2: " << len << "\n";
+
+    if(len < maxPktSize) {
+        return len;
+    }
+    return -2;
 }
 
 
@@ -242,14 +247,21 @@ int Web::WebsocketServer::listener() {
     int bufSize = 1024;
     char *buffer = (char*)malloc(bufSize*sizeof(char));
     uint8_t msg[bufSize];
+    memset(msg, '\0', bufSize);
+    memset(buffer, '\0', bufSize);
+
     while(true) {
         //reset buffers
-        memset(msg, '\0', bufSize);
-        memset(buffer, '\0', bufSize);
 
         recv(this->clientSocket, buffer, bufSize, 0);
-        int size = recv_data(buffer, bufSize, msg, bufSize);
-        func_cb(msg, size);
+        if(buffer[0] != '\0') {
+            int size = recv_data(buffer, bufSize, msg, bufSize);
+            if(size > 0) {
+                func_cb(msg, size);
+            }
+            memset(msg, '\0', bufSize);
+            memset(buffer, '\0', bufSize);
+        }
     }
 }
 
@@ -257,3 +269,5 @@ int Web::WebsocketServer::listener() {
 void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t[], int)) {
    this->func_cb = funcptr; 
 }
+
+

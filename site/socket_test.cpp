@@ -8,9 +8,13 @@
  *
  * Seperate class will handle socket, and probably be passed to websocket server class. Or maybe class can handle multiple connections on its own?
  * Create function pointer to pass to class. This can be called from inside the class
+ *
+ * Need uniform const to set max packet size
  */
 
 void websocket_cb(uint8_t msg[], int size) {
+    std::cout << "Message sise: " << size << "\n";
+    std::cout << "function pointer called\n";
     for(int i = 0; i < size; i++) {
         std::cout << msg[i];
     }
