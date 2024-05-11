@@ -34,7 +34,7 @@ Web::WebsocketServer::~WebsocketServer() {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    if (this->cbSet == 1){
+    if (this->cbSet == 1) {
         bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
         listen(this->listenSocket, 5);
 
@@ -57,7 +57,6 @@ void Web::WebsocketServer::begin() {
             send(this->clientSocket, wsHeader, headerSize-1, 0);
             memset(buffer, '\0', bufSize);
             recv(this->clientSocket, buffer, bufSize, 0);
-            //read(clientSocket, buffer)
            
             //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
             //detect if websocket connection was successful
@@ -225,11 +224,13 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 //create frame before sending to client
 void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
     //add check for packet size later
-    if(msgLen < 126) {
-        buf[0] = 129; //indicate this is the final frame, and that it contains text
-        buf[1] = msgLen; //set mask bit to 0, and indicate message length
-        memcpy(&buf[2], msg, msgLen); //copy message to buffer
-        memcpy(&buf[2+msgLen], "\r\n\r\n", 4); //end the packet
+    int len = msgLen-1; //remove null terminator
+    if(len < 126) {
+        //buf[0] = (unsigned char)129; //indicate this is the final frame, and that it contains text
+        buf[0] = 0b10000001;
+        buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
+        memcpy(&buf[2], msg, len); //copy message to buffer
+        memcpy(&buf[2+len], "\r\n\r\n", 4); //end the packet
         std::cout << "Frame created\n";
 
     }
@@ -241,7 +242,7 @@ void Web::WebsocketServer::send_data(char msg[], int size) {
     
     uint8_t packet[this->maxPktSize];
     create_frame(packet, msg, size);
-    send(this->clientSocket, msg, size+2, 0);
+    send(this->clientSocket, msg, size+5, 0);
 }
 
 //listen for incoming messages
@@ -260,7 +261,9 @@ int Web::WebsocketServer::listener() {
         if(buffer[0] != '\0') {
             int size = recv_data(buffer, bufSize, msg, bufSize);
             if(size > 0) {
+                char tstMsg[] = "hello";
                 func_cb(msg, size);
+                send_data(tstMsg, sizeof(tstMsg));
             }
             memset(msg, '\0', bufSize);
             memset(buffer, '\0', bufSize);
