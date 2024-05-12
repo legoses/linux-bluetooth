@@ -229,6 +229,8 @@ void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
         //buf[0] = (unsigned char)129; //indicate this is the final frame, and that it contains text
         buf[0] = 0b10000001;
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
+
+        printf("Test hex: %x\n", buf[0]);
         memcpy(&buf[2], msg, len); //copy message to buffer
         memcpy(&buf[2+len], "\r\n\r\n", 4); //end the packet
         std::cout << "Frame created\n";
@@ -242,7 +244,7 @@ void Web::WebsocketServer::send_data(char msg[], int size) {
     
     uint8_t packet[this->maxPktSize];
     create_frame(packet, msg, size);
-    send(this->clientSocket, msg, size+5, 0);
+    send(this->clientSocket, packet, size+5, 0);
 }
 
 //listen for incoming messages
