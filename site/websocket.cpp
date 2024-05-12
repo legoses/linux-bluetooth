@@ -56,7 +56,7 @@ void Web::WebsocketServer::begin() {
         if(wsHeader != NULL) {
             send(this->clientSocket, wsHeader, headerSize-1, 0);
             memset(buffer, '\0', bufSize);
-            recv(this->clientSocket, buffer, bufSize, 0);
+            //recv(this->clientSocket, buffer, bufSize, 0);
            
             //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
             //detect if websocket connection was successful
