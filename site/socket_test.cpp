@@ -14,6 +14,8 @@
  * figure out why msg length is being overidden after socket is spammed by javascript
  *
  * After init websocket connection, waits for extra packet before actually listening. Fix this
+ *
+ * Create raw socket for ping/pong control frames to test connection to client?
  */
 
 void websocket_cb(uint8_t msg[], int size) {

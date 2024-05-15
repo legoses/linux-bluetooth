@@ -31,6 +31,15 @@ Web::WebsocketServer::~WebsocketServer() {
 }
 
 
+void Web::WebsocketServer::print_frame(char *frame, int len) {
+    std::cout << "Printing frame:\n\n";
+    for(int i = 0; i < len; i++) {
+        std::cout << frame[i];
+    }
+    std::cout << "\n\n";
+}
+
+
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
@@ -54,12 +63,21 @@ void Web::WebsocketServer::begin() {
         char *wsHeader = create_ws_header(readBuffer, bufSize, headerSize);
 
         if(wsHeader != NULL) {
-            send(this->clientSocket, wsHeader, headerSize-1, 0);
+            std::cout << "Init WS upgrade\n";
             memset(buffer, '\0', bufSize);
-            //recv(this->clientSocket, buffer, bufSize, 0);
+            send(this->clientSocket, wsHeader, headerSize-1, 0);
+            recv(this->clientSocket, buffer, bufSize, 0);
+
+            //use ping/pong frame to test connection is alive
+            //Check if connection has been terminated
+            //read(this->listenSocket, readBuffer, bufSize);
+            //print_frame(readBuffer, bufSize);
+
            
             //uint8_t *connBuf = (uint8_t*)malloc(bufSize*sizeof(uint8_t));
             //detect if websocket connection was successful
+            //listener();
+            
             if(buffer[0] != 0) {
                 std::cout << "Websocket Connection Successful\n";
                 uint8_t msg[bufSize];
@@ -133,7 +151,9 @@ char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
         gen_sha_hash(webkey, sizeof(webkey), hashBuf);
 
         gen_base64(hashBuf, hashSize, base64, baseSize-4);
-        
+       
+
+        //THIS HAS BEEN CHANGED FOR TESTING PURPOSES.
         memcpy(&base64[baseSize-4], "\r\n\r\n", 4);
 
         int headerSize = sizeof(initReg) + baseSize;
@@ -241,10 +261,13 @@ void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
 
 //send packet to client
 void Web::WebsocketServer::send_data(char msg[], int size) {
-    
     uint8_t packet[this->maxPktSize];
     create_frame(packet, msg, size);
+    std::cout << "Sending data\n";
+    std::cout << (int)packet[0] << "\n";
+    std::cout << (int)packet[1] << "\n\n";
     send(this->clientSocket, packet, size+5, 0);
+    sleep(1);
 }
 
 //listen for incoming messages
@@ -257,20 +280,23 @@ int Web::WebsocketServer::listener() {
     memset(buffer, '\0', bufSize);
 
     while(true) {
-        //reset buffers
-
+        //std::cout << "\n\nListening...\n";
         recv(this->clientSocket, buffer, bufSize, 0);
         if(buffer[0] != '\0') {
             int size = recv_data(buffer, bufSize, msg, bufSize);
+            std::cout << "Size test: " << size << "\n";
             if(size > 0) {
                 char tstMsg[] = "hello";
                 func_cb(msg, size);
                 send_data(tstMsg, sizeof(tstMsg));
+            
+                //reset buffers
+                memset(msg, '\0', bufSize);
+                memset(buffer, '\0', bufSize);
             }
-            memset(msg, '\0', bufSize);
-            memset(buffer, '\0', bufSize);
         }
     }
+    free(buffer);
 }
 
 
