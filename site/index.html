@@ -20,6 +20,7 @@
             
             function button_click(arg) {
                 ws.send(arg);
+                console.log("Button pressed");
             }
 
             ws.onopen = (event) => {

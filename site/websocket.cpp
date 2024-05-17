@@ -31,10 +31,10 @@ Web::WebsocketServer::~WebsocketServer() {
 }
 
 
-void Web::WebsocketServer::print_frame(char *frame, int len) {
+void Web::WebsocketServer::print_frame(uint8_t frame[], int len) {
     std::cout << "Printing frame:\n\n";
     for(int i = 0; i < len; i++) {
-        std::cout << frame[i];
+        std::cout << (int)frame[i] << " ";
     }
     std::cout << "\n\n";
 }
@@ -55,7 +55,7 @@ void Web::WebsocketServer::begin() {
           
         std::cout << "Reading input\n";
         std::cout << sizeof(readBuffer);
-        if(read(clientSocket, readBuffer, bufSize) == 0) {
+        if(read(this->clientSocket, readBuffer, bufSize) == 0) {
             std::cout << "Read does not wokr?\n";
         }
 
@@ -242,15 +242,15 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 
 
 //create frame before sending to client
-void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
+void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     //add check for packet size later
-    int len = msgLen-1; //remove null terminator
+    //int len = msgLen-1; //remove null terminator
     if(len < 126) {
         //buf[0] = (unsigned char)129; //indicate this is the final frame, and that it contains text
         buf[0] = 0b10000001;
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
-        printf("Test hex: %x\n", buf[0]);
+        //printf("Test hex: %x\n", buf[0]);
         memcpy(&buf[2], msg, len); //copy message to buffer
         memcpy(&buf[2+len], "\r\n\r\n", 4); //end the packet
         std::cout << "Frame created\n";
@@ -261,14 +261,15 @@ void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int msgLen) {
 
 //send packet to client
 void Web::WebsocketServer::send_data(char msg[], int size) {
+    int len = size-1;
     uint8_t packet[this->maxPktSize];
-    create_frame(packet, msg, size);
-    std::cout << "Sending data\n";
-    std::cout << (int)packet[0] << "\n";
-    std::cout << (int)packet[1] << "\n\n";
-    send(this->clientSocket, packet, size+5, 0);
-    sleep(1);
+    
+    create_frame(packet, msg, len);
+    print_frame(packet, len+6);
+    
+    send(this->clientSocket, packet, len+6, 0);
 }
+
 
 //listen for incoming messages
 int Web::WebsocketServer::listener() {
@@ -278,10 +279,12 @@ int Web::WebsocketServer::listener() {
     uint8_t msg[bufSize];
     memset(msg, '\0', bufSize);
     memset(buffer, '\0', bufSize);
+    int get;
 
-    while(true) {
+    while((get = recv(this->clientSocket, buffer, bufSize, 0)) > 0) {
         //std::cout << "\n\nListening...\n";
-        recv(this->clientSocket, buffer, bufSize, 0);
+        std::cout << "message recieved\n";
+        //send(this->clientSocket, packet, 11, 0);
         if(buffer[0] != '\0') {
             int size = recv_data(buffer, bufSize, msg, bufSize);
             std::cout << "Size test: " << size << "\n";
@@ -296,7 +299,10 @@ int Web::WebsocketServer::listener() {
             }
         }
     }
+    std::cout << "Error: " << get << "\n";
+    std::cout << "Socket closed\n";
     free(buffer);
+    return 0;
 }
 
 
