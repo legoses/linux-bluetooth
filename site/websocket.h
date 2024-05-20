@@ -30,7 +30,7 @@ namespace Web {
 
         //parses data recieved
         int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-        void create_frame(uint8_t buf[], char msg[], int msgLen);
+        void create_frame(char buf[], char msg[], int msgLen);
         void print_frame(uint8_t frame[], int len);
 
         public:
