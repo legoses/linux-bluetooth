@@ -242,7 +242,7 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 
 
 //create frame before sending to client
-void Web::WebsocketServer::create_frame(char buf[], char msg[], int len) {
+void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     //add check for packet size later
 
     if(len < 126) {
@@ -264,7 +264,7 @@ void Web::WebsocketServer::create_frame(char buf[], char msg[], int len) {
 //send packet to client
 void Web::WebsocketServer::send_data(char msg[], int len) {
     //uint8_t packet[this->maxPktSize];
-    char packet[this->maxPktSize];
+    uint8_t packet[this->maxPktSize];
     
     create_frame(packet, msg, len);
     //print_frame(packet, len+6);
@@ -282,7 +282,9 @@ int Web::WebsocketServer::listener() {
     memset(msg, '\0', bufSize);
     memset(buffer, '\0', bufSize);
     int g;
-    uint8_t testFrm[] = {(unsigned char)129, (unsigned char)9, 'h', 'e', 'l', 'l', 'o', '\r', '\n', '\r', '\n'};
+
+    //delete after done testing
+    uint8_t testPkt[] = {0b10000001, 9, 'h', 'e', 'l', 'l'};
 
     while((g = recv(this->clientSocket, buffer, bufSize, 0)) > 0) {
         //std::cout << "\n\nListening...\n";
@@ -293,8 +295,17 @@ int Web::WebsocketServer::listener() {
             std::cout << "Size test: " << size << "\n";
             if(size > 0) {
                 char tstMsg[] = "hello";
-                func_cb(msg, size);
-                send_data(tstMsg, sizeof(tstMsg)-1);
+                //func_cb(msg, size);
+                //send_data(tstMsg, sizeof(tstMsg)-1);
+                sleep(1);
+                send(this->clientSocket, testPkt, 6, 0);
+                testPkt[2] = 'x';
+                sleep(1);
+                std::cout << "Sending second packet\n";
+                send(this->clientSocket, testPkt, 6, 0);
+                
+                std::cout << "sent\n";
+
                 //send_data(testFrm, sizeof(testFrm));
                 
                 //reset buffers
