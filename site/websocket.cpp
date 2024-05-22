@@ -253,9 +253,9 @@ void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
         //buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
-        //printf("Test hex: %x\n", buf[0]);
+        //make sure len includes just the message and not any \r\n that may come after
         memcpy(&buf[2], msg, len); //copy message to buffer
-        memcpy(&buf[2+len], "\r\n\r\n", 4); //end the packet
+        //memcpy(&buf[2+len], "\r\n\r\n", 4); //end the packet
         std::cout << "Frame created\n";
     }
 }
@@ -269,7 +269,7 @@ void Web::WebsocketServer::send_data(char msg[], int len) {
     create_frame(packet, msg, len);
     //print_frame(packet, len+6);
     
-    send(this->clientSocket, packet, len+6, 0);
+    send(this->clientSocket, packet, len+2, 0);
 }
 
 
@@ -284,7 +284,7 @@ int Web::WebsocketServer::listener() {
     int g;
 
     //delete after done testing
-    uint8_t testPkt[] = {0b10000001, 9, 'h', 'e', 'l', 'l'};
+    uint8_t testPkt[] = {0b10000001, 4, 'h', 'e', 'l', 'l'};
 
     while((g = recv(this->clientSocket, buffer, bufSize, 0)) > 0) {
         //std::cout << "\n\nListening...\n";
@@ -295,16 +295,16 @@ int Web::WebsocketServer::listener() {
             std::cout << "Size test: " << size << "\n";
             if(size > 0) {
                 char tstMsg[] = "hello";
-                //func_cb(msg, size);
-                //send_data(tstMsg, sizeof(tstMsg)-1);
-                sleep(1);
-                send(this->clientSocket, testPkt, 6, 0);
-                testPkt[2] = 'x';
-                sleep(1);
-                std::cout << "Sending second packet\n";
-                send(this->clientSocket, testPkt, 6, 0);
+                func_cb(msg, size);
+                send_data(tstMsg, sizeof(tstMsg)-1);
+                //sleep(1);
+                //send(this->clientSocket, testPkt, 6, 0);
+                //testPkt[2] = 'x';
+                //sleep(1);
+                //std::cout << "Sending second packet\n";
+                //send(this->clientSocket, testPkt, 6, 0);
                 
-                std::cout << "sent\n";
+                //std::cout << "sent\n";
 
                 //send_data(testFrm, sizeof(testFrm));
                 
