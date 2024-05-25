@@ -273,8 +273,6 @@ int Web::WebsocketServer::listener() {
     memset(buffer, '\0', this->maxPktSize);
     int g;
 
-    //delete after done testing
-
     while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
         std::cout << "message recieved\n";
         if(buffer[0] != '\0') {

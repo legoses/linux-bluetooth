@@ -6,7 +6,7 @@
 #include <vector>
 #include <local_adapter.h>
 #include <found_ble.h>
-#include <web_socket.h>
+#include <websocket.h>
 #include <encode.h>
 /*
  * TODO:
@@ -69,7 +69,7 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             
         }
         std::cout << "\n";
-        it++;
+        ++it;
     }
 
     std::cout << "\n\n--------------------------\n\n";
