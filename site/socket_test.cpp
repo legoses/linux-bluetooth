@@ -18,13 +18,27 @@
  * Create raw socket for ping/pong control frames to test connection to client?
  */
 
-void websocket_cb(uint8_t msg[], int size) {
-    std::cout << "Message sise: " << size << "\n";
-    std::cout << "function pointer called\n";
-    for(int i = 0; i < size; i++) {
-        std::cout << msg[i];
+//void websocket_cb(uint8_t msg[], int size) {
+void websocket_cb(uint8_t *msg, int size) {
+    std::cout << "call test\n";
+    if(size == 1) {
+        switch(msg[0]) {
+            case 0:
+                for(int i = 0; i < 10; i++) {
+                    std::cout << "test 0: " << i << "\n";
+                    sleep(1);
+                }
+                break;
+            case 1:
+                for(int i = 0; i < 10; i++) {
+                    std::cout << "test 1: " << i << "\n";
+                    sleep(1);
+                }
+                break;
+            default:
+                std::cout << "Invalid input recieved\n";
+        }
     }
-    std::cout << "\n";
 }
 
 
@@ -35,6 +49,10 @@ int main() {
     //void (*callback)(uint8_t[], int);
     //callback = websocket_cb;
     server.set_cb(websocket_cb);
+    server.set_threading(true);
+    //std::thread threaded_cb(websocket_cb, std::ref(msg), size);
+
+    //threaded_cb.join();
 
     server.begin();
     

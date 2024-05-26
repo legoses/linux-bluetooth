@@ -83,13 +83,7 @@ void Web::WebsocketServer::begin() {
                 std::cout << "Websocket Connection Successful\n";
                 uint8_t msg[this->maxPktSize];
                 memset(msg, '\0', this->maxPktSize);
-                
-                if(this->thread == false) {
-                    listener();
-                }
-                else {
-                    threaded_listener();
-                }
+                listener();
             }
             else {
                 std::cout << "Error: Connection failed\n";
@@ -270,49 +264,6 @@ void Web::WebsocketServer::send_data(char msg[], int len) {
 }
 
 
-//break processess off in threads
-int Web::WebsocketServer::threaded_listener() {
-    if(this->thread == true) {
-        std::cout << "Threaded listening for messages...\n";
-
-        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-        //uint8_t msg[this->maxPktSize];
-        //will probable need to have this called in a thread so messages to not overwrite eachother
-        uint8_t *msg = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
-        memset(msg, '\0', this->maxPktSize);
-        memset(buffer, '\0', this->maxPktSize);
-        int g;
-
-        while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
-            std::cout << "message recieved\n";
-            if(buffer[0] != '\0') {
-                int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-                std::cout << "Size test: " << size << "\n";
-                if(size > 0) {
-                    std::thread threaded_cb(this->func_cb, std::ref(msg), size);
-                    char testMsg[] = "tstMsg";
-                    send_data(testMsg, sizeof(testMsg)-1);
-                    threaded_cb.join();
-                    
-                    //reset buffers
-                    memset(msg, '\0', this->maxPktSize);
-                    memset(buffer, '\0', this->maxPktSize);
-                }
-            }
-        }
-        std::cout << "Error: " << g << "\n";
-        std::cout << "Socket closed\n";
-        free(buffer);
-        free(msg);
-    }
-    else {
-        std::cout << "Error: Called threaded listener when threading is not enabled.\n";
-    }
-
-    return 0;
-}
-
-
 //listen for incoming messages
 int Web::WebsocketServer::listener() {
     std::cout << "Listening for messages...\n";
@@ -329,7 +280,7 @@ int Web::WebsocketServer::listener() {
             std::cout << "Size test: " << size << "\n";
             if(size > 0) {
                 char tstMsg[] = "hello";
-                this->func_cb(msg, size);
+                func_cb(msg, size);
                 send_data(tstMsg, sizeof(tstMsg)-1);
                 
                 //reset buffers
@@ -351,11 +302,3 @@ void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t[], int)) {
 }
 
 
-void Web::WebsocketServer::set_threading(bool opt) {
-    this->thread = opt;
-}
-
-
-bool Web::WebsocketServer::get_threading() {
-    return this->thread;
-}

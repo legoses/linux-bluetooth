@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include "encode.h"
 #include <iostream>
-#include <future>
+#include <thread>
 
 
 namespace Web {
@@ -23,6 +23,7 @@ namespace Web {
         int maxPktSize = 2000;
         void (*func_cb)(uint8_t[], int);
         int cbSet = 0;
+        bool thread = false;
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
@@ -41,7 +42,11 @@ namespace Web {
         void send_data(char msg[], int size);
         //int listener(uint8_t buf[], int bufSize);
         int listener();
+        int threaded_listener();
         void set_cb(void (*funcptr)(uint8_t[], int));
+
+        void set_threading(bool opt);
+        bool get_threading(); 
     };
 };
 #endif
