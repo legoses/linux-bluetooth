@@ -11,6 +11,7 @@
 #include "encode.h"
 #include <iostream>
 #include <thread>
+#include <vector>
 
 
 namespace Web {

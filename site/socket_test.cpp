@@ -21,6 +21,10 @@
 //void websocket_cb(uint8_t msg[], int size) {
 void websocket_cb(uint8_t *msg, int size) {
     std::cout << "call test\n";
+    for(int i = 0; i < 10; i++) {
+        std::cout << "Wait for " << i << "seconds\n";
+        sleep(1);
+    }
     if(size == 1) {
         switch(msg[0]) {
             case 0:

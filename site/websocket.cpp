@@ -282,6 +282,7 @@ int Web::WebsocketServer::threaded_listener() {
         memset(msg, '\0', this->maxPktSize);
         memset(buffer, '\0', this->maxPktSize);
         int g;
+        std::vector<std::thread> holdThread;
 
         while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
             std::cout << "message recieved\n";
@@ -289,14 +290,19 @@ int Web::WebsocketServer::threaded_listener() {
                 int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
                 std::cout << "Size test: " << size << "\n";
                 if(size > 0) {
-                    std::thread threaded_cb(this->func_cb, std::ref(msg), size);
+                    //instead of constantly creating and destroying threads, create thread pool
+                    //std::thread threaded_cb(this->func_cb, std::ref(msg), size);
+                    holdThread.push_back(std::thread(this->func_cb, std::ref(msg), size));
+
+                    //Test to JS console has something to output
+                    //delete later
                     char testMsg[] = "tstMsg";
                     send_data(testMsg, sizeof(testMsg)-1);
-                    threaded_cb.join();
+
                     
                     //reset buffers
-                    memset(msg, '\0', this->maxPktSize);
-                    memset(buffer, '\0', this->maxPktSize);
+                    memset(msg, '\0', size);
+                    memset(buffer, '\0', g);
                 }
             }
         }
