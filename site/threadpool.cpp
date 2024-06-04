@@ -1,110 +1,56 @@
 #include "threadpool.h"
 
-inline void ThreadPool::begin(int num) {
-    //this will call an executable once, even if called by
-    //multiple threads
-    //I think the brackets contain the contents of Args, allowing for an undefined amount of arguments
-    std::call_once(once_, [this, num]() {
-        wlock lock(mtx_);
-        stop_ = false;
-        cancel_ = false;
-        workers_.reserve(num);
+ThreadPool::ThreadPool(int num_threads) {
+    //make sure number of threads does not exceed hardware maximum
+    for(int i = 0; i < num_threads; i++) {
+        threads_.emplace_back([this] {
+            while(true) {
+                std::function<void()> task;
+                //unlock the qeueu before executing a task so other threads can queue tasks
+                {
+                    std::unique_lock<std::mutex> lock(queue_mutex_);
 
-        //bind calls a function and passes arguments boudn to Args
-        //defined in template<Args... args> wrappers
-        for(int i = 0; i < num; i++) {
-            workers_.emplace_back(std::bind(&threadpool::spawn, this));
-        }
-        inited = true;
-    });
-}
+                    //wait until there is a task to execute or the pool is stopped
+                    cv_.wait(lock, [this] {
+                        return !tasks_.empty() || stop_;
+                    });
 
-int a :w
+                    //if the pool is stopped and there are no tasks remaining, exit the thread
+                    if(stop_ && tasks_.empty()) {
+                        return;
+                    }
 
-
-//runs continously throughout threadpool lifetime
-inline void ThreadPool::spawn() {
-    for(;;) {
-        bool pop = false;
-        std::function<void()> task; //create task to add to queue
-        {
-            wlock lock(mtx_);
-            cond_.wait(lock, [this, &pop, &task] { //wait until lock is enabled
-                pop = tasks_.pop(task); //attempt to add task to qeueu
-
-                return cancel_ || stop_ || pop;
-            });
-        }
-
-        //if pool is cancled, function exits
-        if(cancel_ || (stop_ && !pop)) {
-            return;
-        }
-       
-        //execute task if it has not been calceled, stopped, and was successfully added to qeueue
-        task();
+                    //get the next task from the queue
+                    task = move(tasks_.front());
+                    tasks_.pop();
+                }
+            }
+        });
     }
 }
 
-
-inline void ThreadPool::terminate() {
+ThreadPool::~ThreadPool() {
     {
-        wlock lock(mtx_);
-        if(_is_running()) {
-            stop_ = true;
-        }
-        else {
-            return;
-        }
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        stop_ = true;
     }
 
-    cond_.notify_all();
+    //unblocks all threads
+    cv_.notify_all();
 
-    //wait for all workers to stop
-    for(auto &worker : workers_) {
-        worker.join();
+    //wait for thread to finish
+    for(auto &thread : threads_) {
+        thread.join();
     }
 }
 
 
-inline void ThreadPool::cancel() {
+void ThreadPool::enqueue(std::function<void ()> task) {
     {
-        wlock lock(mtx_);
-        if(_is_running()) {
-            cancel_ = true;
-        }
-        else {
-            return;
-        }
+        std::unique_lock<std::mutex> lock(queue_mutex_);
+        tasks_.emplace(move(task));
     }
-
-    tasks_.clear();
-    cond_.notify_all();
-
-    for(auto &worker : workers_) {
-        worker.join();
-    }
-}
-
-
-inline bool ThreadPool::_is_running() const {
-    return had_begun_ && !stop_ && !cancel_;
-}
-
-
-inline bool ThreadPool::had_begun() const {
-    rlock lock(mxt_);
-    return had_begun_;
-}
-
-
-inline bool ThreadPool::is_running() const {
-    rlock lock(mtx_);
-    return _is_running();
-}
-
-
-inline bool ThreadPool::size() const {
-    rlock lock(mtx_);
-    return workers_.size();
+    
+    //unblock a single waiting thread
+    cv_.notify_one();
 }

@@ -1,6 +1,7 @@
 #include "websocket.h"
 //#include "blocking_queue.h"
 #include "threadpool.h"
+#include <chrono>
 
 /*
  * TODO:
@@ -55,9 +56,18 @@ int main() {
     //callback = websocket_cb;
     server.set_cb(websocket_cb);
     server.set_threading(true);
-    //std::thread threaded_cb(websocket_cb, std::ref(msg), size);
 
-    //threaded_cb.join();
+    ThreadPool pool(4);
+
+    for(int i = 0; i < 5; i++) {
+        std::cout << "terst " << i << "\n\n";
+        pool.enqueue([i] {
+            std::cout << "Task " << i << " is running on the thread " << std::this_thread::get_id() << "\n";
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        });
+    }
+
+
 
     server.begin();
     
