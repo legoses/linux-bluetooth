@@ -2,7 +2,6 @@
 #define SOCKET_TEST_H
 
 #include <cstring>
-#include <unistd.h>
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -12,6 +11,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include <cstring>
 #include "threadpool.h"
 
 
@@ -43,9 +43,10 @@ namespace Web {
         void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
         //int listener(uint8_t buf[], int bufSize);
-        void listener();
-        int threaded_listener();
         void set_cb(void (*funcptr)(uint8_t[], int));
+
+        void threaded_listener();
+        void listener();
 
         void set_threading(bool opt);
         bool get_threading(); 

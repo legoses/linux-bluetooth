@@ -271,7 +271,7 @@ void Web::WebsocketServer::send_data(char msg[], int len) {
 
 
 //break processess off in threads
-int Web::WebsocketServer::threaded_listener() {
+void Web::WebsocketServer::threaded_listener() {
     /*
     std::cout << "Threaded listening for messages...\n";
 
@@ -316,9 +316,7 @@ int Web::WebsocketServer::threaded_listener() {
 
     //lambda function
     //use this as the capture clause so thread can access class variables
-    pool.enqueue(listener);
-
-    return 0;
+    pool.enqueue(Web::WebsocketServer::listener);
 }
 
 
