@@ -21,29 +21,27 @@
  */
 
 //void websocket_cb(uint8_t msg[], int size) {
-void websocket_cb(uint8_t *msg, int size) {
+void websocket_cb(uint8_t msg) {
+    //msg is only 1 bit?
+    int tst = 1;
     std::cout << "call test\n";
-    for(int i = 0; i < 10; i++) {
-        std::cout << "Wait for " << i << "seconds\n";
-        sleep(1);
+    if(newMsg == 0) {
+        std::cout << "msg equal 0\n";
     }
-    if(size == 1) {
-        switch(msg[0]) {
-            case 0:
-                for(int i = 0; i < 10; i++) {
-                    std::cout << "test 0: " << i << "\n";
-                    sleep(1);
-                }
-                break;
-            case 1:
-                for(int i = 0; i < 10; i++) {
-                    std::cout << "test 1: " << i << "\n";
-                    sleep(1);
-                }
-                break;
-            default:
-                std::cout << "Invalid input recieved\n";
-        }
+    else {
+        std::cout << "msg not \n";
+        std::cout << "size: " << sizeof(tst) << "\n\n";
+    }
+    switch(msg) {
+        case 0:
+            std::cout << "test 0: \n";
+            break;
+        case 1:
+            std::cout << "test 1: \n"; 
+            break;
+        default:
+            std::cout << "Invalid input recieved\n";
+            std::cout << "Value sent: " << msg << "\n";
     }
 }
 
@@ -69,7 +67,7 @@ int main() {
     }
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    sleep(1);
+    sleep(1)i;
 
     std::cout << "attempting to stop\n";
     pool.stop();

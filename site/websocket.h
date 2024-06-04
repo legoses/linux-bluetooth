@@ -23,9 +23,14 @@ namespace Web {
         int clientAddrSize;
         int clientSocket;
         int maxPktSize = 2000;
-        void (*func_cb)(uint8_t[], int);
+        void (*func_cb)(uint8_t);
         int cbSet = 0;
         bool thread = false;
+
+        //handle actions
+        uint8_t action = 0;
+        bool actionModified = false;
+
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
 
@@ -43,7 +48,7 @@ namespace Web {
         void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
         //int listener(uint8_t buf[], int bufSize);
-        void set_cb(void (*funcptr)(uint8_t[], int));
+        void set_cb(void (*funcptr)(uint8_t));
 
         void threaded_listener();
         void listener();
