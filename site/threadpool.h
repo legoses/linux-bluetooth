@@ -22,6 +22,7 @@ public:
     ThreadPool(int num_threads = std::thread::hardware_concurrency());
     ~ThreadPool();
     void enqueue(std::function<void()> task);
+    void stop();
 };
 
 #endif

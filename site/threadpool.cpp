@@ -1,7 +1,6 @@
 #include "threadpool.h"
 
 ThreadPool::ThreadPool(int num_threads) {
-    //make sure number of threads does not exceed hardware maximum
     for(int i = 0; i < num_threads; i++) {
         threads_.emplace_back([this] {
             while(true) {
@@ -16,14 +15,14 @@ ThreadPool::ThreadPool(int num_threads) {
                     });
 
                     //if the pool is stopped and there are no tasks remaining, exit the thread
-                    if(stop_ && tasks_.empty()) {
+                    if(this->stop_ && tasks_.empty()) {
                         return;
                     }
 
-                    //get the next task from the queue
                     task = move(tasks_.front());
                     tasks_.pop();
                 }
+                task();
             }
         });
     }

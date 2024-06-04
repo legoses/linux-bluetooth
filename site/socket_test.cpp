@@ -1,7 +1,7 @@
 #include "websocket.h"
 //#include "blocking_queue.h"
-#include "threadpool.h"
-#include <chrono>
+//#include "threadpool.h"
+//#include <chrono>
 
 /*
  * TODO:
@@ -57,6 +57,7 @@ int main() {
     server.set_cb(websocket_cb);
     server.set_threading(true);
 
+    /*
     ThreadPool pool(4);
 
     for(int i = 0; i < 5; i++) {
@@ -67,8 +68,12 @@ int main() {
         });
     }
 
+    //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    sleep(1);
 
-
+    std::cout << "attempting to stop\n";
+    pool.stop();
+*/
     server.begin();
     
     return 0;

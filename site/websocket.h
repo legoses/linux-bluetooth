@@ -12,6 +12,7 @@
 #include <iostream>
 #include <thread>
 #include <vector>
+#include "threadpool.h"
 
 
 namespace Web {
@@ -42,7 +43,7 @@ namespace Web {
         void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
         //int listener(uint8_t buf[], int bufSize);
-        int listener();
+        void listener();
         int threaded_listener();
         void set_cb(void (*funcptr)(uint8_t[], int));
 
