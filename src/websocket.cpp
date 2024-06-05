@@ -1,4 +1,4 @@
-#include "websocket.h"
+#include <websocket.h>
 //#include <websocket.h>
 
 //create socket
@@ -83,7 +83,13 @@ void Web::WebsocketServer::begin() {
                 std::cout << "Websocket Connection Successful\n";
                 uint8_t msg[this->maxPktSize];
                 memset(msg, '\0', this->maxPktSize);
-                listener();
+                
+                if(this->thread == false) {
+                    listener();
+                }
+                else {
+                    threaded_listener();
+                }
             }
             else {
                 std::cout << "Error: Connection failed\n";
@@ -264,15 +270,69 @@ void Web::WebsocketServer::send_data(char msg[], int len) {
 }
 
 
+//break processess off in threads
+void Web::WebsocketServer::threaded_listener() {
+    std::cout << "threaded listener call\n";
+
+    //create a listener thread and action thread
+    ThreadPool pool(2);
+
+    //lambda function
+    //use this as the capture clause so thread can access class variables
+    //handle websocket connection
+    pool.enqueue([this] {
+        std::cout << "Listening for messages...\n";
+        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
+        uint8_t msg[this->maxPktSize];
+        memset(msg, '\0', this->maxPktSize);
+        memset(buffer, '\0', this->maxPktSize);
+        int g;
+        while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
+            std::cout << "message recieved\n";
+            if(buffer[0] != '\0') {
+                int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
+                std::cout << "Size test: " << size << "\n";
+                if(size > 0) {
+                    char tstMsg[] = "hello";
+                    if(size == 1) {
+                        this->action = msg[0];
+                        this->actionModified = true;
+                    }
+                    //send_data(tstMsg, sizeof(tstMsg)-1);
+                    
+                    //reset buffers
+                    memset(msg, '\0', this->maxPktSize);
+                    memset(buffer, '\0', this->maxPktSize);
+                }
+            }
+        }
+        std::cout << "Error: " << g << "\n";
+        std::cout << "Socket closed\n";
+        free(buffer);
+    });
+
+    //handle actions signaled by listener thread
+    pool.enqueue([this] {
+        while(true) {
+            if(this->actionModified == true) {
+                this->func_cb(this->action); 
+                this->actionModified = false;
+            }
+            //check for changes ever 100 milliseconds
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    });
+}
+
+
 //listen for incoming messages
-int Web::WebsocketServer::listener() {
+void Web::WebsocketServer::listener() {
     std::cout << "Listening for messages...\n";
     char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
     uint8_t msg[this->maxPktSize];
     memset(msg, '\0', this->maxPktSize);
     memset(buffer, '\0', this->maxPktSize);
     int g;
-
     while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
         std::cout << "message recieved\n";
         if(buffer[0] != '\0') {
@@ -280,7 +340,10 @@ int Web::WebsocketServer::listener() {
             std::cout << "Size test: " << size << "\n";
             if(size > 0) {
                 char tstMsg[] = "hello";
-                func_cb(msg, size);
+
+                if(size == 1) {
+                    this->func_cb(msg[0]);
+                }
                 send_data(tstMsg, sizeof(tstMsg)-1);
                 
                 //reset buffers
@@ -292,13 +355,20 @@ int Web::WebsocketServer::listener() {
     std::cout << "Error: " << g << "\n";
     std::cout << "Socket closed\n";
     free(buffer);
-    return 0;
 }
 
 
-void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t[], int)) {
+void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t)) {
    this->func_cb = funcptr; 
    this->cbSet = 1;
 }
 
 
+void Web::WebsocketServer::set_threading(bool opt) {
+    this->thread = opt;
+}
+
+
+bool Web::WebsocketServer::get_threading() {
+    return this->thread;
+}

@@ -10,8 +10,8 @@
 #include <encode.h>
 /*
  * TODO:
- * Make sure web socket library actually works before going further with this.
- * Think through how each componnent will interact with each other
+ * Expand websocket site to include more than start and stop scan
+ * Figure out a way to have callback access dbus functions to control bluetooth
  */
 
     
@@ -201,6 +201,23 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
+//handle callbacks for webserver class
+void websocket_cb(uint8_t msg) {
+    int message = (int)msg - '0';
+
+    switch(message) {
+        case 0:
+            std::cout << "start scan placeholder\n";
+            break;
+        case 1:
+            std::cout << "stop scan placehoder\n";
+            break;
+        default:
+            std::cout << "Invalid input recieved\n";
+    }
+}
+
+
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
@@ -235,18 +252,24 @@ int main() {
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
-        local.start_scan();
+        Web::WebsocketServer server(8080);
+        server.set_cb(websocket_cb);
+        server.set_threading(true);
+
+        server.begin();
+
+        //local.start_scan();
      
         //scan for 10 seconds
-        for(int i = 0; i < 10; i++) {
-            sleep(1);
-        }
+        //for(int i = 0; i < 10; i++) {
+        //    sleep(1);
+        //}
         //remove recievers when no longer needed
         connection->remove_free_signal_proxy(addSignal);
         connection->remove_free_signal_proxy(removeSignal);
         std::cout << "Testing after free\n";
         
-        local.stop_scan();
+        //local.stop_scan();
     }
     else {
         std::cout << "Bluetooth device not found\n";
