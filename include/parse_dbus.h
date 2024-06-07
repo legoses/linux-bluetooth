@@ -10,6 +10,7 @@ class BLEObject {
     std::shared_ptr<DBus::ObjectProxy> object;
 
     public:
+    BLEObject() = default;
     void set_path(std::string path);
     void set_interface(std::string intrface);
     void set_object(std::shared_ptr<DBus::ObjectProxy> object);

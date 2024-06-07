@@ -12,6 +12,8 @@
  * TODO:
  * Expand websocket site to include more than start and stop scan
  * Figure out a way to have callback access dbus functions to control bluetooth
+ * Instead of using callback, use a member function that will return a value. Run that in a while loop
+ * Pass some sort of variable pointer so both can access its value
  */
 
     
@@ -19,7 +21,6 @@
 typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>> BLEDeviceObject;
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
-
 
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Device at: " << path << " found\n";
@@ -253,17 +254,14 @@ int main() {
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
         Web::WebsocketServer server(8080);
-        server.set_cb(websocket_cb);
+
+
+        //lambda callback for websocket class
+        //server.set_cb(&web_cb);
         server.set_threading(true);
 
         server.begin();
 
-        //local.start_scan();
-     
-        //scan for 10 seconds
-        //for(int i = 0; i < 10; i++) {
-        //    sleep(1);
-        //}
         //remove recievers when no longer needed
         connection->remove_free_signal_proxy(addSignal);
         connection->remove_free_signal_proxy(removeSignal);

@@ -3,9 +3,8 @@
 
 LocalAdapter::LocalAdapter(DBus::MethodProxy<void()> &scanStart, DBus::MethodProxy<void()> &scanStop)
     : start_scan_proxy(scanStart)
-    , stop_scan_proxy(scanStop) //initialize variables
-{
-}
+    , stop_scan_proxy(scanStop) 
+{}//initialize variables
 
 
 void LocalAdapter::create_adapter(std::shared_ptr<DBus::ObjectProxy> object, std::string path, std::string interface) {
