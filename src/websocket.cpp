@@ -275,12 +275,12 @@ void Web::WebsocketServer::threaded_listener() {
     std::cout << "threaded listener call\n";
 
     //create a listener thread and action thread
-    //ThreadPool pool(2);
+    ThreadPool pool(2);
 
     //lambda function
     //use this as the capture clause so thread can access class variables
     //handle websocket connection
-    this->pool.enqueue([this] {
+    pool.enqueue([this] {
         std::cout << "Listening for messages...\n";
         char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
         uint8_t msg[this->maxPktSize];
@@ -312,7 +312,7 @@ void Web::WebsocketServer::threaded_listener() {
     });
 
     //handle actions signaled by listener thread
-    this->pool.enqueue([this] {
+    pool.enqueue([this] {
         while(true) {
             if(this->actionModified == true) {
                 this->func_cb(this->action); 
@@ -357,14 +357,8 @@ void Web::WebsocketServer::listener() {
     free(buffer);
 }
 
-/*
+
 void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t)) {
-   this->func_cb = funcptr; 
-   this->cbSet = 1;
-}
-*/
-template <typename T>
-void Web::WebsocketServer::set_cb(const T *funcptr) {
    this->func_cb = funcptr; 
    this->cbSet = 1;
 }

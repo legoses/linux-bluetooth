@@ -22,6 +22,11 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
+
+struct BLEWrapper {
+    static LocalAdapter *bleControl;
+};
+
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Device at: " << path << " found\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
@@ -238,7 +243,11 @@ int main() {
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
     DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer = method_proxy();
-    LocalAdapter local = parse_known_devices(connection, answer, knownBleDevices);
+    LocalAdapter *local = parse_known_devices(connection, answer, knownBleDevices);
+
+    struct BLEWrapper obj;
+    obj.bleControl = (LocalAdapter*)malloc(sizeof(LocalAdapter));
+    obj.bleControl = local;
 
     //parse info from answer. Get local adapter object 
     std::cout << "Get path test: " << local.get_path() << "\n";
