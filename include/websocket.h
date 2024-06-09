@@ -27,6 +27,8 @@ namespace Web {
         int cbSet = 0;
         bool thread = false;
 
+        uint8_t &msg;
+
         //handle actions
         uint8_t action = 0;
         bool actionModified = false;
@@ -36,6 +38,9 @@ namespace Web {
         //I think this is because it is abigious whether this is a function call
         //or a classs initializer, so the brackets differentiate between the two
         ThreadPool pool{2};
+
+        //store command recieved
+        uint8_t *webAction = 0;
 
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
@@ -48,7 +53,7 @@ namespace Web {
         void print_frame(uint8_t frame[], int len);
 
     public:
-        WebsocketServer(int port);
+        WebsocketServer(int port, uint8_t &msg_cb);
         ~WebsocketServer();
 
         void begin(); //loops infinantly so program will not exit after called
@@ -61,6 +66,8 @@ namespace Web {
 
         void set_threading(bool opt);
         bool get_threading(); 
+
+        uint8_t *get_command();
     };
 };
 #endif

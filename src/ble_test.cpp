@@ -254,15 +254,32 @@ int main() {
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
-        Web::WebsocketServer server(8080);
+        //create variable to hold commands from websocket site
+        uint8_t cmd = 0;
+        Web::WebsocketServer server(8080, cmd);
 
 
         //lambda callback for websocket class
         server.set_cb(websocket_cb);
         server.set_threading(true);
 
-        std::cout << "[INFO] Starting Webserver\n";
+        std::cout << "Starting webserver\n";
         server.begin();
+        sleep(1);
+
+        std::cout << "sdtarting loop\n";
+        while(true) {
+            int cmdInt = (int)cmd - '0';
+            if(cmdInt != 0) {
+                std::cout << "testinhg\n";
+                std::cout << "cmd != 0!. Cmd = " << cmdInt << "\n";
+            }
+            else {
+                std::cout << "testinhgggggggggggg\n";
+                std::cout << "Nothing. equqls " << cmdInt << "\n";
+            }
+            sleep(1);
+        }
 
         //remove recievers when no longer needed
         connection->remove_free_signal_proxy(addSignal);

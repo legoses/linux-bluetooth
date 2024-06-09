@@ -2,7 +2,9 @@
 //#include <websocket.h>
 
 //create socket
-Web::WebsocketServer::WebsocketServer(int port) {
+Web::WebsocketServer::WebsocketServer(int port, uint8_t &msg_cb)
+    : msg{msg_cb}
+{
 
     this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(this->listenSocket < 0) {
@@ -23,6 +25,8 @@ Web::WebsocketServer::WebsocketServer(int port) {
 
     this->serverAddr.sin_addr.s_addr = INADDR_ANY;
     this->clientAddrSize = sizeof(clientAddr);
+    
+    //this->webAction = (uint8_t*)malloc(sizeof(uint8_t));
 }
 
 
@@ -298,8 +302,9 @@ void Web::WebsocketServer::threaded_listener() {
                 if(size > 0) {
                     char tstMsg[] = "hello";
                     if(size == 1) {
-                        this->action = msg[0];
-                        this->actionModified = true;
+                        //this->action = msg[0];
+                        //this->actionModified = true;
+                        this->msg = msg[0];
                     }
                     //send_data(tstMsg, sizeof(tstMsg)-1);
                     
@@ -344,10 +349,10 @@ void Web::WebsocketServer::listener() {
             if(size > 0) {
                 char tstMsg[] = "hello";
 
-                if(size == 1) {
-                    this->func_cb(msg[0]);
-                }
-                send_data(tstMsg, sizeof(tstMsg)-1);
+                //if(size == 1) {
+                //    this->func_cb(msg[0]);
+                //}
+                //send_data(tstMsg, sizeof(tstMsg)-1);
                 
                 //reset buffers
                 memset(msg, '\0', this->maxPktSize);
@@ -374,4 +379,9 @@ void Web::WebsocketServer::set_threading(bool opt) {
 
 bool Web::WebsocketServer::get_threading() {
     return this->thread;
+}
+
+
+uint8_t *Web::WebsocketServer::get_command() {
+    return this->webAction;
 }
