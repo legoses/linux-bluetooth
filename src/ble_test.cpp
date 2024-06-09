@@ -1,13 +1,13 @@
 #include <dbus-cxx.h>
-#include <unistd.h>
-#include <iostream>
+//#include <unistd.h>
+//#include <iostream>
 #include <string>
-#include <map>
-#include <vector>
+//#include <vector>
+//#include <map>
 #include <local_adapter.h>
 #include <found_ble.h>
 #include <websocket.h>
-#include <encode.h>
+//#include <encode.h>
 /*
  * TODO:
  * Expand websocket site to include more than start and stop scan
@@ -22,10 +22,6 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
-
-struct BLEWrapper {
-    static LocalAdapter *bleControl;
-};
 
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Device at: " << path << " found\n";
@@ -182,9 +178,9 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
                 get_interface_added(it->first, it->second, knownBleDevices);
                 break;
             }
-            itr++;
+            ++itr;
         }
-        it++;
+        ++it;
     }
     //Create class with ability to start and stop scan
     if(adapterObject != NULL) {
@@ -243,11 +239,7 @@ int main() {
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
     DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer = method_proxy();
-    LocalAdapter *local = parse_known_devices(connection, answer, knownBleDevices);
-
-    struct BLEWrapper obj;
-    obj.bleControl = (LocalAdapter*)malloc(sizeof(LocalAdapter));
-    obj.bleControl = local;
+    LocalAdapter local = parse_known_devices(connection, answer, knownBleDevices);
 
     //parse info from answer. Get local adapter object 
     std::cout << "Get path test: " << local.get_path() << "\n";
@@ -266,9 +258,10 @@ int main() {
 
 
         //lambda callback for websocket class
-        //server.set_cb(&web_cb);
+        server.set_cb(websocket_cb);
         server.set_threading(true);
 
+        std::cout << "[INFO] Starting Webserver\n";
         server.begin();
 
         //remove recievers when no longer needed

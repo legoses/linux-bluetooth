@@ -1,6 +1,5 @@
 #include <local_adapter.h>
 
-
 LocalAdapter::LocalAdapter(DBus::MethodProxy<void()> &scanStart, DBus::MethodProxy<void()> &scanStop)
     : start_scan_proxy(scanStart)
     , stop_scan_proxy(scanStop) 
@@ -20,12 +19,21 @@ void LocalAdapter::create_adapter(std::shared_ptr<DBus::ObjectProxy> object, std
 
 int LocalAdapter::start_scan() {
     //begin listening for discovery events
-
-    if(currentlyScanning == 0) {
-        std::cout << "Starting scan\n";
-        currentlyScanning = 1;
-        start_scan_proxy();
-        return 0;
+    if(startSet && stopSet) {
+        if(currentlyScanning == 0) {
+            std::cout << "Starting scan\n";
+            currentlyScanning = 1;
+            start_scan_proxy();
+            return 0;
+        }
+    }
+    else if(startSet == false){
+        std::cout << "No scan start proxy set\n";
+        return -2;
+    }
+    else {
+        std::cout << "No scan stop proxy set\n";
+        return -2;
     }
 
     std::cout << "Scan already in progress\n";

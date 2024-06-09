@@ -32,7 +32,10 @@ namespace Web {
         bool actionModified = false;
 
         //setup threads
-        //ThreadPool pool(2);
+        //when being initialized along with the class, curley brackets must be used
+        //I think this is because it is abigious whether this is a function call
+        //or a classs initializer, so the brackets differentiate between the two
+        ThreadPool pool{2};
 
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
@@ -44,7 +47,7 @@ namespace Web {
         void create_frame(uint8_t buf[], char msg[], int msgLen);
         void print_frame(uint8_t frame[], int len);
 
-        public:
+    public:
         WebsocketServer(int port);
         ~WebsocketServer();
 

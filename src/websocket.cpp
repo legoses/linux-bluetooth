@@ -44,6 +44,7 @@ void Web::WebsocketServer::print_frame(uint8_t frame[], int len) {
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
     if (this->cbSet == 1) {
+        std::cout << "Listening for connections...\n";
         //create socket
         bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
         listen(this->listenSocket, 5);
@@ -89,6 +90,8 @@ void Web::WebsocketServer::begin() {
                 }
                 else {
                     threaded_listener();
+
+                    std::cout << "Post threaded listener call\n";
                 }
             }
             else {
@@ -275,12 +278,12 @@ void Web::WebsocketServer::threaded_listener() {
     std::cout << "threaded listener call\n";
 
     //create a listener thread and action thread
-    ThreadPool pool(2);
+    //ThreadPool pool(2);
 
     //lambda function
     //use this as the capture clause so thread can access class variables
     //handle websocket connection
-    pool.enqueue([this] {
+    this->pool.enqueue([this] {
         std::cout << "Listening for messages...\n";
         char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
         uint8_t msg[this->maxPktSize];
@@ -312,7 +315,7 @@ void Web::WebsocketServer::threaded_listener() {
     });
 
     //handle actions signaled by listener thread
-    pool.enqueue([this] {
+    this->pool.enqueue([this] {
         while(true) {
             if(this->actionModified == true) {
                 this->func_cb(this->action); 
