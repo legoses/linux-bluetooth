@@ -11,9 +11,8 @@
 /*
  * TODO:
  * Expand websocket site to include more than start and stop scan
- * Figure out a way to have callback access dbus functions to control bluetooth
- * Instead of using callback, use a member function that will return a value. Run that in a while loop
- * Pass some sort of variable pointer so both can access its value
+ * Add switch case statement to while loop in main funciton to listen for commands
+ * Make sure 0 is neutral value that will not call any bluetooth funcitons in said case switch
  */
 
     
