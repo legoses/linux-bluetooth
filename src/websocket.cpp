@@ -47,69 +47,64 @@ void Web::WebsocketServer::print_frame(uint8_t frame[], int len) {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    if (this->cbSet == 1) {
-        std::cout << "Listening for connections...\n";
-        //create socket
-        bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
-        listen(this->listenSocket, 5);
+    std::cout << "Listening for connections...\n";
+    //create socket
+    bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
+    listen(this->listenSocket, 5);
 
-        //listen for connections
-        this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+    //listen for connections
+    this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
 
-        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-        char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
-          
-        std::cout << "Reading input\n";
-        std::cout << sizeof(readBuffer);
-        if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
-            std::cout << "Read does not wokr?\n";
-        }
+    char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
+    char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
+      
+    std::cout << "Reading input\n";
+    std::cout << sizeof(readBuffer);
+    if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
+        std::cout << "Read does not wokr?\n";
+    }
 
-        int headerSize;
-        char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
+    int headerSize;
+    char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
 
-        if(wsHeader != NULL) {
-            std::cout << "Init WS upgrade\n";
-            memset(buffer, '\0', this->maxPktSize);
-            send(this->clientSocket, wsHeader, headerSize-1, 0);
-            recv(this->clientSocket, buffer, this->maxPktSize, 0);
+    if(wsHeader != NULL) {
+        std::cout << "Init WS upgrade\n";
+        memset(buffer, '\0', this->maxPktSize);
+        send(this->clientSocket, wsHeader, headerSize-1, 0);
+        recv(this->clientSocket, buffer, this->maxPktSize, 0);
 
-            //use ping/pong frame to test connection is alive
-            //Check if connection has been terminated
-            //read(this->listenSocket, readBuffer, this->maxPktSize);
-            //print_frame(readBuffer, this->maxPktSize);
+        //use ping/pong frame to test connection is alive
+        //Check if connection has been terminated
+        //read(this->listenSocket, readBuffer, this->maxPktSize);
+        //print_frame(readBuffer, this->maxPktSize);
 
-           
-            //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
-            //detect if websocket connection was successful
-            //listener();
+       
+        //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
+        //detect if websocket connection was successful
+        //listener();
+        
+        if(buffer[0] != 0) {
+            std::cout << "Websocket Connection Successful\n";
+            uint8_t msg[this->maxPktSize];
+            memset(msg, '\0', this->maxPktSize);
             
-            if(buffer[0] != 0) {
-                std::cout << "Websocket Connection Successful\n";
-                uint8_t msg[this->maxPktSize];
-                memset(msg, '\0', this->maxPktSize);
-                
-                if(this->thread == false) {
-                    listener();
-                }
-                else {
-                    threaded_listener();
-
-                    std::cout << "Post threaded listener call\n";
-                }
+            if(this->thread == false) {
+                listener();
             }
             else {
-                std::cout << "Error: Connection failed\n";
+                threaded_listener();
+
+                std::cout << "Post threaded listener call\n";
             }
         }
+        else {
+            std::cout << "Error: Connection failed\n";
+        }
+    }
 
-        free(buffer);
-        free(readBuffer);
-        free(wsHeader);
-    }
-    else {
-        std::cout << "Error: callback function not set\n";
-    }
+    free(buffer);
+    free(readBuffer);
+    free(wsHeader);
 }
 
 
@@ -349,11 +344,6 @@ void Web::WebsocketServer::listener() {
             if(size > 0) {
                 char tstMsg[] = "hello";
 
-                //if(size == 1) {
-                //    this->func_cb(msg[0]);
-                //}
-                //send_data(tstMsg, sizeof(tstMsg)-1);
-                
                 //reset buffers
                 memset(msg, '\0', this->maxPktSize);
                 memset(buffer, '\0', this->maxPktSize);
@@ -363,12 +353,6 @@ void Web::WebsocketServer::listener() {
     std::cout << "Error: " << g << "\n";
     std::cout << "Socket closed\n";
     free(buffer);
-}
-
-
-void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t)) {
-   this->func_cb = funcptr; 
-   this->cbSet = 1;
 }
 
 

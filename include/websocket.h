@@ -23,15 +23,9 @@ namespace Web {
         int clientAddrSize;
         int clientSocket;
         int maxPktSize = 2000;
-        void (*func_cb)(uint8_t);
-        int cbSet = 0;
         bool thread = false;
 
         uint8_t &msg;
-
-        //handle actions
-        uint8_t action = 0;
-        bool actionModified = false;
 
         //setup threads
         //when being initialized along with the class, curley brackets must be used
@@ -58,8 +52,6 @@ namespace Web {
 
         void begin(); //loops infinantly so program will not exit after called
         void send_data(char msg[], int size);
-        //int listener(uint8_t buf[], int bufSize);
-        void set_cb(void (*funcptr)(uint8_t));
 
         void threaded_listener();
         void listener();

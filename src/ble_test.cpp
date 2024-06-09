@@ -203,23 +203,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
-//handle callbacks for webserver class
-void websocket_cb(uint8_t msg) {
-    int message = (int)msg - '0';
-
-    switch(message) {
-        case 0:
-            std::cout << "start scan placeholder\n";
-            break;
-        case 1:
-            std::cout << "stop scan placehoder\n";
-            break;
-        default:
-            std::cout << "Invalid input recieved\n";
-    }
-}
-
-
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
