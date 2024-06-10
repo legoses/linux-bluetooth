@@ -242,23 +242,24 @@ int main() {
 
 
         //lambda callback for websocket class
-        server.set_cb(websocket_cb);
         server.set_threading(true);
 
         std::cout << "Starting webserver\n";
         server.begin();
         sleep(1);
 
-        std::cout << "sdtarting loop\n";
+
+        //listen for websocket events
         while(true) {
             int cmdInt = (int)cmd - '0';
-            if(cmdInt != 0) {
-                std::cout << "testinhg\n";
-                std::cout << "cmd != 0!. Cmd = " << cmdInt << "\n";
-            }
-            else {
-                std::cout << "testinhgggggggggggg\n";
-                std::cout << "Nothing. equqls " << cmdInt << "\n";
+            switch(cmdInt) {
+                case 1:
+                    //Create a nen wdbus object to get scanned devices, unless there allready is one?
+                    local.start_scan();
+                    break;
+                case 2:
+                    local.stop_scan();
+                    break;
             }
             sleep(1);
         }

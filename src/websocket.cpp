@@ -277,7 +277,6 @@ void Web::WebsocketServer::threaded_listener() {
     std::cout << "threaded listener call\n";
 
     //create a listener thread and action thread
-    //ThreadPool pool(2);
 
     //lambda function
     //use this as the capture clause so thread can access class variables
@@ -297,8 +296,6 @@ void Web::WebsocketServer::threaded_listener() {
                 if(size > 0) {
                     char tstMsg[] = "hello";
                     if(size == 1) {
-                        //this->action = msg[0];
-                        //this->actionModified = true;
                         this->msg = msg[0];
                     }
                     //send_data(tstMsg, sizeof(tstMsg)-1);
