@@ -2,9 +2,7 @@
 
 FoundBLE::FoundBLE(int a)
     : isBLE(a)
-{
-
-}
+{}
 
 
 static const std::map<std::string, std::string> bleUUID = {
@@ -30,6 +28,8 @@ static const std::map<std::string, std::string> bleUUID = {
     {"e95d93ee-251d-470a-a062-fa1922dfa9a8", "led text"},
     {"00002902-0000-1000-8000-00805f9b34fb", "client characteristic configuration"},
 };
+
+
 //only add a uuid if this is a ble device. Otherwise return 1
 int FoundBLE::add_UUID(std::string uuid) {
     if(isBLE == 1) {

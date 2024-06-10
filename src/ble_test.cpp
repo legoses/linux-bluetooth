@@ -13,6 +13,8 @@
  * Expand websocket site to include more than start and stop scan
  * Add switch case statement to while loop in main funciton to listen for commands
  * Make sure 0 is neutral value that will not call any bluetooth funcitons in said case switch
+ * Create a thread to handle dbus operations
+ * Maybe have some sort of sending queue, so program doesnt try to send multiple things at once
  */
 
     
@@ -22,6 +24,8 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
 
+//This is what currently parses scanned devices
+//Create a class to handle this
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
     std::cout << "Device at: " << path << " found\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
@@ -29,7 +33,7 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
 
     while(it != itEnd) {
         std::string mapString = it->first;
-        std::cout << "Interface: " << mapString << "\n";
+        //std::cout << "Interface: " << mapString << "\n";
       
         //Handles string, dict(string, dict{string, variant})
         if(it->second.size() > 0 && mapString == "org.bluez.Device1") {
@@ -37,9 +41,9 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
 
             //Crash happens after this line
-            std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
+            //std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
             std::string address = it->second["Address"];
-            std::cout << "Adapter Address: " << address << "\n" << std::flush; 
+            //std::cout << "Adapter Address: " << address << "\n" << std::flush; 
            
             std::vector<std::string> vect = it->second["UUIDs"].to_vector<std::string>();
 
@@ -51,13 +55,13 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                 //Create object, signify that it is ble
                 FoundBLE bleObj(1);
                 for(int i = 0; i < UUIDCount; i++) {
-                    std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
+                    //std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
                     bleObj.add_UUID(vect[i]);
                 }
 
                 bleObj.set_path(path);
                 knownBleObj.push_back(bleObj);
-                std::cout << "test size: " << knownBleObj.size() << "\n";
+                //std::cout << "test size: " << knownBleObj.size() << "\n";
             }
             else {
                 FoundBLE bleObj(0);
@@ -149,6 +153,7 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &
 }
 
 
+//Creats an object to iteract with the ble adapter on this device
 LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices) {
     BLEDeviceObject::iterator it = devices.begin();
     BLEDeviceObject::iterator itEnd = devices.end();
