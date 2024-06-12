@@ -2,8 +2,7 @@
 //#include <websocket.h>
 
 //create socket
-Web::WebsocketServer::WebsocketServer(int port, uint8_t &msg_cb)
-    : msg{msg_cb}
+Web::WebsocketServer::WebsocketServer(int port)
 {
 
     this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -244,7 +243,7 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 
 
 //create frame before sending to client
-void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
+int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     //add check for packet size later
 
     if(len < 126) {
@@ -256,19 +255,39 @@ void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
         //make sure len includes just the message and not any \r\n that may come after
         memcpy(&buf[2], msg, len); //copy message to buffer
         std::cout << "Frame created\n";
+
+        return 0;
     }
+    else if(len < 320000) {
+        uint16_t binLen = (uint16_t)len;
+        uint8_t len1 = (binLen >> 8) && 0b00000000;
+        uint8_t len2 = (binLen << 8) && 0b00000000;
+        buf[0] = 129;
+        buf[1] = (unsigned char)126;
+        buf[2] = len1;
+        buf[3] = len2;
+        std::cout << "Len1: " << (int)(binLen << 8) << "\n";
+        std::cout << "Len2: " << (int)len2 << "\n";
+        memcpy(&buf[4], msg, len);
+        return 0;
+    }
+
+    return -1;
 }
 
 
 //send packet to client
-void Web::WebsocketServer::send_data(char msg[], int len) {
+int Web::WebsocketServer::send_data(char msg[], int len) {
     //uint8_t packet[this->maxPktSize];
     uint8_t packet[this->maxPktSize];
     
-    create_frame(packet, msg, len);
+    if(create_frame(packet, msg, len) == 0) {
+        send(this->clientSocket, packet, len+2, 0);
+        return 0;
+    }
     //print_frame(packet, len+6);
-    
-    send(this->clientSocket, packet, len+2, 0);
+    return -1;
+     
 }
 
 
@@ -292,13 +311,11 @@ void Web::WebsocketServer::threaded_listener() {
             std::cout << "message recieved\n";
             if(buffer[0] != '\0') {
                 int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-                std::cout << "Size test: " << size << "\n";
                 if(size > 0) {
-                    char tstMsg[] = "hello";
                     if(size == 1) {
                         this->msg = msg[0];
+                        this->modified = true;
                     }
-                    //send_data(tstMsg, sizeof(tstMsg)-1);
                     
                     //reset buffers
                     memset(msg, '\0', this->maxPktSize);
@@ -311,14 +328,13 @@ void Web::WebsocketServer::threaded_listener() {
         free(buffer);
     });
 
-    //handle actions signaled by listener thread
+    //repurpose this thread for sending messages to client
     this->pool.enqueue([this] {
         while(true) {
-            if(this->actionModified == true) {
-                this->func_cb(this->action); 
-                this->actionModified = false;
+            //this->webAction = this->msg;
+            if(msgQueue.size() > 0) {
+
             }
-            //check for changes ever 100 milliseconds
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });
@@ -335,11 +351,10 @@ void Web::WebsocketServer::listener() {
     int g;
     while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
         std::cout << "message recieved\n";
+        //make sure message is not empty
         if(buffer[0] != '\0') {
             int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-            std::cout << "Size test: " << size << "\n";
             if(size > 0) {
-                char tstMsg[] = "hello";
 
                 //reset buffers
                 memset(msg, '\0', this->maxPktSize);
@@ -362,7 +377,10 @@ bool Web::WebsocketServer::get_threading() {
     return this->thread;
 }
 
-
-uint8_t *Web::WebsocketServer::get_command() {
-    return this->webAction;
+uint8_t Web::WebsocketServer::get_command() {
+    if(this->modified == true) {
+        this->modified = false;
+        return this->msg;
+    }
+    return 0;
 }

@@ -3,6 +3,7 @@
     <body>
         <h1>Found devices:</h1>
         </br>
+        <textarea class="devices"></textarea>
         <button onclick="button_click(1)">Start Scanning</button>
         <button onclick="button_click(2)">Stop Scanning</button>
         <script>
@@ -34,7 +35,12 @@
             }
             
             ws.onmessage = (event) => {
-                console.log(event.data);
+                msg = event.data;
+                if(msg[0] == "{") {
+                    console.log("json detected");
+                    obj = JSON.parse(msg);
+                }
+                console.log("MESSAGE: " + event.data);
             }
 
             ws.onerror = (error) => {

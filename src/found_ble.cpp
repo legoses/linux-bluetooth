@@ -31,18 +31,94 @@ static const std::map<std::string, std::string> bleUUID = {
 
 
 //only add a uuid if this is a ble device. Otherwise return 1
-int FoundBLE::add_UUID(std::string uuid) {
-    if(isBLE == 1) {
-        this->uuidList.push_back(uuid);
-        return 0;
+void FoundBLE::add_value(std::string key, std::string value) {
+    if(this->deviceAttributes.count(key) > 0) {
+        this->deviceAttributes[key].push_back(value);
     }
     else {
-        return 1;
+        std::vector<std::string> str;
+        str.push_back(value);
+        this->deviceAttributes[key] = str;
     }
 }
 
 
-int FoundBLE::get_type() {
-    return this->isBLE;
+void FoundBLE::add_vect(std::string key, std::vector<std::string> vect) {
+    if(this->deviceAttributes.count(key) > 0) {
+        //copy contents of vect to deviceAttributes map
+        //back_inserter create push_back function, allowing items to be placed in back of vector
+        std::move(
+            vect.begin(), 
+            vect.end(), 
+            std::back_inserter(this->deviceAttributes[key]));
+    }
+    else {
+        this->deviceAttributes[key] = vect;
+    }
 }
 
+//add digit to json arr
+void FoundBLE::add_digit(char dig, char arr[], int arrSize, int &pos) {
+    if(pos+1 < arrSize) {
+        arr[pos] = dig;
+        pos++;
+    }
+}
+
+
+void FoundBLE::copy_value(std::string str, char arr[], int arrSize, int &pos)  {
+    //make sure value will not overflow array
+    if(pos + str.size()+2 < arrSize) {
+        add_digit('"', arr, arrSize, pos);
+        for(int i = 0; i < str.size(); i++) {
+           arr[pos+i] = str[i]; 
+        }
+        pos+=str.size();
+        add_digit('"', arr, arrSize, pos);
+    }
+}
+
+//convert map to json format
+int FoundBLE::obj_json(char jsonArr[], int arrLen) {
+    std::map<std::string, std::vector<std::string>>::iterator it = deviceAttributes.begin();
+
+    int arrPos = 0;
+    add_digit('{', jsonArr, arrLen, arrPos);
+    while(it != deviceAttributes.end()) {
+        std::cout << "Entering while loop\n";
+        //if there is only one value is vect, do not creat an array
+        if(it->second.size() == 1) {
+            std::cout << "not vector\n";
+            //copy value to arr and surround by quotes
+            copy_value(it->first, jsonArr, arrLen, arrPos);
+            add_digit(':', jsonArr, arrLen, arrPos);
+            
+            copy_value(it->second[0], jsonArr, arrLen, arrPos);
+            add_digit(',', jsonArr, arrLen, arrPos);
+        }
+        //if the vect contains multiple vlaues, create an array
+        else if(it->second.size() > 1) {
+            std::cout << "vector\n";
+            copy_value(it->first, jsonArr, arrLen, arrPos); 
+            add_digit(':', jsonArr, arrLen, arrPos);
+            add_digit('[', jsonArr, arrLen, arrPos);
+            
+            for(std::string &val : it->second) {
+                copy_value(val, jsonArr, arrLen, arrPos); 
+
+                if(val != it->second[-1]) {
+                    add_digit(',', jsonArr, arrLen, arrPos);
+                }
+            }
+
+            add_digit(']', jsonArr, arrLen, arrPos);
+            add_digit(',', jsonArr, arrLen, arrPos);
+        }
+        ++it;
+    }
+    add_digit('}', jsonArr, arrLen, arrPos);
+    std::cout << "done\n";
+
+    //return size of arrai
+    return arrPos+1;
+}

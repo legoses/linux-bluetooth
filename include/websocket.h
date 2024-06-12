@@ -25,7 +25,12 @@ namespace Web {
         int maxPktSize = 2000;
         bool thread = false;
 
-        uint8_t &msg;
+        //msg recieved from website
+        uint8_t msg;
+        bool modified = false;
+
+        //queue messages to send to client
+        std::queue<char*> msgQueue;
 
         //setup threads
         //when being initialized along with the class, curley brackets must be used
@@ -34,7 +39,7 @@ namespace Web {
         ThreadPool pool{2};
 
         //store command recieved
-        uint8_t *webAction = 0;
+        uint8_t webAction = 0;
 
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
@@ -43,15 +48,15 @@ namespace Web {
 
         //parses data recieved
         int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-        void create_frame(uint8_t buf[], char msg[], int msgLen);
+        int create_frame(uint8_t buf[], char msg[], int msgLen);
         void print_frame(uint8_t frame[], int len);
 
     public:
-        WebsocketServer(int port, uint8_t &msg_cb);
+        WebsocketServer(int port);
         ~WebsocketServer();
 
         void begin(); //loops infinantly so program will not exit after called
-        void send_data(char msg[], int size);
+        int send_data(char msg[], int size);
 
         void threaded_listener();
         void listener();
@@ -59,7 +64,7 @@ namespace Web {
         void set_threading(bool opt);
         bool get_threading(); 
 
-        uint8_t *get_command();
+        uint8_t get_command();
     };
 };
 #endif

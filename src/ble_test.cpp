@@ -11,10 +11,9 @@
 /*
  * TODO:
  * Expand websocket site to include more than start and stop scan
- * Add switch case statement to while loop in main funciton to listen for commands
- * Make sure 0 is neutral value that will not call any bluetooth funcitons in said case switch
- * Create a thread to handle dbus operations
- * Maybe have some sort of sending queue, so program doesnt try to send multiple things at once
+ * Figure out a way to send arrays of data through websocket. JSON?
+ * Create a public websocket function to queue messages to send to websocket client
+ * Look into crash caused by BadVariantCast after adding device
  */
 
     
@@ -53,13 +52,16 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             std::cout << "Adding device\n";
             if(UUIDCount > 0) {
                 //Create object, signify that it is ble
+                //Possible swtich to pointer
                 FoundBLE bleObj(1);
-                for(int i = 0; i < UUIDCount; i++) {
+                //for(int i = 0; i < UUIDCount; i++) {
                     //std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
-                    bleObj.add_UUID(vect[i]);
-                }
-
-                bleObj.set_path(path);
+                //    bleObj.add_UUID(vect[i]);
+                //}
+                bleObj.add_vect("UUID", vect);
+                bleObj.add_value("Path", path);
+                bleObj.add_value("Address", it->second["Address"]);
+                bleObj.add_value("Name", it->second["Name"]);
                 knownBleObj.push_back(bleObj);
                 //std::cout << "test size: " << knownBleObj.size() << "\n";
             }
@@ -70,14 +72,11 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             
                 knownBleObj.push_back(bleObj);
             }
-            std::cout << "\n\n";
             
         }
-        std::cout << "\n";
         ++it;
     }
 
-    std::cout << "\n\n--------------------------\n\n";
 }
 
 
@@ -207,6 +206,17 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
+
+//loop through ble devices to prepare to send to websocket client
+void send_ble_devices(std::vector<FoundBLE> &bleDevices, Web::WebsocketServer &server) {
+    int maxSize = 1024;
+    char sendArr[maxSize];
+    for(int i = 0; i < bleDevices.size(); i++) {
+        //device_to_json(sendArr, maxSize, bleDevices[i]);
+    }
+}
+
+
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
@@ -242,8 +252,8 @@ int main() {
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices); 
 
         //create variable to hold commands from websocket site
-        uint8_t cmd = 0;
-        Web::WebsocketServer server(8080, cmd);
+        //uint8_t cmd = 0;
+        Web::WebsocketServer server(8080);
 
 
         //lambda callback for websocket class
@@ -255,18 +265,44 @@ int main() {
 
 
         //listen for websocket events
+        //works
+        char jsonTest[] = {'{', '"', 'n', 'a', 'm', 'e', '"', ':', '"', 'k', 'y', 'l', 'e', '"', ',', '"', 'a', 'g', 'e', '"', ':', '"', '2', '5', '"', '}'};
+        //doesnt work
+        //char jsonTest2[] = "{\"name\":\"kyle\", \"age\":\"25\"}";
+        //std::string jsonTest3 = R"("name":"kyle", "age":"25")";
         while(true) {
+            uint8_t cmd = server.get_command();
             int cmdInt = (int)cmd - '0';
             switch(cmdInt) {
                 case 1:
-                    //Create a nen wdbus object to get scanned devices, unless there allready is one?
                     local.start_scan();
+                    std::cout << "Scan started\n";
+                    //server.send_data(jsonTest, sizeof(jsonTest));
                     break;
                 case 2:
+                    //send_ble_devices(knownBleDevices, server);
                     local.stop_scan();
+                    std::cout << "Scan stopped\n";
+
+                    if(knownBleDevices.size() > 0) {
+                        char jsonStr[1024];
+                        std::cout << "Creating json object\n";
+                        int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
+
+                        std::cout << "Length: " << tstSize << "\n";
+
+                        server.send_data(jsonStr, tstSize);
+
+                        std::cout << "Printing json obj\n";
+
+                        for(int i = 0; i < tstSize; i++) {
+                            std::cout << jsonStr[i];
+                        }
+                        std::cout << "\n";
+                    }
                     break;
             }
-            sleep(1);
+            sleep(.1);
         }
 
         //remove recievers when no longer needed
@@ -274,7 +310,6 @@ int main() {
         connection->remove_free_signal_proxy(removeSignal);
         std::cout << "Testing after free\n";
         
-        //local.stop_scan();
     }
     else {
         std::cout << "Bluetooth device not found\n";
