@@ -260,8 +260,10 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     }
     else if(len < 320000) {
         uint16_t binLen = (uint16_t)len;
-        uint8_t len1 = (binLen >> 8) && 0b00000000;
-        uint8_t len2 = (binLen << 8) && 0b00000000;
+        //uint8_t len1 = (binLen >> 8) | 0b00000000;
+        //uint8_t len2 = (binLen << 8) | 0b00000000;
+        uint8_t len1 = binLen | 0b00000000;
+        uint8_t len2 = (binLen >> 8) | 0b00000000;
         buf[0] = 129;
         buf[1] = (unsigned char)126;
         buf[2] = len1;
@@ -282,6 +284,7 @@ int Web::WebsocketServer::send_data(char msg[], int len) {
     uint8_t packet[this->maxPktSize];
     
     if(create_frame(packet, msg, len) == 0) {
+        std::cout << "Sending data\n";
         send(this->clientSocket, packet, len+2, 0);
         return 0;
     }
