@@ -289,7 +289,10 @@ int main() {
                         std::cout << "Creating json object\n";
                         int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
 
-                        std::cout << "Length: " << tstSize << "\n";
+                        //std::cout << "Length: " << tstSize << "\n";
+
+                        char tstmsg[] = "hello";
+                        server.send_data(tstmsg, 5);
 
                         server.send_data(jsonStr, tstSize);
 

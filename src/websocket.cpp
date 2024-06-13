@@ -254,23 +254,25 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
 
         //make sure len includes just the message and not any \r\n that may come after
         memcpy(&buf[2], msg, len); //copy message to buffer
-        std::cout << "Frame created\n";
+        std::cout << " Short Frame created\n";
 
         return 0;
     }
     else if(len < 320000) {
         uint16_t binLen = (uint16_t)len;
-        //uint8_t len1 = (binLen >> 8) | 0b00000000;
-        //uint8_t len2 = (binLen << 8) | 0b00000000;
-        uint8_t len1 = binLen | 0b00000000;
-        uint8_t len2 = (binLen >> 8) | 0b00000000;
+        std::cout << "From: " << len << " to: " << (int)binLen << "\n";
+
+        //convert binLen into two 8 bit bytes so it can be read by websocket
+        //unsigned char len1 = binLen & 0xFF;
+        //unsigned char len2 = (binLen >> 8) & 0xFF;
         buf[0] = 129;
-        buf[1] = (unsigned char)126;
-        buf[2] = len1;
-        buf[3] = len2;
-        std::cout << "Len1: " << (int)(binLen << 8) << "\n";
-        std::cout << "Len2: " << (int)len2 << "\n";
+        buf[1] = 126;
+        buf[2] = (binLen >> 8) & 0xFF; //shift byte over to get the 8 MSB
+        buf[3] = binLen & 0xFF; // get 8 LSB
+        std::cout << "Len1: " << (int)((binLen >> 8) & 0xFF) << "\n";
+        std::cout << "Len2: " << (int)0b00000100 << "\n";
         memcpy(&buf[4], msg, len);
+        std::cout << "Long Frame created\n";
         return 0;
     }
 
@@ -285,6 +287,12 @@ int Web::WebsocketServer::send_data(char msg[], int len) {
     
     if(create_frame(packet, msg, len) == 0) {
         std::cout << "Sending data\n";
+
+        if(packet[1] == (unsigned char)126) {
+            uint16_t decLen = (packet[2] << 8) | packet[3]; 
+            std::cout << "decoded LEN: " << (int)decLen << "\n";
+            len++;
+        }
         send(this->clientSocket, packet, len+2, 0);
         return 0;
     }
