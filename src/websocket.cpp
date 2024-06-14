@@ -249,7 +249,6 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     if(len < 126) {
         //use strncpy to create frame. May be less variabality than memset?
         buf[0] = 129;
-        //buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
         //make sure len includes just the message and not any \r\n that may come after
@@ -259,19 +258,17 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
         return 0;
     }
     else if(len < 320000) {
-        uint16_t binLen = (uint16_t)len;
+        uint16_t binLen = htons((uint16_t)len);
         std::cout << "From: " << len << " to: " << (int)binLen << "\n";
 
         //convert binLen into two 8 bit bytes so it can be read by websocket
-        //unsigned char len1 = binLen & 0xFF;
-        //unsigned char len2 = (binLen >> 8) & 0xFF;
         buf[0] = 129;
-        buf[1] = 126;
+        buf[1] = (uint8_t)126;
         buf[2] = (binLen >> 8) & 0xFF; //shift byte over to get the 8 MSB
         buf[3] = binLen & 0xFF; // get 8 LSB
-        std::cout << "Len1: " << (int)((binLen >> 8) & 0xFF) << "\n";
-        std::cout << "Len2: " << (int)0b00000100 << "\n";
-        memcpy(&buf[4], msg, len);
+        std::cout << "Bit1: " << (int)buf[2] << "\n";
+        std::cout << "Bit2: " << (int)buf[3] << "\n";
+        memcpy(&buf[5], msg, len);
         std::cout << "Long Frame created\n";
         return 0;
     }
