@@ -300,6 +300,8 @@ int main() {
 
                         for(int i = 0; i < tstSize; i++) {
                             std::cout << jsonStr[i];
+                            //std::cout << " num: ";
+                            //std::cout << i << "\n";
                         }
                         std::cout << "\n";
                     }

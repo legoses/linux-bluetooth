@@ -257,18 +257,18 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
 
         return 0;
     }
-    else if(len < 320000) {
-        uint16_t binLen = htons((uint16_t)len);
+    else if(len < 320000) { //something is going on with the length. When sending the proper length of the arr, it comes up one byte short
+        uint16_t binLen = (uint16_t)len; //convert to network byte order. Even though it already should be
         std::cout << "From: " << len << " to: " << (int)binLen << "\n";
 
         //convert binLen into two 8 bit bytes so it can be read by websocket
         buf[0] = 129;
-        buf[1] = (uint8_t)126;
+        buf[1] = (uint8_t)126 & 0b01111111; //make sure mask bit is set to 0
         buf[2] = (binLen >> 8) & 0xFF; //shift byte over to get the 8 MSB
         buf[3] = binLen & 0xFF; // get 8 LSB
         std::cout << "Bit1: " << (int)buf[2] << "\n";
         std::cout << "Bit2: " << (int)buf[3] << "\n";
-        memcpy(&buf[5], msg, len);
+        memcpy(&buf[4], msg, len);
         std::cout << "Long Frame created\n";
         return 0;
     }
@@ -288,7 +288,8 @@ int Web::WebsocketServer::send_data(char msg[], int len) {
         if(packet[1] == (unsigned char)126) {
             uint16_t decLen = (packet[2] << 8) | packet[3]; 
             std::cout << "decoded LEN: " << (int)decLen << "\n";
-            len++;
+            send(this->clientSocket, packet, len+4, 0);
+            return 0;
         }
         send(this->clientSocket, packet, len+2, 0);
         return 0;
