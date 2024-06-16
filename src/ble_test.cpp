@@ -10,10 +10,11 @@
 //#include <encode.h>
 /*
  * TODO:
- * Expand websocket site to include more than start and stop scan
- * Figure out a way to send arrays of data through websocket. JSON?
  * Create a public websocket function to queue messages to send to websocket client
  * Look into crash caused by BadVariantCast after adding device
+ * Implement mutex variables for better thread saftey
+ * Update site to print blue tooth device data
+ * Send all bluetooth devices to size, not just one
  */
 
     
