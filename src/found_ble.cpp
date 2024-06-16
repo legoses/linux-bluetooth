@@ -61,7 +61,6 @@ void FoundBLE::add_vect(std::string key, std::vector<std::string> vect) {
 void FoundBLE::add_digit(char dig, char arr[], int arrSize, int &pos) {
     if(pos+1 < arrSize) {
         arr[pos] = dig;
-        std::cout << "adding val: " << dig << " at pos: " << pos << "\n";
         pos++;
     }
 }
@@ -72,7 +71,6 @@ void FoundBLE::copy_value(std::string str, char arr[], int arrSize, int &pos)  {
     if(pos + str.size()+2 < arrSize) {
         add_digit('"', arr, arrSize, pos);
         for(int i = 0; i < str.size(); i++) {
-           //arr[pos+i] = str[i]; 
             add_digit(str[i], arr, arrSize, pos);
         }
         //pos+=str.size();

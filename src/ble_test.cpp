@@ -267,11 +267,6 @@ int main() {
 
 
         //listen for websocket events
-        //works
-        char jsonTest[] = {'{', '"', 'n', 'a', 'm', 'e', '"', ':', '"', 'k', 'y', 'l', 'e', '"', ',', '"', 'a', 'g', 'e', '"', ':', '"', '2', '5', '"', '}'};
-        //doesnt work
-        //char jsonTest2[] = "{\"name\":\"kyle\", \"age\":\"25\"}";
-        //std::string jsonTest3 = R"("name":"kyle", "age":"25")";
         while(true) {
             uint8_t cmd = server.get_command();
             int cmdInt = (int)cmd - '0';
@@ -291,11 +286,6 @@ int main() {
                         std::cout << "Creating json object\n";
                         int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
                         std::cout << "Json size " << tstSize << "\n";
-
-                        //std::cout << "Length: " << tstSize << "\n";
-
-                        char tstmsg[] = "hello";
-                        server.send_data(tstmsg, 5);
 
                         server.send_data(jsonStr, tstSize);
 
