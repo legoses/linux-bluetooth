@@ -288,6 +288,7 @@ int main() {
                         char jsonStr[1024];
                         std::cout << "Creating json object\n";
                         int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
+                        std::cout << "Json size " << tstSize << "\n";
 
                         //std::cout << "Length: " << tstSize << "\n";
 

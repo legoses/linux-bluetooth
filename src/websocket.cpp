@@ -288,7 +288,7 @@ int Web::WebsocketServer::send_data(char msg[], int len) {
         if(packet[1] == (unsigned char)126) {
             uint16_t decLen = (packet[2] << 8) | packet[3]; 
             std::cout << "decoded LEN: " << (int)decLen << "\n";
-            send(this->clientSocket, packet, len+4, 0);
+            send(this->clientSocket, packet, len+4, 0); //length of packet must be correct, otherwise it will not be detected by client
             return 0;
         }
         send(this->clientSocket, packet, len+2, 0);

@@ -61,6 +61,7 @@ void FoundBLE::add_vect(std::string key, std::vector<std::string> vect) {
 void FoundBLE::add_digit(char dig, char arr[], int arrSize, int &pos) {
     if(pos+1 < arrSize) {
         arr[pos] = dig;
+        std::cout << "adding val: " << dig << " at pos: " << pos << "\n";
         pos++;
     }
 }
@@ -71,20 +72,24 @@ void FoundBLE::copy_value(std::string str, char arr[], int arrSize, int &pos)  {
     if(pos + str.size()+2 < arrSize) {
         add_digit('"', arr, arrSize, pos);
         for(int i = 0; i < str.size(); i++) {
-           arr[pos+i] = str[i]; 
+           //arr[pos+i] = str[i]; 
+            add_digit(str[i], arr, arrSize, pos);
         }
-        pos+=str.size();
+        //pos+=str.size();
         add_digit('"', arr, arrSize, pos);
     }
 }
 
 //convert map to json format
 int FoundBLE::obj_json(char jsonArr[], int arrLen) {
-    std::map<std::string, std::vector<std::string>>::iterator it = deviceAttributes.begin();
+    std::map<std::string, std::vector<std::string>>::iterator it = this->deviceAttributes.begin();
 
     int arrPos = 0;
+    int mapSize = this->deviceAttributes.size();
+    int mapLoop = 0;
     add_digit('{', jsonArr, arrLen, arrPos);
-    while(it != deviceAttributes.end()) {
+    while(it != this->deviceAttributes.end()) {
+        int vectSize = it->second.size();
         std::cout << "Entering while loop\n";
         //if there is only one value is vect, do not creat an array
         if(it->second.size() == 1) {
@@ -94,31 +99,39 @@ int FoundBLE::obj_json(char jsonArr[], int arrLen) {
             add_digit(':', jsonArr, arrLen, arrPos);
             
             copy_value(it->second[0], jsonArr, arrLen, arrPos);
-            add_digit(',', jsonArr, arrLen, arrPos);
+            //add_digit(',', jsonArr, arrLen, arrPos);
         }
         //if the vect contains multiple vlaues, create an array
-        else if(it->second.size() > 1) {
-            std::cout << "vector\n";
+        else if(vectSize > 1) {
             copy_value(it->first, jsonArr, arrLen, arrPos); 
             add_digit(':', jsonArr, arrLen, arrPos);
             add_digit('[', jsonArr, arrLen, arrPos);
+            int loop = 0;
             
             for(std::string &val : it->second) {
                 copy_value(val, jsonArr, arrLen, arrPos); 
-
-                if(val != it->second[-1]) {
+                
+                loop++;
+                if(loop != vectSize) {
                     add_digit(',', jsonArr, arrLen, arrPos);
                 }
             }
 
+            //close out array
             add_digit(']', jsonArr, arrLen, arrPos);
-            add_digit(',', jsonArr, arrLen, arrPos);
+
+            //do not follow last array with a comma
+            std::cout << "vecct size: " << vectSize << " loop size: " << loop << "\n";
         }
         ++it;
+        mapLoop++;
+        if(mapLoop != mapSize) {
+            add_digit(',', jsonArr, arrLen, arrPos);
+        }
     }
     add_digit('}', jsonArr, arrLen, arrPos);
     std::cout << "done\n";
 
-    //return size of arrai
-    return arrPos+1;
+    //since add digit always iterates, this returns actual length, not max index value
+    return arrPos;
 }
