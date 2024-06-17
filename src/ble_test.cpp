@@ -15,7 +15,6 @@
  * Implement mutex variables for better thread saftey
  * Update site to print blue tooth device data
  * Send all bluetooth devices to size, not just one
- * Add threads when sending requiests to bluetooth device
  */
 
     
