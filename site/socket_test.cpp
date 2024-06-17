@@ -21,24 +21,6 @@
  */
 
 //void websocket_cb(uint8_t msg[], int size) {
-void websocket_cb(uint8_t msg) {
-    //msg is only 1 bit?
-    //convert from ascii value to int
-    int message = (int)msg - '0';
-    std::cout << "call test\n";
-    
-    switch(message) {
-        case 0:
-            std::cout << "test 0: \n";
-            break;
-        case 1:
-            std::cout << "test 1: \n"; 
-            break;
-        default:
-            std::cout << "Invalid input recieved\n";
-            std::cout << "Value sent: " << tst << "\n";
-    }
-}
 
 
 int main() {
