@@ -283,19 +283,23 @@ int main() {
                     if(knownBleDevices.size() > 0) {
                         char jsonStr[1024];
                         std::cout << "Creating json object\n";
-                        int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
-                        std::cout << "Json size " << tstSize << "\n";
 
-                        server.send_data(jsonStr, tstSize);
+                        //make sure to have a way to deal with theads MUTEX
+                        for (int i = 0; i < knownBleDevices.size(); i++) {
+                            int tstSize = knownBleDevices[0].obj_json(jsonStr, 1024);
+                            std::cout << "Json size " << tstSize << "\n";
+
+                            server.send_data(jsonStr, tstSize);
+                            for(int i = 0; i < tstSize; i++) {
+                                std::cout << jsonStr[i];
+                                //std::cout << " num: ";
+                                //std::cout << i << "\n";
+                            }
+                            std::cout << "\n";
+                        }
 
                         std::cout << "Printing json obj\n";
 
-                        for(int i = 0; i < tstSize; i++) {
-                            std::cout << jsonStr[i];
-                            //std::cout << " num: ";
-                            //std::cout << i << "\n";
-                        }
-                        std::cout << "\n";
                     }
                     break;
             }
