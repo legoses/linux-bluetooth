@@ -30,4 +30,5 @@ class FoundBLE : public BLEObject {
         int obj_json(char jsonArr[], int arrLen);
         //void set_path(DBus::Path path);
         //std::string get_path();
+        //add function to pull value from map
 };

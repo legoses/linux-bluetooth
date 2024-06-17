@@ -24,6 +24,14 @@ typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::V
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
 
 
+bool device_exists(std::vector<FoundBLE> &knownBleObj, std::string address) {
+    for(int i = 0; i < knownBleObj.size(); i++) {
+        if()
+        
+    }
+    return false;
+}
+
 //This is what currently parses scanned devices
 //Create a class to handle this
 void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj) {
@@ -51,7 +59,10 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             int UUIDCount = vect.size();
 
             std::cout << "Adding device\n";
+
+            
             if(UUIDCount > 0) {
+
                 //Create object, signify that it is ble
                 //Possible swtich to pointer
                 FoundBLE bleObj(1);

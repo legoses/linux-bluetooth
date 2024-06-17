@@ -29,7 +29,6 @@ int main() {
     Web::WebsocketServer server(8080);
     //void (*callback)(uint8_t[], int);
     //callback = websocket_cb;
-    server.set_cb(websocket_cb);
     server.set_threading(true);
 
     /*
@@ -50,6 +49,12 @@ int main() {
     pool.stop();
 */
     server.begin();
+
+    char testMsg[] = "Hello World";
+    while(true) {
+        server.send_data(testMsg, sizeof(testMsg)-1);
+        sleep(1);
+    }
     
     return 0;
 }

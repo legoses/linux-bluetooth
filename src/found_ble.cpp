@@ -105,7 +105,7 @@ int FoundBLE::obj_json(char jsonArr[], int arrLen) {
             add_digit(':', jsonArr, arrLen, arrPos);
             add_digit('[', jsonArr, arrLen, arrPos);
             int loop = 0;
-            
+                
             for(std::string &val : it->second) {
                 copy_value(val, jsonArr, arrLen, arrPos); 
                 

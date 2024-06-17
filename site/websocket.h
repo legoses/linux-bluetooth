@@ -23,13 +23,23 @@ namespace Web {
         int clientAddrSize;
         int clientSocket;
         int maxPktSize = 2000;
-        void (*func_cb)(uint8_t);
-        int cbSet = 0;
         bool thread = false;
 
-        //handle actions
-        uint8_t action = 0;
-        bool actionModified = false;
+        //msg recieved from website
+        uint8_t msg;
+        bool modified = false;
+
+        //queue messages to send to client
+        std::queue<char*> msgQueue;
+
+        //setup threads
+        //when being initialized along with the class, curley brackets must be used
+        //I think this is because it is abigious whether this is a function call
+        //or a classs initializer, so the brackets differentiate between the two
+        ThreadPool pool{2};
+
+        //store command recieved
+        uint8_t webAction = 0;
 
 
         int get_websocket_key(char *header, const int headerSize, unsigned char buffer[], int bufferSize);
@@ -38,23 +48,23 @@ namespace Web {
 
         //parses data recieved
         int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-        void create_frame(uint8_t buf[], char msg[], int msgLen);
+        int create_frame(uint8_t buf[], char msg[], int msgLen);
         void print_frame(uint8_t frame[], int len);
 
-        public:
+    public:
         WebsocketServer(int port);
         ~WebsocketServer();
 
         void begin(); //loops infinantly so program will not exit after called
-        void send_data(char msg[], int size);
-        //int listener(uint8_t buf[], int bufSize);
-        void set_cb(void (*funcptr)(uint8_t));
+        int send_data(char msg[], int size);
 
         void threaded_listener();
         void listener();
 
         void set_threading(bool opt);
         bool get_threading(); 
+
+        uint8_t get_command();
     };
 };
 #endif

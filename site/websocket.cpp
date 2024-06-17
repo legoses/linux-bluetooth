@@ -2,7 +2,8 @@
 //#include <websocket.h>
 
 //create socket
-Web::WebsocketServer::WebsocketServer(int port) {
+Web::WebsocketServer::WebsocketServer(int port)
+{
 
     this->listenSocket = socket(AF_INET, SOCK_STREAM, 0);
     if(this->listenSocket < 0) {
@@ -23,6 +24,8 @@ Web::WebsocketServer::WebsocketServer(int port) {
 
     this->serverAddr.sin_addr.s_addr = INADDR_ANY;
     this->clientAddrSize = sizeof(clientAddr);
+    
+    //this->webAction = (uint8_t*)malloc(sizeof(uint8_t));
 }
 
 
@@ -43,66 +46,64 @@ void Web::WebsocketServer::print_frame(uint8_t frame[], int len) {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    if (this->cbSet == 1) {
-        //create socket
-        bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
-        listen(this->listenSocket, 5);
+    std::cout << "Listening for connections...\n";
+    //create socket
+    bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
+    listen(this->listenSocket, 5);
 
-        //listen for connections
-        this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+    //listen for connections
+    this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
 
-        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-        char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
-          
-        std::cout << "Reading input\n";
-        std::cout << sizeof(readBuffer);
-        if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
-            std::cout << "Read does not wokr?\n";
-        }
+    char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
+    char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
+      
+    std::cout << "Reading input\n";
+    std::cout << sizeof(readBuffer);
+    if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
+        std::cout << "Read does not wokr?\n";
+    }
 
-        int headerSize;
-        char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
+    int headerSize;
+    char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
 
-        if(wsHeader != NULL) {
-            std::cout << "Init WS upgrade\n";
-            memset(buffer, '\0', this->maxPktSize);
-            send(this->clientSocket, wsHeader, headerSize-1, 0);
-            recv(this->clientSocket, buffer, this->maxPktSize, 0);
+    if(wsHeader != NULL) {
+        std::cout << "Init WS upgrade\n";
+        memset(buffer, '\0', this->maxPktSize);
+        send(this->clientSocket, wsHeader, headerSize-1, 0);
+        recv(this->clientSocket, buffer, this->maxPktSize, 0);
 
-            //use ping/pong frame to test connection is alive
-            //Check if connection has been terminated
-            //read(this->listenSocket, readBuffer, this->maxPktSize);
-            //print_frame(readBuffer, this->maxPktSize);
+        //use ping/pong frame to test connection is alive
+        //Check if connection has been terminated
+        //read(this->listenSocket, readBuffer, this->maxPktSize);
+        //print_frame(readBuffer, this->maxPktSize);
 
-           
-            //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
-            //detect if websocket connection was successful
-            //listener();
+       
+        //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
+        //detect if websocket connection was successful
+        //listener();
+        
+        if(buffer[0] != 0) {
+            std::cout << "Websocket Connection Successful\n";
+            uint8_t msg[this->maxPktSize];
+            memset(msg, '\0', this->maxPktSize);
             
-            if(buffer[0] != 0) {
-                std::cout << "Websocket Connection Successful\n";
-                uint8_t msg[this->maxPktSize];
-                memset(msg, '\0', this->maxPktSize);
-                
-                if(this->thread == false) {
-                    listener();
-                }
-                else {
-                    threaded_listener();
-                }
+            if(this->thread == false) {
+                listener();
             }
             else {
-                std::cout << "Error: Connection failed\n";
+                threaded_listener();
+
+                std::cout << "Post threaded listener call\n";
             }
         }
+        else {
+            std::cout << "Error: Connection failed\n";
+        }
+    }
 
-        free(buffer);
-        free(readBuffer);
-        free(wsHeader);
-    }
-    else {
-        std::cout << "Error: callback function not set\n";
-    }
+    free(buffer);
+    free(readBuffer);
+    free(wsHeader);
 }
 
 
@@ -242,31 +243,60 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 
 
 //create frame before sending to client
-void Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
+int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
     //add check for packet size later
 
     if(len < 126) {
         //use strncpy to create frame. May be less variabality than memset?
         buf[0] = 129;
-        //buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
         //make sure len includes just the message and not any \r\n that may come after
         memcpy(&buf[2], msg, len); //copy message to buffer
-        std::cout << "Frame created\n";
+        std::cout << " Short Frame created\n";
+
+        return 0;
     }
+    else if(len < 320000) { //something is going on with the length. When sending the proper length of the arr, it comes up one byte short
+        uint16_t binLen = (uint16_t)len; //convert to network byte order. Even though it already should be
+        std::cout << "From: " << len << " to: " << (int)binLen << "\n";
+
+        //convert binLen into two 8 bit bytes so it can be read by websocket
+        buf[0] = 129;
+        buf[1] = (uint8_t)126 & 0b01111111; //make sure mask bit is set to 0
+        buf[2] = (binLen >> 8) & 0xFF; //shift byte over to get the 8 MSB
+        buf[3] = binLen & 0xFF; // get 8 LSB
+        std::cout << "Bit1: " << (int)buf[2] << "\n";
+        std::cout << "Bit2: " << (int)buf[3] << "\n";
+        memcpy(&buf[4], msg, len);
+        std::cout << "Long Frame created\n";
+        return 0;
+    }
+
+    return -1;
 }
 
 
 //send packet to client
-void Web::WebsocketServer::send_data(char msg[], int len) {
+int Web::WebsocketServer::send_data(char msg[], int len) {
     //uint8_t packet[this->maxPktSize];
     uint8_t packet[this->maxPktSize];
     
-    create_frame(packet, msg, len);
+    if(create_frame(packet, msg, len) == 0) {
+        std::cout << "Sending data\n";
+
+        if(packet[1] == (unsigned char)126) {
+            uint16_t decLen = (packet[2] << 8) | packet[3]; 
+            std::cout << "decoded LEN: " << (int)decLen << "\n";
+            send(this->clientSocket, packet, len+4, 0); //length of packet must be correct, otherwise it will not be detected by client
+            return 0;
+        }
+        send(this->clientSocket, packet, len+2, 0);
+        return 0;
+    }
     //print_frame(packet, len+6);
-    
-    send(this->clientSocket, packet, len+2, 0);
+    return -1;
+     
 }
 
 
@@ -275,12 +305,11 @@ void Web::WebsocketServer::threaded_listener() {
     std::cout << "threaded listener call\n";
 
     //create a listener thread and action thread
-    ThreadPool pool(2);
 
     //lambda function
     //use this as the capture clause so thread can access class variables
     //handle websocket connection
-    pool.enqueue([this] {
+    this->pool.enqueue([this] {
         std::cout << "Listening for messages...\n";
         char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
         uint8_t msg[this->maxPktSize];
@@ -291,14 +320,11 @@ void Web::WebsocketServer::threaded_listener() {
             std::cout << "message recieved\n";
             if(buffer[0] != '\0') {
                 int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-                std::cout << "Size test: " << size << "\n";
                 if(size > 0) {
-                    char tstMsg[] = "hello";
                     if(size == 1) {
-                        this->action = msg[0];
-                        this->actionModified = true;
+                        this->msg = msg[0];
+                        this->modified = true;
                     }
-                    //send_data(tstMsg, sizeof(tstMsg)-1);
                     
                     //reset buffers
                     memset(msg, '\0', this->maxPktSize);
@@ -311,14 +337,13 @@ void Web::WebsocketServer::threaded_listener() {
         free(buffer);
     });
 
-    //handle actions signaled by listener thread
-    pool.enqueue([this] {
+    //repurpose this thread for sending messages to client
+    this->pool.enqueue([this] {
         while(true) {
-            if(this->actionModified == true) {
-                this->func_cb(this->action); 
-                this->actionModified = false;
+            //this->webAction = this->msg;
+            if(msgQueue.size() > 0) {
+
             }
-            //check for changes ever 100 milliseconds
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });
@@ -335,17 +360,11 @@ void Web::WebsocketServer::listener() {
     int g;
     while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
         std::cout << "message recieved\n";
+        //make sure message is not empty
         if(buffer[0] != '\0') {
             int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-            std::cout << "Size test: " << size << "\n";
             if(size > 0) {
-                char tstMsg[] = "hello";
 
-                if(size == 1) {
-                    this->func_cb(msg[0]);
-                }
-                send_data(tstMsg, sizeof(tstMsg)-1);
-                
                 //reset buffers
                 memset(msg, '\0', this->maxPktSize);
                 memset(buffer, '\0', this->maxPktSize);
@@ -358,12 +377,6 @@ void Web::WebsocketServer::listener() {
 }
 
 
-void Web::WebsocketServer::set_cb(void (*funcptr)(uint8_t)) {
-   this->func_cb = funcptr; 
-   this->cbSet = 1;
-}
-
-
 void Web::WebsocketServer::set_threading(bool opt) {
     this->thread = opt;
 }
@@ -371,4 +384,12 @@ void Web::WebsocketServer::set_threading(bool opt) {
 
 bool Web::WebsocketServer::get_threading() {
     return this->thread;
+}
+
+uint8_t Web::WebsocketServer::get_command() {
+    if(this->modified == true) {
+        this->modified = false;
+        return this->msg;
+    }
+    return 0;
 }
