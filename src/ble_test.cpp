@@ -77,8 +77,9 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                     //}
                     bleObj.add_vect("UUID", vect);
                     bleObj.add_value("Path", path);
-                    bleObj.add_value("Address", it->second["Address"]);
-                    bleObj.add_value("Name", it->second["Name"]);
+                    bleObj.add_value("Address", it->second["Address"].to_string());
+                    bleObj.add_value("Name", it->second["Name"].to_string());
+                    std::cout << "Adding name test: " << it->second["Name"].to_string() << "\n";
 
                     mtx.lock();
                     knownBleObj.push_back(bleObj);
@@ -89,8 +90,9 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                 else {
                     FoundBLE bleObj(0);
                     bleObj.add_value("Path", path);
-                    bleObj.add_value("Address", it->second["Address"]);
-                    bleObj.add_value("Name", it->second["Name"]);
+                    bleObj.add_value("Address", it->second["Address"].to_string());
+                    bleObj.add_value("Name", it->second["Name"].to_string());
+                    std::cout << "Adding name test: " << it->second["Name"].to_string() << "\n";
 
                     mtx.lock();
                     knownBleObj.push_back(bleObj);
@@ -99,11 +101,11 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                 }
             }
             else {
-                FoundBLE bleObj(0);
+                //FoundBLE bleObj(0);
                 std::cout << "UUID not found or device exists\n";
-                bleObj.set_path(path);
+                //bleObj.set_path(path);
             
-                knownBleObj.push_back(bleObj);
+                //knownBleObj.push_back(bleObj);
             }
             
         }
@@ -324,21 +326,22 @@ int main() {
                         std::cout << "Creating json object\n";
 
                         //make sure to have a way to deal with theads MUTEX
+                        mtx.lock();
+                        //potentially chcange to while loop. only use mutex while accessing an object to minimize time
+                        //the vector in unavailable
                         for (int i = 0; i < knownBleDevices.size(); i++) {
                             int tstSize = knownBleDevices[i].obj_json(jsonStr, 1024);
                             std::cout << "Json size " << tstSize << "\n";
 
                             server.send_data(jsonStr, tstSize);
-                            for(int i = 0; i < tstSize; i++) {
-                                std::cout << jsonStr[i];
+                            //for(int i = 0; i < tstSize; i++) {
+                            //    std::cout << jsonStr[i];
                                 //std::cout << " num: ";
                                 //std::cout << i << "\n";
-                            }
-                            std::cout << "\n";
+                            //}
+                            //std::cout << "\n";
                         }
-
-                        std::cout << "Printing json obj\n";
-
+                        mtx.unlock();
                     }
                     break;
             }
