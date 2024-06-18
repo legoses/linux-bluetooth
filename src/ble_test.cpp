@@ -50,7 +50,7 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
         if(it->second.size() > 0 && mapString == "org.bluez.Device1") {
             std::map<std::string, DBus::Variant>::iterator itr = it->second.begin();
             std::map<std::string, DBus::Variant>::iterator itrEnd = it->second.end();
-
+            
             //Crash happens after this line
             //std::cout << "Adapter Name: " << it->second["Adapter"] << "\n";
             std::string address = it->second["Address"];
@@ -61,57 +61,59 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
             //get the size of array holding UUIDs
             int UUIDCount = vect.size();
 
-            std::cout << "Adding device\n";
-
-            
             //if(!device_exists(knownBleObj, address) && it->second["Paired"].to_bool() == false) {
             if(it->second["Paired"].to_bool() == false) {
                 if(UUIDCount > 0) {
 
                     //Create object, signify that it is ble
                     //Possible swtich to pointer
-                    FoundBLE bleObj(1);
                     //for(int i = 0; i < UUIDCount; i++) {
                         //std::cout << "UUID Found: " << vect[i] << "\n" << std::flush;
                     //    bleObj.add_UUID(vect[i]);
                     //}
-                    bleObj.add_vect("UUID", vect);
-                    bleObj.add_value("Path", path);
-                    bleObj.add_value("Address", it->second["Address"].to_string());
-                    bleObj.add_value("Name", it->second["Name"].to_string());
-                    std::cout << "Adding name test: " << it->second["Name"].to_string() << "\n";
+                    
+                    if(it->second["Name"].type() == DBus::DataType::INVALID) {
+                        std::cout << "Name type invalid. BLE Object not created\n";
+                    }
+                    else {
+                        FoundBLE bleObj(1);
+                        bleObj.add_vect("UUID", vect);
+                        bleObj.add_value("Path", path);
+                        bleObj.add_value("Address", it->second["Address"].to_string());
+                        bleObj.add_value("Name", it->second["Name"].to_string());
 
-                    mtx.lock();
-                    knownBleObj.push_back(bleObj);
-                    mtx.unlock();
-                    //std::cout << "test size: " << knownBleObj.size() << "\n";
+                        std::cout << "Adding device\n";
+                        mtx.lock();
+                        knownBleObj.push_back(bleObj);
+                        mtx.unlock();
+                        //std::cout << "test size: " << knownBleObj.size() << "\n";
+                    }
 
                 }
                 else {
-                    FoundBLE bleObj(0);
-                    bleObj.add_value("Path", path);
-                    bleObj.add_value("Address", it->second["Address"].to_string());
-                    bleObj.add_value("Name", it->second["Name"].to_string());
-                    std::cout << "Adding name test: " << it->second["Name"].to_string() << "\n";
-
-                    mtx.lock();
-                    knownBleObj.push_back(bleObj);
-                    mtx.unlock();
-
+                    if(it->second["Name"].type() == DBus::DataType::INVALID) {
+                        std::cout << "Name invalid. Object not created\n";
+                    }
+                    else {
+                        bleObj.add_value("Name", it->second["Name"].to_string());
+                        FoundBLE bleObj(0);
+                        bleObj.add_value("Path", path);
+                        bleObj.add_value("Address", it->second["Address"].to_string());
+                    
+                        std::cout << "Adding device\n";
+                        mtx.lock();
+                        knownBleObj.push_back(bleObj);
+                        mtx.unlock();
+                    }
                 }
             }
             else {
-                //FoundBLE bleObj(0);
                 std::cout << "UUID not found or device exists\n";
-                //bleObj.set_path(path);
-            
-                //knownBleObj.push_back(bleObj);
             }
             
         }
         ++it;
     }
-
 }
 
 
@@ -209,6 +211,7 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
         BLEDeviceInterface::iterator itrEnd = it->second.end();
         std::cout << "adapter made with path: " << pth << "\n";
         adapterObject = connection->create_object_proxy("org.bluez", pth);
+        std::cout << "Adapter crash test msg\n";
 
         while(itr != itrEnd) {
             if(itr->first == adapterName) {
@@ -217,11 +220,14 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
                 break;
             }
             else if(itr->first == "org.bluez.Device1") {
+                std::cout << "Adapter crash test msg 1\n";
                 get_interface_added(it->first, it->second, knownBleDevices, mtx);
                 break;
             }
+            std::cout << "Adapter crash test msg 2\n";
             ++itr;
         }
+        std::cout << "Adapter crash test msg 3\n";
         ++it;
     }
     //Create class with ability to start and stop scan
@@ -297,14 +303,12 @@ int main() {
         //uint8_t cmd = 0;
         Web::WebsocketServer server(8080);
 
-
         //lambda callback for websocket class
         server.set_threading(true);
 
         std::cout << "Starting webserver\n";
         server.begin();
         sleep(1);
-
 
         //listen for websocket events
         while(true) {
@@ -330,10 +334,9 @@ int main() {
                         //potentially chcange to while loop. only use mutex while accessing an object to minimize time
                         //the vector in unavailable
                         for (int i = 0; i < knownBleDevices.size(); i++) {
-                            int tstSize = knownBleDevices[i].obj_json(jsonStr, 1024);
-                            std::cout << "Json size " << tstSize << "\n";
+                            int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
 
-                            server.send_data(jsonStr, tstSize);
+                            server.send_data(jsonStr, jsonSize);
                             //for(int i = 0; i < tstSize; i++) {
                             //    std::cout << jsonStr[i];
                                 //std::cout << " num: ";
