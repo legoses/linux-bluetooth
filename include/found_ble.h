@@ -28,6 +28,7 @@ class FoundBLE : public BLEObject {
         void add_vect(std::string key, std::vector<std::string> vect);
 
         int obj_json(char jsonArr[], int arrLen);
+        std::string get_attribute(std::string attr);
         //void set_path(DBus::Path path);
         //std::string get_path();
         //add function to pull value from map

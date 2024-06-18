@@ -133,3 +133,12 @@ int FoundBLE::obj_json(char jsonArr[], int arrLen) {
     //since add digit always iterates, this returns actual length, not max index value
     return arrPos;
 }
+
+
+std::string FoundBLE::get_attribute(std::string attr) {
+    if(this->deviceAttributes.count(attr) > 0) {
+        return this->deviceAttributes[attr][0];
+    }
+
+    return "";
+}
