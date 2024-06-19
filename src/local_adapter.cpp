@@ -19,6 +19,7 @@ void LocalAdapter::create_adapter(std::shared_ptr<DBus::ObjectProxy> object, std
 
 int LocalAdapter::start_scan() {
     //begin listening for discovery events
+
     if(currentlyScanning == 0) {
         std::cout << "Starting scan\n";
         currentlyScanning = 1;

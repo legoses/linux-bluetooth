@@ -95,8 +95,8 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                         std::cout << "Name invalid. Object not created\n";
                     }
                     else {
-                        bleObj.add_value("Name", it->second["Name"].to_string());
                         FoundBLE bleObj(0);
+                        bleObj.add_value("Name", it->second["Name"].to_string());
                         bleObj.add_value("Path", path);
                         bleObj.add_value("Address", it->second["Address"].to_string());
                     
@@ -193,6 +193,11 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &
 }
 
 
+int uint_to_int(uint8_t num) {
+    return (int)num;
+}
+
+
 //Creats an object to iteract with the ble adapter on this device
 LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices, std::mutex &mtx) {
     BLEDeviceObject::iterator it = devices.begin();
@@ -211,7 +216,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
         BLEDeviceInterface::iterator itrEnd = it->second.end();
         std::cout << "adapter made with path: " << pth << "\n";
         adapterObject = connection->create_object_proxy("org.bluez", pth);
-        std::cout << "Adapter crash test msg\n";
 
         while(itr != itrEnd) {
             if(itr->first == adapterName) {
@@ -220,14 +224,11 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
                 break;
             }
             else if(itr->first == "org.bluez.Device1") {
-                std::cout << "Adapter crash test msg 1\n";
                 get_interface_added(it->first, it->second, knownBleDevices, mtx);
                 break;
             }
-            std::cout << "Adapter crash test msg 2\n";
             ++itr;
         }
-        std::cout << "Adapter crash test msg 3\n";
         ++it;
     }
     //Create class with ability to start and stop scan
@@ -254,11 +255,24 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 
 
 //loop through ble devices to prepare to send to websocket client
-void send_ble_devices(std::vector<FoundBLE> &bleDevices, Web::WebsocketServer &server) {
-    int maxSize = 1024;
-    char sendArr[maxSize];
-    for(int i = 0; i < bleDevices.size(); i++) {
-        //device_to_json(sendArr, maxSize, bleDevices[i]);
+void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServer &server, std::mutex &mtx) {
+    if(knownBleDevices.size() > 0) {
+        char jsonStr[1024];
+        std::cout << "Sending objects to websocket client\n\n";
+        //make sure to have a way to deal with theads MUTEX
+        //potentially chcange to while loop. only use mutex while accessing an object to minimize time
+        //the vector in unavailable
+        for(int i = 0; i < knownBleDevices.size(); i++) {
+            //only apply lock while item is being accessed
+            mtx.lock();
+            //make sure index has not gone out of range since beginning of iteration
+            if(i < knownBleDevices.size()) {
+                int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
+
+                server.send_data(jsonStr, jsonSize);
+                mtx.unlock();
+            }
+        }
     }
 }
 
@@ -315,38 +329,38 @@ int main() {
             uint8_t cmd = server.get_command();
             int cmdInt = (int)cmd - '0';
             switch(cmdInt) {
-                case 1:
+                case 1: {
+                    //start initial scan. use while loop to start and stop later
                     local.start_scan();
-                    std::cout << "Scan started\n";
-                    //server.send_data(jsonTest, sizeof(jsonTest));
-                    break;
-                case 2:
-                    //send_ble_devices(knownBleDevices, server);
-                    local.stop_scan();
-                    std::cout << "Scan stopped\n";
-
-                    if(knownBleDevices.size() > 0) {
-                        char jsonStr[1024];
-                        std::cout << "Creating json object\n";
-
-                        //make sure to have a way to deal with theads MUTEX
-                        mtx.lock();
-                        //potentially chcange to while loop. only use mutex while accessing an object to minimize time
-                        //the vector in unavailable
-                        for (int i = 0; i < knownBleDevices.size(); i++) {
-                            int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
-
-                            server.send_data(jsonStr, jsonSize);
-                            //for(int i = 0; i < tstSize; i++) {
-                            //    std::cout << jsonStr[i];
-                                //std::cout << " num: ";
-                                //std::cout << i << "\n";
-                            //}
-                            //std::cout << "\n";
+                    int startTime = time(nullptr);
+                    //scan for 10 seconds, wait for 10 seconds
+                    bool scan = true;
+                    //continue until stop scanning is explicitly sent
+                    while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
+                        int scanWait = time(nullptr) - startTime;
+                        //start scan if not currently scanning, and waited longer than 30 seconds
+                        if(!scan && scanWait > 30) {
+                            local.start_scan();
+                            scan = true;
+                            startTime = time(nullptr);
                         }
-                        mtx.unlock();
+                        else if(scan && scanWait > 10) { //stop scan if currently scanning and waited longer than to seconds
+                            local.stop_scan();
+                            send_ble_devices(knownBleDevices, server, mtx);
+                            scan = false;
+                            startTime = time(nullptr);
+                        }
+                        sleep(.1);
                     }
                     break;
+                }
+                case 2: {
+                    local.stop_scan();
+                    std::cout << "Scan explicitly stopped\n";
+                    
+                    send_ble_devices(knownBleDevices, server, mtx);
+                    break;
+                }
             }
             sleep(.1);
         }
