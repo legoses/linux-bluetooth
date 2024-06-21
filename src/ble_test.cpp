@@ -277,6 +277,43 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
 }
 
 
+//create a new dbus connection after resetting
+void reset_dbus_connection(std::shared_ptr<DBus::Connection> &connection, 
+                           std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> &addSignal,
+                           std::shared_ptr<DBus::ObjectProxy> &baseObject,
+                           std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> &removeSignal) {
+    connection->remove_free_signal_proxy(addSignal);
+    connection->remove_free_signal_proxy(removeSignal);
+
+    connection.reset();
+    baseObject.reset();
+    removeSignal.reset();
+    addSignal.reset();
+}
+
+
+LocalAdapter create_new_dbus_connection(std::shared_ptr<DBus::Connection> &connection,
+                                std::shared_ptr<DBus::Dispatcher> &dispatcher,
+                                std::shared_ptr<DBus::ObjectProxy> &baseObject,
+                                DBus::MethodProxy<BLEDeviceObject()> method_proxy,
+                                std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> &addSignal,
+                                std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal) {
+
+    connection = dispatcher->create_connection(DBus::BusType::SYSTEM);
+    std::string tmpPath = "/org/bluez/hci0";
+        
+    std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", tmpPath);
+    DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
+    DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
+    //*method_proxy = *(baseObject->create_method<BLEDeviceObject()>(
+    //    "org.freedesktop.DBus.ObjectManager", 
+    //    "GetManagedObjects"));
+
+    LocalAdapter adapter(scanStart, scanStop);
+    return adapter;
+
+}
+
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
@@ -326,6 +363,8 @@ int main() {
 
         //listen for websocket events
         while(true) {
+            const int scanTime = 10;
+            const int waitTime = 30;
             uint8_t cmd = server.get_command();
             int cmdInt = (int)cmd - '0';
             switch(cmdInt) {
@@ -339,16 +378,20 @@ int main() {
                     while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
                         int scanWait = time(nullptr) - startTime;
                         //start scan if not currently scanning, and waited longer than 30 seconds
-                        if(!scan && scanWait > 30) {
+                        if(!scan && scanWait > waitTime) {
                             local.start_scan();
                             scan = true;
                             startTime = time(nullptr);
                         }
-                        else if(scan && scanWait > 10) { //stop scan if currently scanning and waited longer than to seconds
+                        else if(scan && scanWait > scanTime) { //stop scan if currently scanning and waited longer than to seconds
                             local.stop_scan();
                             send_ble_devices(knownBleDevices, server, mtx);
                             scan = false;
                             startTime = time(nullptr);
+
+                            //create new dbus adapter
+                            reset_dbus_connection(connection, addSignal, baseObject, removeSignal);
+                            create_new_dbus_connection(connection, dispatcher, baseObject, method_proxy, addSignal, removeSignal);
                         }
                         sleep(.1);
                     }
@@ -359,6 +402,15 @@ int main() {
                     std::cout << "Scan explicitly stopped\n";
                     
                     send_ble_devices(knownBleDevices, server, mtx);
+    
+                    connection->remove_free_signal_proxy(addSignal);
+                    connection->remove_free_signal_proxy(removeSignal);
+
+                    connection.reset();
+                    baseObject.reset();
+                    removeSignal.reset();
+                    addSignal.reset();
+
                     break;
                 }
             }
