@@ -24,6 +24,7 @@ int LocalAdapter::start_scan() {
         std::cout << "Starting scan\n";
         currentlyScanning = 1;
         start_scan_proxy();
+        std::cout << "scan started\n";
         return 0;
     }
 
