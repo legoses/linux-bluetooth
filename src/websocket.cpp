@@ -81,7 +81,16 @@ void Web::WebsocketServer::begin() {
         //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
         //detect if websocket connection was successful
         //listener();
-        
+        if(this->thread == false) {
+            listener();
+        }
+        else {
+            threaded_listener();
+
+            std::cout << "Post threaded listener call\n";
+        }
+       
+        /*
         if(buffer[0] != 0) {
             std::cout << "Websocket Connection Successful\n";
             uint8_t msg[this->maxPktSize];
@@ -99,6 +108,7 @@ void Web::WebsocketServer::begin() {
         else {
             std::cout << "Error: Connection failed\n";
         }
+        */
     }
 
     free(buffer);

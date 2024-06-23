@@ -68,39 +68,43 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                     //    bleObj.add_UUID(vect[i]);
                     //}
                     
+                    FoundBLE bleObj(1);
+                    bleObj.add_vect("UUID", vect);
+                    bleObj.add_value("Path", path);
+                    bleObj.add_value("Address", it->second["Address"].to_string());
+               
+                    //Add name if one exists. Otherwise add DNE
+                    //maybe add checks like this for other attributes as well?
                     if(it->second["Name"].type() == DBus::DataType::INVALID) {
-                        std::cout << "Name type invalid. BLE Object not created\n";
+                        bleObj.add_value("Name", "DNE");
                     }
                     else {
-                        FoundBLE bleObj(1);
-                        bleObj.add_vect("UUID", vect);
-                        bleObj.add_value("Path", path);
-                        bleObj.add_value("Address", it->second["Address"].to_string());
                         bleObj.add_value("Name", it->second["Name"].to_string());
-
-                        std::cout << "Adding device\n";
-                        mtx.lock();
-                        knownBleObj.push_back(bleObj);
-                        mtx.unlock();
-                        //std::cout << "test size: " << knownBleObj.size() << "\n";
                     }
+
+                    std::cout << "Adding device\n";
+                    mtx.lock();
+                    knownBleObj.push_back(bleObj);
+                    mtx.unlock();
+                    //std::cout << "test size: " << knownBleObj.size() << "\n";
 
                 }
                 else {
+                    FoundBLE bleObj(0);
+                    
                     if(it->second["Name"].type() == DBus::DataType::INVALID) {
-                        std::cout << "Name invalid. Object not created\n";
+                        bleObj.add_value("Name", "DNE");
                     }
                     else {
-                        FoundBLE bleObj(0);
                         bleObj.add_value("Name", it->second["Name"].to_string());
-                        bleObj.add_value("Path", path);
-                        bleObj.add_value("Address", it->second["Address"].to_string());
-                    
-                        std::cout << "Adding device\n";
-                        mtx.lock();
-                        knownBleObj.push_back(bleObj);
-                        mtx.unlock();
                     }
+                    bleObj.add_value("Path", path);
+                    bleObj.add_value("Address", it->second["Address"].to_string());
+                
+                    std::cout << "Adding device\n";
+                    mtx.lock();
+                    knownBleObj.push_back(bleObj);
+                    mtx.unlock();
                 }
             }
             else {
@@ -322,10 +326,20 @@ int main() {
         sleep(1);
 
         //listen for websocket events
+        int cmd = uint_to_int(server.get_command());
+        bool check_cmd = true;
         while(true) {
             const int scanTime = 10;
-            const int waitTime = 30;
-            int cmd = uint_to_int(server.get_command());
+            const int waitTime = 15; //rescan before bluetooth gets depopulated
+
+            //signal if command need to be checked, or if it has been set by previous loop
+            if(check_cmd) {
+                cmd = uint_to_int(server.get_command());
+            }
+            else {
+                check_cmd = true;
+            }
+
 
             if(cmd != 0) {
                 std::cout << "COMMAND: " << cmd << "\n";
@@ -338,9 +352,7 @@ int main() {
                     //scan for 10 seconds, wait for 10 seconds
                     bool scan = true;
                     //continue until stop scanning is explicitly sent
-                    //im pretty sure the wierd dbus crashing has something to do with this while loop
-                    //while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
-                    while(uint_to_int(server.get_command()) != 2) {
+                    while(cmd <= 1) {
                         int scanWait = time(nullptr) - startTime;
                         //start scan if not currently scanning, and waited longer than 30 seconds
                         if(!scan && scanWait >= waitTime) {
@@ -359,8 +371,10 @@ int main() {
                             startTime = time(nullptr);
                         }
                         sleep(1);
+                        cmd = uint_to_int(server.get_command());
                     }
-                    //break;
+                    check_cmd = false;
+                    break;
                 }
                 case 2: {
                     mtx.lock();
