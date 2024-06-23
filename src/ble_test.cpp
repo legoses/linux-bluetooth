@@ -132,6 +132,8 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>, std::vecto
             knownBleObj.erase(it);
             
             std::cout << "Signal " << path << " removed\n";
+            //dont forget to unlock mutex if a signal is removed
+            mtx.unlock();
             return;
         }
     }
@@ -143,7 +145,7 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>, std::vecto
 
 //Listen for device added signal emmited on dbus
 //massive function definition for creating signal to listen for interfaces added
-std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(LocalAdapter object, std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> &foundBleObj, std::mutex &mtx) {
+std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> &foundBleObj, std::mutex &mtx) {
      //Create a listener for the InterfacesAdded signal and call get_interface_added()
      std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> signal = connection->create_free_signal_proxy<void(DBus::Path, BLEDeviceInterface)>(
                     DBus::MatchRuleBuilder::create()
@@ -164,7 +166,6 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
 
 //listen for devices removed signal
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(
-            LocalAdapter object, 
             std::shared_ptr<DBus::Connection> connection,
             std::vector<FoundBLE> &foundBleObj,
             std::mutex &mtx) {
@@ -262,17 +263,17 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
         //make sure to have a way to deal with theads MUTEX
         //potentially chcange to while loop. only use mutex while accessing an object to minimize time
         //the vector in unavailable
+        mtx.lock();
         for(int i = 0; i < knownBleDevices.size(); i++) {
             //only apply lock while item is being accessed
-            mtx.lock();
             //make sure index has not gone out of range since beginning of iteration
             if(i < knownBleDevices.size()) {
                 int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
 
                 server.send_data(jsonStr, jsonSize);
-                mtx.unlock();
             }
         }
+        mtx.unlock();
     }
 }
 
@@ -349,10 +350,10 @@ int main() {
         std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", local.get_path());
 
         //create listener for device added
-        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(local, connection, knownBleDevices, mtx);
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(connection, knownBleDevices, mtx);
        
         //Add reciever to listen for device removed signal
-        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(local, connection, knownBleDevices, mtx); 
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(connection, knownBleDevices, mtx); 
 
         //create variable to hold commands from websocket site
         //uint8_t cmd = 0;
@@ -382,16 +383,19 @@ int main() {
                     //im pretty sure the wierd dbus crashing has something to do with this while loop
                     while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
                         int scanWait = time(nullptr) - startTime;
+                        std::cout << "Waited about: " << scanWait << " seconds\n";
                         //start scan if not currently scanning, and waited longer than 30 seconds
                         if(scan == false && scanWait > waitTime) {
+                            mtx.lock();
                             local.start_scan();
-                            sleep(.1);
+                            mtx.unlock();
                             scan = true;
                             startTime = time(nullptr);
                         }
                         else if(scan == true && scanWait > scanTime) { //stop scan if currently scanning and waited longer than to seconds
+                            mtx.lock();
                             local.stop_scan();
-                            sleep(.1);
+                            mtx.unlock();
                             send_ble_devices(knownBleDevices, server, mtx);
                             scan = false;
                             startTime = time(nullptr);
@@ -402,7 +406,7 @@ int main() {
                             //std::cout << "Creating new dbus connectino\n";
                             //create_new_dbus_connection(connection, dispatcher, baseObject, method_proxy, addSignal, removeSignal);
                         }
-                        sleep(.1);
+                        sleep(1);
                     }
                     break;
                 }
