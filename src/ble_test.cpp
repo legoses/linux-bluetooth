@@ -278,47 +278,6 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
 }
 
 
-//create a new dbus connection after resetting
-void reset_dbus_connection(std::shared_ptr<DBus::Connection> &connection, 
-                           std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> &addSignal,
-                           std::shared_ptr<DBus::ObjectProxy> &baseObject,
-                           std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> &removeSignal) {
-    std::cout << "Removing signals\n";
-    connection->remove_free_signal_proxy(addSignal);
-    connection->remove_free_signal_proxy(removeSignal);
-
-    std::cout << "Resetting shared pointers\n";
-    connection.reset();
-    baseObject.reset();
-    removeSignal.reset();
-    addSignal.reset();
-}
-
-
-LocalAdapter create_new_dbus_connection(std::shared_ptr<DBus::Connection> &connection,
-                                std::shared_ptr<DBus::Dispatcher> &dispatcher,
-                                std::shared_ptr<DBus::ObjectProxy> &baseObject,
-                                DBus::MethodProxy<BLEDeviceObject()> method_proxy,
-                                std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> &addSignal,
-                                std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal) {
-    std::cout << "Creating new connection\n";
-    connection = dispatcher->create_connection(DBus::BusType::SYSTEM);
-    std::string tmpPath = "/org/bluez/hci0";
-       
-    std::cout << "Setting up new discovery methods\n";
-    std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", tmpPath);
-    DBus::MethodProxy<void()> &scanStart = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StartDiscovery"));
-    DBus::MethodProxy<void()> &scanStop = *(adapterObject->create_method<void()>("org.bluez.Adapter1", "StopDiscovery"));
-    //*method_proxy = *(baseObject->create_method<BLEDeviceObject()>(
-    //    "org.freedesktop.DBus.ObjectManager", 
-    //    "GetManagedObjects"));
-
-    std::cout << "Creaitn adapter object\n";
-    LocalAdapter adapter(scanStart, scanStop);
-    return adapter;
-
-}
-
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
@@ -399,12 +358,6 @@ int main() {
                             send_ble_devices(knownBleDevices, server, mtx);
                             scan = false;
                             startTime = time(nullptr);
-
-                            //create new dbus adapter. If I dont do this, dbus breaks and I cry
-                            //std::cout << "Removing old dbus connection\n";
-                            //reset_dbus_connection(connection, addSignal, baseObject, removeSignal);
-                            //std::cout << "Creating new dbus connectino\n";
-                            //create_new_dbus_connection(connection, dispatcher, baseObject, method_proxy, addSignal, removeSignal);
                         }
                         sleep(1);
                     }
