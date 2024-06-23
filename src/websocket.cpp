@@ -70,7 +70,7 @@ void Web::WebsocketServer::begin() {
         std::cout << "Init WS upgrade\n";
         memset(buffer, '\0', this->maxPktSize);
         send(this->clientSocket, wsHeader, headerSize-1, 0);
-        recv(this->clientSocket, buffer, this->maxPktSize, 0);
+        //recv(this->clientSocket, buffer, this->maxPktSize, 0);
 
         //use ping/pong frame to test connection is alive
         //Check if connection has been terminated
@@ -253,12 +253,17 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 
 
 //create frame before sending to client
-int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
+int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool complete) {
     //add check for packet size later
 
     if(len < 126) {
         //use strncpy to create frame. May be less variabality than memset?
-        buf[0] = 129;
+        if(complete) {
+            buf[0] = 0x81;
+        }
+        else {
+            buf[0] = 0x01;
+        }
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
         //make sure len includes just the message and not any \r\n that may come after
@@ -288,11 +293,12 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len) {
 
 
 //send packet to client
-int Web::WebsocketServer::send_data(char msg[], int len) {
+//requires msg data, msg length, and bool indicating if this is a complete message or fragment
+int Web::WebsocketServer::send_data(char msg[], int len, bool complete) {
     //uint8_t packet[this->maxPktSize];
     uint8_t packet[this->maxPktSize];
     
-    if(create_frame(packet, msg, len) == 0) {
+    if(create_frame(packet, msg, len, complete) == 0) {
         std::cout << "Sending data\n";
 
         if(packet[1] == (unsigned char)126) {

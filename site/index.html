@@ -8,16 +8,8 @@
         <button onclick="button_click(1)">Start Scanning</button>
         <button onclick="button_click(2)">Stop Scanning</button>
         <script>
-            function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
-            }
 
-
-            //while(true) {
-                //sleep(1000).then(() => { console.log("sleep test"); });
-            //}
-
-            jsonArr = [];
+           jsonArr = [];
 
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
@@ -29,7 +21,7 @@
 
             ws.onopen = (event) => {
                 console.log("Websocket opened");
-                ws.send("open");
+                //ws.send("open");
            
             }
 
@@ -43,6 +35,7 @@
                     obj = JSON.parse(msg);
                     bleLine = "Device Name: " + obj.Name + " MAC: " + obj.Address;
                     document.getElementById("testBox").innerHTML += bleLine;
+                    document.getElementById("testBox").innerHTML += "<br>";
                     console.log("json detected");
                  }
                 console.log("MESSAGE: " + event.data);

@@ -255,6 +255,33 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
+//signal how many deviecs will be sent
+void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
+    //char sizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"', '0', '"', '}', '\0'};
+    char begSizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"'};
+    char endSizeArr[] = {'"', '}'};
+    //if double digit, needs to be broken into individual characters?
+    //std::cout << sizeArr << "\n";
+    //server.send_data(sizeArr, (sizeof(sizeArr)/sizeof(char))-1);
+    
+    
+    server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), false);
+    if(size > 9) {
+        char *size1, *size2;// = size/10;
+        size1 = (char*)(size/10);
+        size2 = (char*)(size%10);
+        std::cout << "division test: " << size1 << " " << size2 << "\n";
+        server.send_data(size1, 1, false);
+        server.send_data(size2, 1, false);
+    }
+    else {
+        char* s = (char*)size;
+        server.send_data(s, 1, false);
+    }
+    server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), true);
+}
+
+
 //loop through ble devices to prepare to send to websocket client
 void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServer &server, std::mutex &mtx) {
     if(knownBleDevices.size() > 0) {
@@ -264,14 +291,14 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
         //potentially chcange to while loop. only use mutex while accessing an object to minimize time
         //the vector in unavailable
         mtx.lock();
-        for(int i = 0; i < knownBleDevices.size(); i++) {
+        int numKnownDevices = knownBleDevices.size();
+        signal_amount_of_devices(server, numKnownDevices);
+        for(int i = 0; i < numKnownDevices; i++) {
             //only apply lock while item is being accessed
             //make sure index has not gone out of range since beginning of iteration
-            if(i < knownBleDevices.size()) {
-                int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
+            int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
 
-                server.send_data(jsonStr, jsonSize);
-            }
+            server.send_data(jsonStr, jsonSize, true);
         }
         mtx.unlock();
     }
