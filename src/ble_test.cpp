@@ -393,7 +393,6 @@ int main() {
         connection->remove_free_signal_proxy(addSignal);
         connection->remove_free_signal_proxy(removeSignal);
         std::cout << "Testing after free\n";
-        
     }
     else {
         std::cout << "Bluetooth device not found\n";
