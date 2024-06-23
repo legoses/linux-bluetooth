@@ -391,5 +391,5 @@ uint8_t Web::WebsocketServer::get_command() {
         this->modified = false;
         return this->msg;
     }
-    return 0;
+    return (uint8_t)48;
 }

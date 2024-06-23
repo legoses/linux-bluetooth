@@ -11,10 +11,6 @@
 /*
  * TODO:
  * Create a public websocket function to queue messages to send to websocket client
- * Look into crash caused by BadVariantCast after adding device
- * Implement mutex variables for better thread saftey
- * Update site to print blue tooth device data
- * Send all bluetooth devices to size, not just one
  */
 
     
@@ -195,7 +191,7 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &
 
 
 int uint_to_int(uint8_t num) {
-    return (int)num;
+    return (int)num - '0';
 }
 
 
@@ -232,6 +228,7 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
         }
         ++it;
     }
+
     //Create class with ability to start and stop scan
     if(adapterObject != NULL) {
         std::cout << "Creating scan method proxies\n";
@@ -252,7 +249,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 
     return adapter;
 }
-
 
 
 //loop through ble devices to prepare to send to websocket client
@@ -329,9 +325,12 @@ int main() {
         while(true) {
             const int scanTime = 10;
             const int waitTime = 30;
-            uint8_t cmd = server.get_command();
-            int cmdInt = (int)cmd - '0';
-            switch(cmdInt) {
+            int cmd = uint_to_int(server.get_command());
+
+            if(cmd != 0) {
+                std::cout << "COMMAND: " << cmd << "\n";
+            }
+            switch(cmd) {
                 case 1: {
                     //start initial scan. use while loop to start and stop later
                     local.start_scan();
@@ -340,18 +339,18 @@ int main() {
                     bool scan = true;
                     //continue until stop scanning is explicitly sent
                     //im pretty sure the wierd dbus crashing has something to do with this while loop
-                    while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
+                    //while(uint_to_int(server.get_command()) == 0 || uint_to_int(server.get_command()) == 1) {
+                    while(uint_to_int(server.get_command()) != 2) {
                         int scanWait = time(nullptr) - startTime;
-                        std::cout << "Waited about: " << scanWait << " seconds\n";
                         //start scan if not currently scanning, and waited longer than 30 seconds
-                        if(scan == false && scanWait > waitTime) {
+                        if(!scan && scanWait >= waitTime) {
                             mtx.lock();
                             local.start_scan();
                             mtx.unlock();
                             scan = true;
                             startTime = time(nullptr);
                         }
-                        else if(scan == true && scanWait > scanTime) { //stop scan if currently scanning and waited longer than to seconds
+                        else if(scan && scanWait >= scanTime) { //stop scan if currently scanning and waited longer than to seconds
                             mtx.lock();
                             local.stop_scan();
                             mtx.unlock();
@@ -361,22 +360,15 @@ int main() {
                         }
                         sleep(1);
                     }
-                    break;
+                    //break;
                 }
                 case 2: {
+                    mtx.lock();
                     local.stop_scan();
+                    mtx.unlock();
                     std::cout << "Scan explicitly stopped\n";
                     
                     send_ble_devices(knownBleDevices, server, mtx);
-    
-                    connection->remove_free_signal_proxy(addSignal);
-                    connection->remove_free_signal_proxy(removeSignal);
-
-                    connection.reset();
-                    baseObject.reset();
-                    removeSignal.reset();
-                    addSignal.reset();
-
                     break;
                 }
             }
