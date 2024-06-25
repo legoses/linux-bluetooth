@@ -11,6 +11,7 @@
 /*
  * TODO:
  * Create a public websocket function to queue messages to send to websocket client
+ * have site store recieved objects to array, update site to contain new objects, or remove objects that have dissapeared
  */
 
     
@@ -258,37 +259,25 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 //signal how many deviecs will be sent
 void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
     //char sizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"', '0', '"', '}', '\0'};
-    char begSizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"'};
-    char endSizeArr[] = {'"', '}'};
-    //if double digit, needs to be broken into individual characters?
-    //std::cout << sizeArr << "\n";
-    //server.send_data(sizeArr, (sizeof(sizeArr)/sizeof(char))-1);
-    char teststr[] = "this is btu a test";
-    char newtest[] = " test 2 baby";
-    char newtest1[] = " one two three";
-  
-    std::cout << "test a\n";
-    server.send_data(teststr, (sizeof(teststr)/sizeof(char))-1, true);
-    std::cout << "test b\n";
-    server.send_data(newtest, (sizeof(newtest)/sizeof(char))-1, true);
-    std::cout << "test c\n";
-    server.send_data(newtest1, (sizeof(newtest1)/sizeof(char))-1, false);
-   /* 
-    server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), false);
-    if(size > 9) {
-        char *size1, *size2;// = size/10;
-        size1 = (char*)(size/10);
-        size2 = (char*)(size%10);
-        std::cout << "division test: " << size1 << " " << size2 << "\n";
-        server.send_data(size1, 1, false);
-        server.send_data(size2, 1, false);
+    char begSizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':'};
+    char endSizeArr[] = {'}'};
+    
+    //break size into individual characters
+    if(size > 9 && size < 100) {
+        char first = (size%10) + '0';
+        char second = (size/10 % 10) + '0';
+
+        server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), true);
+        server.send_data(&first, sizeof(char), true);
+        server.send_data(&second, sizeof(char), true);
+        server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), false);
     }
-    else {
-        char* s = (char*)size;
-        server.send_data(s, 1, false);
+    else { //only send a single character for size
+        char s = size + '0';
+        server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), true);
+        server.send_data(&s, sizeof(char), true);
+        server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), false);
     }
-    server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), true);
-    */
 }
 
 

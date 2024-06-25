@@ -8,6 +8,8 @@
         <button onclick="button_click(1)">Start Scanning</button>
         <button onclick="button_click(2)">Stop Scanning</button>
         <script>
+            recieving = 0;
+            recieved = 0;
 
            jsonArr = [];
 
@@ -33,10 +35,20 @@
                 msg = event.data;
                 if(msg[0] == "{") {
                     obj = JSON.parse(msg);
-                    bleLine = "Device Name: " + obj.Name + " MAC: " + obj.Address;
-                    document.getElementById("testBox").innerHTML += bleLine;
-                    document.getElementById("testBox").innerHTML += "<br>";
-                    console.log("json detected");
+
+                    if('devices' in obj) {
+                        recieving = obj.devices;
+                    }
+                    else if(recieving > 0 && recieved < recieving) {
+                        bleLine = "Device Name: " + obj.Name + " MAC: " + obj.Address;
+                        document.getElementById("testBox").innerHTML += bleLine;
+                        document.getElementById("testBox").innerHTML += "<br>";
+                        recieved++;
+                        console.log("json detected");
+                    }
+                    else if(recieved >= recieving) {
+                        recieving = 0;
+                    }
                  }
                 console.log("MESSAGE: " + event.data);
             }

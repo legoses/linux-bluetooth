@@ -278,7 +278,6 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool 
     //add check for packet size later
     //uint8_t opcodes = create_payload_indicator(complete);
     buf[0] = create_payload_indicator(fragment);
-    std::cout << "\n\nBUF0 test: " << (int)buf[0] << "\n\n";
 
     if(len < 126) {
 
