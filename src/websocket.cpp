@@ -252,18 +252,45 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
 }
 
 
+uint8_t Web::WebsocketServer::create_payload_indicator(bool frag) {
+    uint8_t payload = 0b00000000;
+    std::cout << "pyaload thing\n\n";
+    if(frag == true) {
+        if(this->contFrag == false) {
+            payload = payload | 0b00000001;
+            this->contFrag = true;
+        }
+    }
+    else if(!frag && this->contFrag){
+        payload = 0b10000000;
+        this->contFrag = false;
+    }
+    else {
+        payload = 0b10000001;
+    }
+
+    return payload;
+}
+
+
 //create frame before sending to client
-int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool complete) {
+int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool fragment) {
     //add check for packet size later
+    //uint8_t opcodes = create_payload_indicator(complete);
+    buf[0] = create_payload_indicator(fragment);
+    std::cout << "\n\nBUF0 test: " << (int)buf[0] << "\n\n";
 
     if(len < 126) {
+
         //use strncpy to create frame. May be less variabality than memset?
+        /*
         if(complete) {
             buf[0] = 0x81;
         }
         else {
             buf[0] = 0x01;
         }
+        */
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
         //make sure len includes just the message and not any \r\n that may come after
@@ -277,7 +304,7 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool 
         std::cout << "From: " << len << " to: " << (int)binLen << "\n";
 
         //convert binLen into two 8 bit bytes so it can be read by websocket
-        buf[0] = 129;
+        //buf[0] = 129;
         buf[1] = (uint8_t)126 & 0b01111111; //make sure mask bit is set to 0
         buf[2] = (binLen >> 8) & 0xFF; //shift byte over to get the 8 MSB
         buf[3] = binLen & 0xFF; // get 8 LSB
@@ -292,13 +319,16 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool 
 }
 
 
+
+
 //send packet to client
 //requires msg data, msg length, and bool indicating if this is a complete message or fragment
-int Web::WebsocketServer::send_data(char msg[], int len, bool complete) {
+int Web::WebsocketServer::send_data(char msg[], int len, bool fragment) {
     //uint8_t packet[this->maxPktSize];
     uint8_t packet[this->maxPktSize];
+    bool currentFragment = false;
     
-    if(create_frame(packet, msg, len, complete) == 0) {
+    if(create_frame(packet, msg, len, fragment) == 0) {
         std::cout << "Sending data\n";
 
         if(packet[1] == (unsigned char)126) {

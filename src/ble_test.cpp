@@ -263,8 +263,17 @@ void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
     //if double digit, needs to be broken into individual characters?
     //std::cout << sizeArr << "\n";
     //server.send_data(sizeArr, (sizeof(sizeArr)/sizeof(char))-1);
-    
-    
+    char teststr[] = "this is btu a test";
+    char newtest[] = " test 2 baby";
+    char newtest1[] = " one two three";
+  
+    std::cout << "test a\n";
+    server.send_data(teststr, (sizeof(teststr)/sizeof(char))-1, true);
+    std::cout << "test b\n";
+    server.send_data(newtest, (sizeof(newtest)/sizeof(char))-1, true);
+    std::cout << "test c\n";
+    server.send_data(newtest1, (sizeof(newtest1)/sizeof(char))-1, false);
+   /* 
     server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), false);
     if(size > 9) {
         char *size1, *size2;// = size/10;
@@ -279,6 +288,7 @@ void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
         server.send_data(s, 1, false);
     }
     server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), true);
+    */
 }
 
 
