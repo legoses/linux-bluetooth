@@ -308,7 +308,7 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
             //make sure index has not gone out of range since beginning of iteration
             int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
 
-            server.send_data(jsonStr, jsonSize, true);
+            server.send_data(jsonStr, jsonSize, false);
         }
         mtx.unlock();
     }
