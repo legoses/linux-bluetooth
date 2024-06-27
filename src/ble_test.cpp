@@ -11,6 +11,7 @@
 /*
  * TODO:
  * Create a public websocket function to queue messages to send to websocket client
+ * have site store recieved objects to array, update site to contain new objects, or remove objects that have dissapeared
  */
 
     
@@ -255,6 +256,31 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
+//signal how many deviecs will be sent
+void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
+    //char sizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"', '0', '"', '}', '\0'};
+    char begSizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':'};
+    char endSizeArr[] = {'}'};
+    
+    //break size into individual characters
+    if(size > 9 && size < 100) {
+        char first = (size%10) + '0';
+        char second = (size/10 % 10) + '0';
+
+        server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), true);
+        server.send_data(&first, sizeof(char), true);
+        server.send_data(&second, sizeof(char), true);
+        server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), false);
+    }
+    else { //only send a single character for size
+        char s = size + '0';
+        server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), true);
+        server.send_data(&s, sizeof(char), true);
+        server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), false);
+    }
+}
+
+
 //loop through ble devices to prepare to send to websocket client
 void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServer &server, std::mutex &mtx) {
     if(knownBleDevices.size() > 0) {
@@ -264,14 +290,14 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
         //potentially chcange to while loop. only use mutex while accessing an object to minimize time
         //the vector in unavailable
         mtx.lock();
-        for(int i = 0; i < knownBleDevices.size(); i++) {
+        int numKnownDevices = knownBleDevices.size();
+        signal_amount_of_devices(server, numKnownDevices);
+        for(int i = 0; i < numKnownDevices; i++) {
             //only apply lock while item is being accessed
             //make sure index has not gone out of range since beginning of iteration
-            if(i < knownBleDevices.size()) {
-                int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
+            int jsonSize = knownBleDevices[i].obj_json(jsonStr, 1024);
 
-                server.send_data(jsonStr, jsonSize);
-            }
+            server.send_data(jsonStr, jsonSize, false);
         }
         mtx.unlock();
     }
@@ -393,7 +419,6 @@ int main() {
         connection->remove_free_signal_proxy(addSignal);
         connection->remove_free_signal_proxy(removeSignal);
         std::cout << "Testing after free\n";
-        
     }
     else {
         std::cout << "Bluetooth device not found\n";

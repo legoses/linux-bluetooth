@@ -24,6 +24,7 @@ namespace Web {
         int clientSocket;
         int maxPktSize = 2000;
         bool thread = false;
+        bool contFrag = false;
 
         //msg recieved from website
         uint8_t msg;
@@ -48,7 +49,8 @@ namespace Web {
 
         //parses data recieved
         int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
-        int create_frame(uint8_t buf[], char msg[], int msgLen);
+        uint8_t create_payload_indicator(bool frag);
+        int create_frame(uint8_t buf[], char msg[], int msgLen, bool fragment);
         void print_frame(uint8_t frame[], int len);
 
     public:
@@ -56,7 +58,7 @@ namespace Web {
         ~WebsocketServer();
 
         void begin(); //loops infinantly so program will not exit after called
-        int send_data(char msg[], int size);
+        int send_data(char msg[], int size, bool complete);
 
         void threaded_listener();
         void listener();
