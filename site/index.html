@@ -1,13 +1,76 @@
 <html>
-    <head>Bluetooth Controller</head>
-    <body>
+    <head></head>
+    	<style>
+
+		h1{
+
+			font: 3.0em "Gill Sans",sans-serif;
+			color: #C6C6C6;
+			border-width: 10px;
+			vertical-align:middle;
+			width:300px;
+			margin-left: auto;
+			margin-right: auto;	
+		}
+		h2{
+			color: #C6C6C6;
+			font: 1.0em "Gill Sans",sans-serif;
+			border-width: 10px;
+			vertical-align: middle;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.button {
+			background-color: #464949;
+			border: 0px solid;
+			border-radius: 2px;
+			font: 1.0em "Gill Sans", sans-serif;
+			color: #C6C6C6;
+		}
+		.button:hover {
+			background-color: #6A6D6D;
+		}
+		.button:focus{
+
+			border-bottom: 3px solid;
+			border-color: #B8E2E5;
+		}
+		.enter_button{
+			background-color: black;
+
+		}
+		.outside{
+
+			background-color: #464949;
+			margin: auto;
+		}
+	
+		.banner{
+
+			background-color: #6A6D6D;
+			border-radius: 5px;
+			width: 77%;
+			display: grid; 
+            		grid-template-columns: repeat(2, 1fr); 
+            		gap: 1px; 
+	    		margin-left: auto;
+	    		margin-right: auto;
+            		/*justify-content: space-between;*/
+		}
+    	</style>
+    <body class="outside">
+    	<h2>Bluetooth Controller<h2>
         <h1>Found devices:</h1>
         </br>
-        <div style="width:75%;height:300px;line-height:3em;overflow:scroll;padding:5px;" id="testBox"></div>
+        <div style="width:75%;height:300px;line-height:3em;overflow:scroll;margin-left: auto;margin-right: auto;background-color:#252525; color: white" id="testBox"></div>
+	
+	<div class="banner">
 
-        <button onclick="button_click(1)">Start Scanning</button>
-        <button onclick="button_click(2)">Stop Scanning</button>
-        <script>
+        <button class="button" onclick="button_click(1)">Start Scanning</button>
+        <button class="button" onclick="button_click(2)">Stop Scanning</button>
+        </div>
+	<script>
             function sleep(ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
