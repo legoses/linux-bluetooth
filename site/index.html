@@ -73,9 +73,10 @@
             recieving = 0;
             recieved = 0;
 
-
-
+            //maybe use later, but for now im just going to delete and reprint devices everytime recieved
            jsonArr = [];
+           jsonMac = []; //holds just mac to make searching easier
+           jsonnBuff = [];
 
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
@@ -99,19 +100,42 @@
                 msg = event.data;
                 if(msg[0] == "{") {
                     obj = JSON.parse(msg);
+                    bleLine = "";
+                    document.getElementById("testBox").innerHTML += bleLine;
 
                     if('devices' in obj) {
                         recieving = obj.devices;
                     }
                     else if(recieving > 0 && recieved < recieving) {
-                        bleLine = "Device Name: " + obj.Name + " MAC: " + obj.Address;
+                        bleLine = "<p>Device Name: " + obj.Name + "    MAC: " + obj.Address + "</p>";
                         document.getElementById("testBox").innerHTML += bleLine;
-                        document.getElementById("testBox").innerHTML += "<br>";
+                        //document.getElementById("testBox").innerHTML += "<br>";
+                        jsonBuff.push(obj);
                         recieved++;
                         console.log("json detected");
                     }
                     else if(recieved >= recieving) {
                         recieving = 0;
+
+                        //while not recieveing, update ble list
+                        //find logner length of the json arrays
+                        //Loop based on length of one, in a single loop check if buf mac exists in dplsayed array
+                        //and if mac in displayed array does not exist in buff
+                        longerLen = 0;
+                        if(jsonBuff.length() > jsonArr.length()) {
+                            longerLen = jsonBuff.length();
+                        }
+                        else {
+                            longerLen = jsonArr.length();
+                        }
+
+                        //probably needs to be a seperate function
+                        for(i = 0; i < longerLen; i++) {
+                            if(!jsonMac.includes(jsonBuff[i].Address)) {
+                                
+                            }
+                        }
+
                     }
                  }
                 console.log("MESSAGE: " + event.data);
