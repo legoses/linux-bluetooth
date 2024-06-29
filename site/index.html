@@ -163,8 +163,10 @@
                         //find logner length of the json arrays
                         //Loop based on length of one, in a single loop check if buf mac exists in dplsayed array
                         //and if mac in displayed array does not exist in buff
+                        
                         compare_mac();
                         document.getElementById("testBox").innerHTML = "";
+                        jsonBuff = [];
 
                         console.log("Updating list");
                         for(i = 0; i < jsonArr.length; i++) {
