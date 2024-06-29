@@ -259,18 +259,20 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 
 //signal how many deviecs will be sent
 void signal_amount_of_devices(Web::WebsocketServer &server, int &size) {
-    //char sizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':', '"', '0', '"', '}', '\0'};
     char begSizeArr[] = {'{', '"', 'd', 'e', 'v', 'i', 'c', 'e', 's', '"', ':'};
     char endSizeArr[] = {'}'};
     
     //break size into individual characters
+    std::cout << "Array contains " << size << " device\n";
     if(size > 9 && size < 100) {
         char first = (size%10) + '0';
         char second = (size/10 % 10) + '0';
 
+        std::cout << "First: " << first << " seccond: " << second << "\n\n";
+
         server.send_data(begSizeArr, sizeof(begSizeArr)/sizeof(char), true);
-        server.send_data(&first, sizeof(char), true);
         server.send_data(&second, sizeof(char), true);
+        server.send_data(&first, sizeof(char), true);
         server.send_data(endSizeArr, sizeof(endSizeArr)/sizeof(char), false);
     }
     else { //only send a single character for size
@@ -410,6 +412,10 @@ int main() {
                     std::cout << "Scan explicitly stopped\n";
                     
                     send_ble_devices(knownBleDevices, server, mtx);
+                    break;
+                }
+                case 3: {
+                    local.stop_scan();
                     break;
                 }
             }

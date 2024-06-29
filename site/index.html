@@ -68,7 +68,8 @@
 	<div class="banner">
         <button class="button" onclick="button_click(1)">Start Scanning</button>
         <button class="button" onclick="button_click(2)">Stop Scanning</button>
-  </div>
+        <button class="button" onclick="button_click(3)">Select Devices</button>
+    </div>
 	<script>
             recieving = 0;
             recieved = 0;
@@ -76,7 +77,7 @@
             //maybe use later, but for now im just going to delete and reprint devices everytime recieved
            jsonArr = [];
            jsonMac = []; //holds just mac to make searching easier
-           jsonnBuff = [];
+           jsonBuff = [];
 
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
@@ -84,6 +85,51 @@
             function button_click(arg) {
                 ws.send(arg);
                 console.log("Button pressed");
+            }
+
+            function compare_mac() {
+                if(jsonArr.length > jsonBuff.length) {
+                    arrLen = jsonArr.length;
+                    shortLen = jsonBuff.length;
+                    
+                    for(i = 0; i < jsonArr.length; i++) {
+                        //if an item exists on site, but not in buffer, remove it
+                        if(!jsonBuff.includes(jsonArr[i].Address)) {
+                            console.log("Filtering old device");
+                            jsonArr.splice(i, 1);
+                            jsonMac.splice(i, 1);
+                        }
+                        
+                        //check if mac stored in buffer aready exists on site
+                        if(i < shortLen) {
+                            if(!jsonMac.includes(jsonBuff[i].Address)) {
+                                console.log("Adding new device");
+                                jsonMac.push(jsonBuff[i].Address);
+                                jsonArr.push(jsonBuff[i]);
+                            }
+                        }
+                    }
+                }
+                else {
+                    arrLen = jsonBuff.length;
+                    shortLen = jsonArr.length;
+
+                    for(i = 0; i < arrLen; i++) {
+                        //check if mac stored in buffer aready exists on site
+                        if(!jsonMac.includes(jsonBuff[i].Address)) {
+                            jsonMac.push(jsonBuff[i].Address);
+                            jsonArr.push(jsonBuff[i]);
+                        }
+
+                        //if an item exists on site, but not in buffer, remove it
+                        if(i < shortLen) {
+                            if(!jsonMac.includes(jsonArr[i].Address)) {
+                                jsonArr.splice(i, 1);
+                                jsonMac.splice(i, 1);
+                            }
+                        }
+                    }
+                }
             }
 
             ws.onopen = (event) => {
@@ -101,41 +147,31 @@
                 if(msg[0] == "{") {
                     obj = JSON.parse(msg);
                     bleLine = "";
-                    document.getElementById("testBox").innerHTML += bleLine;
 
+                    //get number of incoming devices
                     if('devices' in obj) {
                         recieving = obj.devices;
+                        recieved = 0;
+                        console.log("Detected " + recieving + " devices");
                     }
                     else if(recieving > 0 && recieved < recieving) {
-                        bleLine = "<p>Device Name: " + obj.Name + "    MAC: " + obj.Address + "</p>";
-                        document.getElementById("testBox").innerHTML += bleLine;
-                        //document.getElementById("testBox").innerHTML += "<br>";
                         jsonBuff.push(obj);
                         recieved++;
-                        console.log("json detected");
                     }
-                    else if(recieved >= recieving) {
-                        recieving = 0;
-
+                    if(recieved >= recieving) {
                         //while not recieveing, update ble list
                         //find logner length of the json arrays
                         //Loop based on length of one, in a single loop check if buf mac exists in dplsayed array
                         //and if mac in displayed array does not exist in buff
-                        longerLen = 0;
-                        if(jsonBuff.length() > jsonArr.length()) {
-                            longerLen = jsonBuff.length();
-                        }
-                        else {
-                            longerLen = jsonArr.length();
-                        }
+                        compare_mac();
+                        document.getElementById("testBox").innerHTML = "";
 
-                        //probably needs to be a seperate function
-                        for(i = 0; i < longerLen; i++) {
-                            if(!jsonMac.includes(jsonBuff[i].Address)) {
-                                
-                            }
+                        console.log("Updating list");
+                        for(i = 0; i < jsonArr.length; i++) {
+                            console.log("array test");
+                            bleLine = "<p>Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</p>";
+                            document.getElementById("testBox").innerHTML += bleLine;
                         }
-
                     }
                  }
                 console.log("MESSAGE: " + event.data);
