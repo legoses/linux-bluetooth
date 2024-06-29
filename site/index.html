@@ -1,11 +1,26 @@
 <html>
     <head></head>
     	<style>
+        :root {
+            --main-text-color: #C6C6C6;
+        }
+        
+        .bleitem {
+            color: var(--main-text-color);
+            background: #464949;
+            margin: 5px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .bleitem:hover {
+            background: #353737;
+        }
 
 		h1{
 
 			font: 3.0em "Gill Sans",sans-serif;
-			color: #C6C6C6;
+			color: var(--main-text-color);
 			border-width: 10px;
 			vertical-align:middle;
 			width:300px;
@@ -13,7 +28,7 @@
 			margin-right: auto;	
 		}
 		h2{
-			color: #C6C6C6;
+			color: var(--main-text-color);
 			font: 1.0em "Gill Sans",sans-serif;
 			border-width: 10px;
 			vertical-align: middle;
@@ -26,7 +41,7 @@
 			border: 0px solid;
 			border-radius: 2px;
 			font: 1.0em "Gill Sans", sans-serif;
-			color: #C6C6C6;
+			color: var(--main-text-color);
 		}
 		.button:hover {
 			background-color: #6A6D6D;
@@ -63,7 +78,11 @@
     	<h2>Bluetooth Controller<h2>
         <h1>Found devices:</h1>
         </br>
-        <div style="width:75%;height:300px;line-height:3em;overflow:scroll;margin-left: auto;margin-right: auto;background-color:#252525; color: white" id="testBox"></div>
+        <div style="width:75%;height:300px;line-height:3em;overflow:scroll;margin-left: auto;margin-right: auto;background-color:#252525; color: white" id="testBox">
+            <div class="bleitem">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>
+            <div class="bleitem">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>
+            <div class="bleitem">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>
+        </div>
 	
 	<div class="banner">
         <button class="button" onclick="button_click(1)">Start Scanning</button>
@@ -171,7 +190,7 @@
                         console.log("Updating list");
                         for(i = 0; i < jsonArr.length; i++) {
                             console.log("array test");
-                            bleLine = "<p>Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</p>";
+                            bleLine = "<div class=\"bleitem\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
                             document.getElementById("testBox").innerHTML += bleLine;
                         }
                     }
