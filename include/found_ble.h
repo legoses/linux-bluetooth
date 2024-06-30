@@ -17,6 +17,8 @@ class FoundBLE : public BLEObject {
 
     int get_service_name();
     void copy_value(std::string str, char arr[], int arrSize, int &pos);
+    void copy_value(char str[], int strSize, char arr[], int arrSize, int &pos);
+    
     void add_digit(char dig, char arr[], int arrSize, int &pos);
 
     public:

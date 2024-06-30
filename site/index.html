@@ -75,9 +75,9 @@
 		}
     	</style>
     <body class="outside">
-    	<h2>Bluetooth Controller<h2>
+    	<h2>Bluetooth Controller</h2>
         <h1>Found devices:</h1>
-        </br>
+        <br>
         <div style="width:75%;height:300px;line-height:3em;overflow:scroll;margin-left: auto;margin-right: auto;background-color:#252525; color: white" id="testBox"></div>
 	
 	<div class="banner">
@@ -103,7 +103,18 @@
             }
 
             function toggle_item(pos) {
-                console.log("Item " + pos + " clicked");
+                //if(document.getElementById("ble" + pos).style.background == "#353737") {
+                console.log("Selected status = " + jsonArr[pos].Selected);
+                if(jsonArr[pos].Selected == 0) {
+                    jsonArr[pos].Selected = 1;
+                    document.getElementById("ble" + pos).style.background = "#353737";
+                }
+                else {
+                    jsonArr[pos].Selected = 0;
+                    document.getElementById("ble" + pos).style.background = "#464949";
+                }
+
+
             }
 
             function compare_mac() {
@@ -190,7 +201,7 @@
                         console.log("Updating list");
                         for(i = 0; i < jsonArr.length; i++) {
                             console.log("array test");
-                            bleLine = "<div class=\"bleitem\" onclick=\"toggle_item(" + i + ")\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
+                            bleLine = "<div class=\"bleitem\" id=\"ble" + i + "\" onclick=\"toggle_item(" + i + ")\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
                             document.getElementById("testBox").innerHTML += bleLine;
                         }
                     }

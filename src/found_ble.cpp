@@ -65,12 +65,25 @@ void FoundBLE::add_digit(char dig, char arr[], int arrSize, int &pos) {
     }
 }
 
-
+//add string to json array
 void FoundBLE::copy_value(std::string str, char arr[], int arrSize, int &pos)  {
     //make sure value will not overflow array
     if(pos + str.size()+2 < arrSize) {
         add_digit('"', arr, arrSize, pos);
         for(int i = 0; i < str.size(); i++) {
+            add_digit(str[i], arr, arrSize, pos);
+        }
+        //pos+=str.size();
+        add_digit('"', arr, arrSize, pos);
+    }
+}
+
+
+void FoundBLE::copy_value(char str[], int strSize, char arr[], int arrSize, int &pos)  {
+    //make sure value will not overflow array
+    if(pos + strSize+2 < arrSize) {
+        add_digit('"', arr, arrSize, pos);
+        for(int i = 0; i < strSize; i++) {
             add_digit(str[i], arr, arrSize, pos);
         }
         //pos+=str.size();
@@ -127,6 +140,15 @@ int FoundBLE::obj_json(char jsonArr[], int arrLen) {
             add_digit(',', jsonArr, arrLen, arrPos);
         }
     }
+
+    //add value to signal wether the device is selected or not
+
+    char selected[] = {'S', 'e', 'l', 'e', 'c', 't', 'e', 'd'};
+    add_digit(',', jsonArr, arrLen, arrPos);
+    copy_value(selected, sizeof(selected)/sizeof(char), jsonArr, arrLen, arrPos);
+    add_digit(':', jsonArr, arrLen, arrPos);
+    add_digit('0', jsonArr, arrLen, arrPos);
+
     add_digit('}', jsonArr, arrLen, arrPos);
     std::cout << "done\n";
 
