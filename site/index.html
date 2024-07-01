@@ -83,7 +83,8 @@
 	<div class="banner">
         <button class="button" onclick="button_click(1)">Start Scanning</button>
         <button class="button" onclick="button_click(2)">Stop Scanning</button>
-        <button class="button" onclick="button_click(3)">Select Devices</button>
+        <button class="button" onclick="start_attack()">Start</button>
+        <button class="button" onclick="stop_attack()">Stop</button>
     </div>
 	<script>
             recieving = 0;
@@ -93,6 +94,7 @@
            jsonArr = [];
            jsonMac = []; //holds just mac to make searching easier
            jsonBuff = [];
+           numSelected = 0;
 
            var ws = new WebSocket("ws://127.0.0.1:8080");
            console.log("test log");
@@ -102,19 +104,33 @@
                 console.log("Button pressed");
             }
 
+            //get selected items, and send to cpp program
+            function start_attack() {
+                //stop ble scanning
+                button_click(2);
+                selectedDevices = [];
+                ws.send()
+                for(i = 0; i < jsonArr.length; i++) {
+                    if(jsonArr[i].Selected == 1) {
+                        selectedDevices.push(jsonArr[i]);
+                        numSelected++;
+                    }
+                } 
+            }
+
             function toggle_item(pos) {
                 //if(document.getElementById("ble" + pos).style.background == "#353737") {
                 console.log("Selected status = " + jsonArr[pos].Selected);
                 if(jsonArr[pos].Selected == 0) {
                     jsonArr[pos].Selected = 1;
                     document.getElementById("ble" + pos).style.background = "#353737";
+                    numSelected++;
                 }
                 else {
                     jsonArr[pos].Selected = 0;
                     document.getElementById("ble" + pos).style.background = "#464949";
+                    numSelected--;
                 }
-
-
             }
 
             function compare_mac() {
