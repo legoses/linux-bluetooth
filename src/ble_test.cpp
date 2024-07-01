@@ -197,7 +197,7 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &
 
 
 int uint_to_int(uint8_t num) {
-    return (int)num + '0';
+    return (int)num - '0';
 }
 
 
@@ -308,7 +308,10 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
 }
 
 
+//seperate thread to handle scanning
 void scan_for_devices(std::atomic_bool &run, LocalAdapter &local, std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServer &server, std::mutex &mtx) {
+    //run = true;
+    std::cout << "thread start\n";
     local.start_scan();
     int startTime = time(nullptr);
     const int scanTime = 10;
@@ -329,6 +332,7 @@ void scan_for_devices(std::atomic_bool &run, LocalAdapter &local, std::vector<Fo
         }
         sleep(1);
     }
+    std::cout << "thread ended\n";
     local.stop_scan();
 }
 
@@ -388,39 +392,22 @@ int main() {
         //listen for websocket events
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
         //int cmd = uint_to_int(server.get_command(buf));
-        bool check_cmd = true;
         //boolean that is meant to be written to and read from by different threads
-        std::atomic_bool run = true;
+        std::atomic_bool run = false;
         while(true) {
-            //signal if command need to be checked, or if it has been set by previous loop
-            //if(check_cmd) {
-            //    cmd = uint_to_int(server.get_command(buf));
-            //}
-            //else {
-            //    check_cmd = true;
-            //}
-            std::cout << "start init listen\n";
             int msgLen = server.get_command(buf);
-            std::cout << "Printing buf: ";
-            //std::cout << buf << "\n";
 
             int cmd = uint_to_int(buf[0]);
 
-
             //I think websocket is getting the command from the site incorrectly
-            std::cout << "COmmand get: " << buf[0] << " and " << cmd << " and " << msgLen << "\n";
-
-
-            if(cmd != 0) {
-                std::cout << "COMMAND: " << cmd << "\n";
-            }
             switch(cmd) {
                 //if I have the get_command function wait until a command is recieved, I will need to have the bluetooth scanner as its own thread, ar async?
                 case 1: {
-                    run = true;
-                    std::async(scan_for_devices, std::ref(run), std::ref(local), std::ref(knownBleDevices), std::ref(server), std::ref(mtx));
-                    //start initial scan. use while loop to start and stop later
-                    //check_cmd = false;
+                    if(!run) {
+                        run = true;
+                        std::thread scan(scan_for_devices, std::ref(run), std::ref(local), std::ref(knownBleDevices), std::ref(server), std::ref(mtx));
+                        scan.detach();
+                    }
                     break;
                 }
                 case 2: {

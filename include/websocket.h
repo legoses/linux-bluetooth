@@ -54,7 +54,7 @@ namespace Web {
         char *create_ws_header(char *buf, int size, int &hSize); 
 
         //parses data recieved
-        int recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize); 
+        int recv_data(char *buffer, int bufSize, uint8_t msg[]); 
         uint8_t create_payload_indicator(bool frag);
         int create_frame(uint8_t buf[], char msg[], int msgLen, bool fragment);
         void print_frame(uint8_t frame[], int len);

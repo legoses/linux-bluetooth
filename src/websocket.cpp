@@ -204,7 +204,7 @@ char *Web::WebsocketServer::create_ws_header(char *buf, int size, int &hSize) {
 
 
 //convert websocket data into readable format
-int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], int msgSize) {
+int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[]) {
     std::cout << "Data recieved\n";
 
     //check if this contains a message, and is final packet in stream
@@ -231,7 +231,7 @@ int Web::WebsocketServer::recv_data(char *buffer, int bufSize, uint8_t msg[], in
             len = (unsigned char)buffer[2] << 8 | (unsigned char)buffer[3];
            
             //make sure len is not larger than msg buffer
-            if(len < msgSize) { 
+            if(len < bufSize) { 
                 encoded = (uint8_t*)malloc(len*sizeof(uint8_t));
                 memcpy(encoded, &buffer[8], len);
             }
@@ -363,21 +363,20 @@ void Web::WebsocketServer::threaded_listener() {
     //lambda function
     //use this as the capture clause so thread can access class variables
     //handle websocket connection
-    do {
-        this->pool.enqueue([&] {
-            //automatically releases lock when this goes out of scope
-            std::lock_guard<std::mutex> lock(this->listen_mtx);
-            std::cout << "Waiting for mesasge...\n";
-            this->msgSize = recv(this->clientSocket, this->msg, this->maxPktSize, 0);
-            std::cout << "Message recieved\n";
+    char buffer[this->maxPktSize];
+        this->pool.enqueue([this, &buffer] {
+            while(recv(this->clientSocket, buffer, this->maxPktSize, 0) > 0) {
+                //automatically releases lock when this goes out of scope
+                std::lock_guard<std::mutex> lock(this->listen_mtx);
+                std::cout << "Waiting for mesasge...\n";
+                this->msgSize = recv_data(buffer, this->maxPktSize, this->msg);
 
-            threadFree = true;
+                threadFree = true;
 
-            this->listen_cv.notify_one();
+                this->listen_cv.notify_one();
+            }
         });
-        std::cout << "Freed mutex\n";
 
-    } while(this->msgSize > 0);
     /*
     this->pool.enqueue([this] {
         std::cout << "Listening for messages...\n";
@@ -438,7 +437,7 @@ void Web::WebsocketServer::listener() {
         std::cout << "message recieved\n";
         //make sure message is not empty
         if(buffer[0] != '\0') {
-            int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
+            int size = recv_data(buffer, this->maxPktSize, msg);
             if(size > 0) {
 
                 //reset buffers
@@ -468,22 +467,16 @@ int Web::WebsocketServer::get_command(uint8_t *buf) {
     //});
     //unique locks are able to be created without lockign right away
     //as is done here
-    std::unique_lock<std::mutex> lock(this->listen_mtx);
-    //wait until able to get lock
-    std::cout << "Waiting for mutex free\n";
-    this->listen_cv.wait(lock, [&] {return this->threadFree;});
+    
+    if(!this->threadFree) {
+        std::unique_lock<std::mutex> lock(this->listen_mtx);
+        //wait until able to get lock
+        std::cout << "Waiting for mutex free\n";
+        this->listen_cv.wait(lock, [&] {return this->threadFree;});
+    }
 
-    std::cout << "Insize lambda\n";
     memcpy(buf, this->msg, this->msgSize);
-    std::cout << "post memcpy\n";
 
     threadFree = false;
-    /*
-    this->listen_cv.wait(lock, [&] {
-        std::cout << "Insize lambda\n";
-        memcpy(buf, this->msg, this->msgSize);
-        std::cout << "post memcpy\n";
-    });
-    */
     return this->msgSize;
 }
