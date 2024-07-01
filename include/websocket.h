@@ -22,16 +22,22 @@ namespace Web {
         struct sockaddr clientAddr;
         int clientAddrSize;
         int clientSocket;
-        int maxPktSize = 2000;
         bool thread = false;
         bool contFrag = false;
+        bool bufSet = false;
+        bool threadFree = false;
 
         //msg recieved from website
-        uint8_t msg;
-        bool modified = false;
+        uint8_t *msg;// = (uint8_t*)malloc(sizeof(this->maxPktSize)*sizeof(uint8_t));
+        int maxPktSize;// = 2000;
+        
+        int msgSize;
+        bool msgRecieved = false;
 
         //queue messages to send to client
         std::queue<char*> msgQueue;
+        std::condition_variable listen_cv;
+        std::mutex listen_mtx;
 
         //setup threads
         //when being initialized along with the class, curley brackets must be used
@@ -57,6 +63,8 @@ namespace Web {
         WebsocketServer(int port);
         ~WebsocketServer();
 
+        void set_buffer(int size);
+
         void begin(); //loops infinantly so program will not exit after called
         int send_data(char msg[], int size, bool complete);
 
@@ -66,7 +74,7 @@ namespace Web {
         void set_threading(bool opt);
         bool get_threading(); 
 
-        uint8_t get_command();
+        int get_command(uint8_t *buf);
     };
 };
 #endif

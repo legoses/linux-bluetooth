@@ -197,7 +197,7 @@ DBus::MethodProxy<void()>& create_scan_meth(std::shared_ptr<DBus::ObjectProxy> &
 
 
 int uint_to_int(uint8_t num) {
-    return (int)num - '0';
+    return (int)num + '0';
 }
 
 
@@ -308,6 +308,31 @@ void send_ble_devices(std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServ
 }
 
 
+void scan_for_devices(std::atomic_bool &run, LocalAdapter &local, std::vector<FoundBLE> &knownBleDevices, Web::WebsocketServer &server, std::mutex &mtx) {
+    local.start_scan();
+    int startTime = time(nullptr);
+    const int scanTime = 10;
+    const int waitTime = 15; //rescan before bluetooth gets depopulated
+    //scan for 10 seconds, wait for 10 seconds
+    //continue until stop scanning is explicitly sent
+    while(run) {
+        int scanWait = time(nullptr) - startTime;
+        //start scan if not currently scanning, and waited longer than 30 seconds
+        if(scanWait >= waitTime) {
+            local.start_scan();
+            startTime = time(nullptr);
+        }
+        else if(scanWait >= scanTime) { //stop scan if currently scanning and waited longer than to seconds
+            local.stop_scan();
+            send_ble_devices(knownBleDevices, server, mtx);
+            startTime = time(nullptr);
+        }
+        sleep(1);
+    }
+    local.stop_scan();
+}
+
+
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
@@ -351,65 +376,58 @@ int main() {
         //lambda callback for websocket class
         server.set_threading(true);
 
+        //create buffer to recieve messages from site
+        int bufSize = 2000;
+        uint8_t buf[bufSize];
+        server.set_buffer(bufSize);
+
         std::cout << "Starting webserver\n";
         server.begin();
         sleep(1);
 
         //listen for websocket events
-        int cmd = uint_to_int(server.get_command());
+        //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
+        //int cmd = uint_to_int(server.get_command(buf));
         bool check_cmd = true;
+        //boolean that is meant to be written to and read from by different threads
+        std::atomic_bool run = true;
         while(true) {
-            const int scanTime = 10;
-            const int waitTime = 15; //rescan before bluetooth gets depopulated
-
             //signal if command need to be checked, or if it has been set by previous loop
-            if(check_cmd) {
-                cmd = uint_to_int(server.get_command());
-            }
-            else {
-                check_cmd = true;
-            }
+            //if(check_cmd) {
+            //    cmd = uint_to_int(server.get_command(buf));
+            //}
+            //else {
+            //    check_cmd = true;
+            //}
+            std::cout << "start init listen\n";
+            int msgLen = server.get_command(buf);
+            std::cout << "Printing buf: ";
+            //std::cout << buf << "\n";
+
+            int cmd = uint_to_int(buf[0]);
+
+
+            //I think websocket is getting the command from the site incorrectly
+            std::cout << "COmmand get: " << buf[0] << " and " << cmd << " and " << msgLen << "\n";
 
 
             if(cmd != 0) {
                 std::cout << "COMMAND: " << cmd << "\n";
             }
             switch(cmd) {
+                //if I have the get_command function wait until a command is recieved, I will need to have the bluetooth scanner as its own thread, ar async?
                 case 1: {
+                    run = true;
+                    std::async(scan_for_devices, std::ref(run), std::ref(local), std::ref(knownBleDevices), std::ref(server), std::ref(mtx));
                     //start initial scan. use while loop to start and stop later
-                    local.start_scan();
-                    int startTime = time(nullptr);
-                    //scan for 10 seconds, wait for 10 seconds
-                    bool scan = true;
-                    //continue until stop scanning is explicitly sent
-                    while(cmd <= 1) {
-                        int scanWait = time(nullptr) - startTime;
-                        //start scan if not currently scanning, and waited longer than 30 seconds
-                        if(!scan && scanWait >= waitTime) {
-                            mtx.lock();
-                            local.start_scan();
-                            mtx.unlock();
-                            scan = true;
-                            startTime = time(nullptr);
-                        }
-                        else if(scan && scanWait >= scanTime) { //stop scan if currently scanning and waited longer than to seconds
-                            mtx.lock();
-                            local.stop_scan();
-                            mtx.unlock();
-                            send_ble_devices(knownBleDevices, server, mtx);
-                            scan = false;
-                            startTime = time(nullptr);
-                        }
-                        sleep(1);
-                        cmd = uint_to_int(server.get_command());
-                    }
-                    check_cmd = false;
+                    //check_cmd = false;
                     break;
                 }
                 case 2: {
-                    mtx.lock();
-                    local.stop_scan();
-                    mtx.unlock();
+                    run = false;
+                    //mtx.lock();
+                    //local.stop_scan();
+                    //mtx.unlock();
                     std::cout << "Scan explicitly stopped\n";
                     
                     send_ble_devices(knownBleDevices, server, mtx);
@@ -420,6 +438,7 @@ int main() {
                     break;
                 }
             }
+            std::cout << "Main thread loop\n";
             sleep(.1);
         }
 

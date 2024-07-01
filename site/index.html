@@ -81,12 +81,14 @@
         <div style="width:75%;height:300px;line-height:3em;overflow:scroll;margin-left: auto;margin-right: auto;background-color:#252525; color: white" id="testBox"></div>
 	
 	<div class="banner">
-        <button class="button" onclick="button_click(1)">Start Scanning</button>
-        <button class="button" onclick="button_click(2)">Stop Scanning</button>
+        <button class="button" onclick="button_click(START_SCAN)">Start Scanning</button>
+        <button class="button" onclick="button_click(STOP_SCAN)">Stop Scanning</button>
         <button class="button" onclick="start_attack()">Start</button>
         <button class="button" onclick="stop_attack()">Stop</button>
     </div>
 	<script>
+            const START_SCAN = 1;
+            const STOP_SCAN = 2;
             recieving = 0;
             recieved = 0;
 
@@ -107,7 +109,7 @@
             //get selected items, and send to cpp program
             function start_attack() {
                 //stop ble scanning
-                button_click(2);
+                button_click(STOP_SCAN);
                 selectedDevices = [];
                 ws.send()
                 for(i = 0; i < jsonArr.length; i++) {

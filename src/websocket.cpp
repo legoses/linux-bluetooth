@@ -46,56 +46,42 @@ void Web::WebsocketServer::print_frame(uint8_t frame[], int len) {
 //begin connection to websocket server
 //have this return some kind of value (bool, int) to signify value recieved
 void Web::WebsocketServer::begin() {
-    std::cout << "Listening for connections...\n";
-    //create socket
-    bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
-    listen(this->listenSocket, 5);
+    if(bufSet) {
+        std::cout << "Listening for connections...\n";
+        //create socket
+        bind(this->listenSocket, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
+        listen(this->listenSocket, 5);
 
-    //listen for connections
-    this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
+        //listen for connections
+        this->clientSocket = accept(this->listenSocket, &clientAddr, (socklen_t*)&clientAddrSize);
 
-    char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-    char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
-      
-    std::cout << "Reading input\n";
-    std::cout << sizeof(readBuffer);
-    if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
-        std::cout << "Read does not wokr?\n";
-    }
-
-    int headerSize;
-    char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
-
-    if(wsHeader != NULL) {
-        std::cout << "Init WS upgrade\n";
-        memset(buffer, '\0', this->maxPktSize);
-        send(this->clientSocket, wsHeader, headerSize-1, 0);
-        //recv(this->clientSocket, buffer, this->maxPktSize, 0);
-
-        //use ping/pong frame to test connection is alive
-        //Check if connection has been terminated
-        //read(this->listenSocket, readBuffer, this->maxPktSize);
-        //print_frame(readBuffer, this->maxPktSize);
-
-       
-        //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
-        //detect if websocket connection was successful
-        //listener();
-        if(this->thread == false) {
-            listener();
+        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
+        char *readBuffer = (char*)malloc(this->maxPktSize*sizeof(char));
+          
+        std::cout << "Reading input\n";
+        std::cout << sizeof(readBuffer);
+        if(read(this->clientSocket, readBuffer, this->maxPktSize) == 0) {
+            std::cout << "Read does not wokr?\n";
         }
-        else {
-            threaded_listener();
 
-            std::cout << "Post threaded listener call\n";
-        }
-       
-        /*
-        if(buffer[0] != 0) {
-            std::cout << "Websocket Connection Successful\n";
-            uint8_t msg[this->maxPktSize];
-            memset(msg, '\0', this->maxPktSize);
-            
+        int headerSize;
+        char *wsHeader = create_ws_header(readBuffer, this->maxPktSize, headerSize);
+
+        if(wsHeader != NULL) {
+            std::cout << "Init WS upgrade\n";
+            memset(buffer, '\0', this->maxPktSize);
+            send(this->clientSocket, wsHeader, headerSize-1, 0);
+            //recv(this->clientSocket, buffer, this->maxPktSize, 0);
+
+            //use ping/pong frame to test connection is alive
+            //Check if connection has been terminated
+            //read(this->listenSocket, readBuffer, this->maxPktSize);
+            //print_frame(readBuffer, this->maxPktSize);
+
+           
+            //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
+            //detect if websocket connection was successful
+            //listener();
             if(this->thread == false) {
                 listener();
             }
@@ -104,16 +90,39 @@ void Web::WebsocketServer::begin() {
 
                 std::cout << "Post threaded listener call\n";
             }
-        }
-        else {
-            std::cout << "Error: Connection failed\n";
-        }
-        */
-    }
+           
+            /*
+            if(buffer[0] != 0) {
+                std::cout << "Websocket Connection Successful\n";
+                uint8_t msg[this->maxPktSize];
+                memset(msg, '\0', this->maxPktSize);
+                
+                if(this->thread == false) {
+                    listener();
+                }
+                else {
+                    threaded_listener();
 
-    free(buffer);
-    free(readBuffer);
-    free(wsHeader);
+                    std::cout << "Post threaded listener call\n";
+                }
+            }
+            else {
+                std::cout << "Error: Connection failed\n";
+            }
+            */
+        }
+
+        free(buffer);
+        free(readBuffer);
+        free(wsHeader);
+    }
+}
+
+
+void Web::WebsocketServer::set_buffer(int size) {
+    this->msg = (uint8_t*)malloc(sizeof(size)*sizeof(uint8_t));
+    this->maxPktSize = size;
+    bufSet = true;
 }
 
 
@@ -354,22 +363,42 @@ void Web::WebsocketServer::threaded_listener() {
     //lambda function
     //use this as the capture clause so thread can access class variables
     //handle websocket connection
+    do {
+        this->pool.enqueue([&] {
+            //automatically releases lock when this goes out of scope
+            std::lock_guard<std::mutex> lock(this->listen_mtx);
+            std::cout << "Waiting for mesasge...\n";
+            this->msgSize = recv(this->clientSocket, this->msg, this->maxPktSize, 0);
+            std::cout << "Message recieved\n";
+
+            threadFree = true;
+
+            this->listen_cv.notify_one();
+        });
+        std::cout << "Freed mutex\n";
+
+    } while(this->msgSize > 0);
+    /*
     this->pool.enqueue([this] {
         std::cout << "Listening for messages...\n";
         char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-        uint8_t msg[this->maxPktSize];
-        memset(msg, '\0', this->maxPktSize);
-        memset(buffer, '\0', this->maxPktSize);
-        int g;
-        while((g = recv(this->clientSocket, buffer, this->maxPktSize, 0)) > 0) {
+        //uint8_t msg[this->maxPktSize];
+        //memset(this->msg, '\0', this->maxPktSize);
+        //memset(buffer, '\0', this->maxPktSize);
+        int g = recv(this->clientSocket, this->msg, this->maxPktSize, 0);
+        while((g = recv(this->clientSocket, this->msg, this->maxPktSize, 0)) > 0) {
             std::cout << "message recieved\n";
             if(buffer[0] != '\0') {
                 int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
                 if(size > 0) {
-                    if(size == 1) {
-                        this->msg = msg[0];
-                        this->modified = true;
-                    }
+                    listen_mtx.lock();
+                    if
+                    //msgQueue.emplace(msg);
+                    listen_mtx.unlock();
+                    //if(size == 1) {
+                    //   this->msg = msg[0];
+                    //   this->modified = true;
+                    //}
                     
                     //reset buffers
                     memset(msg, '\0', this->maxPktSize);
@@ -381,8 +410,9 @@ void Web::WebsocketServer::threaded_listener() {
         std::cout << "Socket closed\n";
         free(buffer);
     });
-
+    */
     //repurpose this thread for sending messages to client
+    /*
     this->pool.enqueue([this] {
         while(true) {
             //this->webAction = this->msg;
@@ -392,6 +422,7 @@ void Web::WebsocketServer::threaded_listener() {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });
+    */
 }
 
 
@@ -431,10 +462,28 @@ bool Web::WebsocketServer::get_threading() {
     return this->thread;
 }
 
-uint8_t Web::WebsocketServer::get_command() {
-    if(this->modified == true) {
-        this->modified = false;
-        return this->msg;
-    }
-    return (uint8_t)48;
+int Web::WebsocketServer::get_command(uint8_t *buf) {
+    //this->pool.enqueue([this] {
+    //    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    //});
+    //unique locks are able to be created without lockign right away
+    //as is done here
+    std::unique_lock<std::mutex> lock(this->listen_mtx);
+    //wait until able to get lock
+    std::cout << "Waiting for mutex free\n";
+    this->listen_cv.wait(lock, [&] {return this->threadFree;});
+
+    std::cout << "Insize lambda\n";
+    memcpy(buf, this->msg, this->msgSize);
+    std::cout << "post memcpy\n";
+
+    threadFree = false;
+    /*
+    this->listen_cv.wait(lock, [&] {
+        std::cout << "Insize lambda\n";
+        memcpy(buf, this->msg, this->msgSize);
+        std::cout << "post memcpy\n";
+    });
+    */
+    return this->msgSize;
 }
