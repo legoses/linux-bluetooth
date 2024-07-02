@@ -374,7 +374,6 @@ int main() {
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(connection, knownBleDevices, mtx); 
 
         //create variable to hold commands from websocket site
-        //uint8_t cmd = 0;
         Web::WebsocketServer server(8080);
 
         //lambda callback for websocket class
@@ -391,7 +390,6 @@ int main() {
 
         //listen for websocket events
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
-        //int cmd = uint_to_int(server.get_command(buf));
         //boolean that is meant to be written to and read from by different threads
         std::atomic_bool run = false;
         while(true) {
@@ -412,9 +410,6 @@ int main() {
                 }
                 case 2: {
                     run = false;
-                    //mtx.lock();
-                    //local.stop_scan();
-                    //mtx.unlock();
                     std::cout << "Scan explicitly stopped\n";
                     
                     send_ble_devices(knownBleDevices, server, mtx);

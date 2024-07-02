@@ -25,7 +25,6 @@ Web::WebsocketServer::WebsocketServer(int port)
     this->serverAddr.sin_addr.s_addr = INADDR_ANY;
     this->clientAddrSize = sizeof(clientAddr);
     
-    //this->webAction = (uint8_t*)malloc(sizeof(uint8_t));
 }
 
 
@@ -71,17 +70,9 @@ void Web::WebsocketServer::begin() {
             std::cout << "Init WS upgrade\n";
             memset(buffer, '\0', this->maxPktSize);
             send(this->clientSocket, wsHeader, headerSize-1, 0);
-            //recv(this->clientSocket, buffer, this->maxPktSize, 0);
-
             //use ping/pong frame to test connection is alive
             //Check if connection has been terminated
-            //read(this->listenSocket, readBuffer, this->maxPktSize);
-            //print_frame(readBuffer, this->maxPktSize);
 
-           
-            //uint8_t *connBuf = (uint8_t*)malloc(this->maxPktSize*sizeof(uint8_t));
-            //detect if websocket connection was successful
-            //listener();
             if(this->thread == false) {
                 listener();
             }
@@ -90,26 +81,6 @@ void Web::WebsocketServer::begin() {
 
                 std::cout << "Post threaded listener call\n";
             }
-           
-            /*
-            if(buffer[0] != 0) {
-                std::cout << "Websocket Connection Successful\n";
-                uint8_t msg[this->maxPktSize];
-                memset(msg, '\0', this->maxPktSize);
-                
-                if(this->thread == false) {
-                    listener();
-                }
-                else {
-                    threaded_listener();
-
-                    std::cout << "Post threaded listener call\n";
-                }
-            }
-            else {
-                std::cout << "Error: Connection failed\n";
-            }
-            */
         }
 
         free(buffer);
@@ -289,16 +260,6 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool 
     buf[0] = create_payload_indicator(fragment);
 
     if(len < 126) {
-
-        //use strncpy to create frame. May be less variabality than memset?
-        /*
-        if(complete) {
-            buf[0] = 0x81;
-        }
-        else {
-            buf[0] = 0x01;
-        }
-        */
         buf[1] = (unsigned char)len; //set mask bit to 0, and indicate message length
 
         //make sure len includes just the message and not any \r\n that may come after
@@ -325,8 +286,6 @@ int Web::WebsocketServer::create_frame(uint8_t buf[], char msg[], int len, bool 
 
     return -1;
 }
-
-
 
 
 //send packet to client
@@ -376,52 +335,6 @@ void Web::WebsocketServer::threaded_listener() {
                 this->listen_cv.notify_one();
             }
         });
-
-    /*
-    this->pool.enqueue([this] {
-        std::cout << "Listening for messages...\n";
-        char *buffer = (char*)malloc(this->maxPktSize*sizeof(char));
-        //uint8_t msg[this->maxPktSize];
-        //memset(this->msg, '\0', this->maxPktSize);
-        //memset(buffer, '\0', this->maxPktSize);
-        int g = recv(this->clientSocket, this->msg, this->maxPktSize, 0);
-        while((g = recv(this->clientSocket, this->msg, this->maxPktSize, 0)) > 0) {
-            std::cout << "message recieved\n";
-            if(buffer[0] != '\0') {
-                int size = recv_data(buffer, this->maxPktSize, msg, this->maxPktSize);
-                if(size > 0) {
-                    listen_mtx.lock();
-                    if
-                    //msgQueue.emplace(msg);
-                    listen_mtx.unlock();
-                    //if(size == 1) {
-                    //   this->msg = msg[0];
-                    //   this->modified = true;
-                    //}
-                    
-                    //reset buffers
-                    memset(msg, '\0', this->maxPktSize);
-                    memset(buffer, '\0', this->maxPktSize);
-                }
-            }
-        }
-        std::cout << "Error: " << g << "\n";
-        std::cout << "Socket closed\n";
-        free(buffer);
-    });
-    */
-    //repurpose this thread for sending messages to client
-    /*
-    this->pool.enqueue([this] {
-        while(true) {
-            //this->webAction = this->msg;
-            if(msgQueue.size() > 0) {
-
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    });
-    */
 }
 
 
@@ -462,13 +375,9 @@ bool Web::WebsocketServer::get_threading() {
 }
 
 int Web::WebsocketServer::get_command(uint8_t *buf) {
-    //this->pool.enqueue([this] {
-    //    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    //});
-    //unique locks are able to be created without lockign right away
-    //as is done here
-    
     if(!this->threadFree) {
+        //unique locks are able to be created without lockign right away
+        //as is done here
         std::unique_lock<std::mutex> lock(this->listen_mtx);
         //wait until able to get lock
         std::cout << "Waiting for mutex free\n";
