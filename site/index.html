@@ -110,17 +110,17 @@
                 //stop ble scanning
                 button_click(STOP_SCAN);
                 selectedDevices = [];
-                ws.send()
                 for(i = 0; i < jsonArr.length; i++) {
                     if(jsonArr[i].Selected == 1) {
                         selectedDevices.push(jsonArr[i]);
                         numSelected++;
                     }
                 } 
+
+                ws.send();
             }
 
             function toggle_item(pos) {
-                //if(document.getElementById("ble" + pos).style.background == "#353737") {
                 console.log("Selected status = " + jsonArr[pos].Selected);
                 if(jsonArr[pos].Selected == 0) {
                     jsonArr[pos].Selected = 1;

@@ -24,7 +24,6 @@ Web::WebsocketServer::WebsocketServer(int port)
 
     this->serverAddr.sin_addr.s_addr = INADDR_ANY;
     this->clientAddrSize = sizeof(clientAddr);
-    
 }
 
 
