@@ -15,7 +15,6 @@
  * 
  */
 
-    
 //Holds return value of GetManagedObjects()
 typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>> BLEDeviceObject;
 //adapter for each path
@@ -392,7 +391,8 @@ int main() {
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
         //boolean that is meant to be written to and read from by different threads
         std::atomic_bool run = false;
-        while(true) {
+        bool mainRun = true;
+        while(mainRun) {
             int msgLen = server.get_command(buf);
 
             int cmd = uint_to_int(buf[0]);
@@ -417,6 +417,12 @@ int main() {
                 }
                 case 3: {
                     local.stop_scan();
+                    break;
+                }
+                case 4: { //end program execution
+                    local.stop_scan();
+                    mainRun = false;
+                    std::cout << "Exiting program\n";
                     break;
                 }
             }
