@@ -40,18 +40,15 @@ void JsonObject::parse() {
                 break;
             }
             case (TOKEN::STRING): {
-                //this->list[root.c] = parse_string();
-                //std::cout << this->root.c << "\n";
-                //std::cout << this->current.c << "\n\n\n";
-                //this->root = tokenizer.get_token();
-                JSON::JSONNode *node = parse_string(token);
+                (*this->list)[key] = parse_string(token);
                 this->setKey = true;
-                //tokenizer.get_token();
-                
                 break;
             }
             case (TOKEN::NUMBER): {
-
+                (*this->list)[key] = parse_number(token); //oh man i dont know why this crashes
+                std::cout << "NUBMER RECIEVED: " << (*this->list)[key]->get_float() << "\n";
+                this->setKey = true;
+                break;
             }
             case (TOKEN::BOOLEAN): {
 
@@ -61,6 +58,14 @@ void JsonObject::parse() {
             }
         }
     }
+}
+
+
+JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
+    JSON::JSONNode *node = new JSON::JSONNode();
+    std::cout << "NUMBER VAL: " << token.c << "\n";
+    node->set_float(std::stof(token.c));
+    return node;
 }
 
 

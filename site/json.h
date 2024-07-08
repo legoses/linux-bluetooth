@@ -19,12 +19,12 @@ class JsonObject {
     JSON::JSONObject *list = new JSON::JSONObject();
 
     void parse();
-    JSON::JSONNode* parse_object();
-    JSON::JSONNode* parse_list();
+    JSON::JSONNode* parse_object(struct Token &token);
+    JSON::JSONNode* parse_list(struct Token &token);
     JSON::JSONNode* parse_string(struct Token &token);
-    JSON::JSONNode* parse_number();
-    JSON::JSONNode* parse_boolean();
-    JSON::JSONNode* parse_null();
+    JSON::JSONNode* parse_number(struct Token &token);
+    JSON::JSONNode* parse_boolean(struct Token &token);
+    JSON::JSONNode* parse_null(struct Token &token);
     
     
 

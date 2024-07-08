@@ -48,13 +48,16 @@ struct Token Tokenizer::get_token() {
         token.type = TOKEN::COLON;
         curPos++;
     }
-    else if(this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) {
-        int initPos = curPos;
-        int count = 1;
-        while((this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) && curPos < this->arrSize) {
-            token.c += this->char_array[curPos];
+    else if(this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) { //value is number
+        while(this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) {
+            std::cout << "loop\n";
+            std::cout << "tryinhg toadd " << this->char_array[curPos-2] << "\n";
+            //token.c += this->char_array[curPos];
+            uint8_t tst = 0;
+            token.c += tst;
             curPos++;
         }
+        token.type = TOKEN::NUMBER;
         //token.c = (char*)malloc(count*sizeof(str));
         //memcpy(token.c, &this->char_array[initPos], count);
     }

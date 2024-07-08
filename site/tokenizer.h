@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <iostream>
 
 enum class TOKEN {
     CURLEY_OPEN,
