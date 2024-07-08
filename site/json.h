@@ -12,8 +12,7 @@ class JsonObject {
     uint8_t *initArr;
     int initArrSize;
     Tokenizer tokenizer;
-    struct Token root;
-    struct Token current;
+    bool setKey = true;
     //bool root = true; //indicate whether workign with key or value
 
     //main object to store parsed json
@@ -22,7 +21,7 @@ class JsonObject {
     void parse();
     JSON::JSONNode* parse_object();
     JSON::JSONNode* parse_list();
-    JSON::JSONNode* parse_string();
+    JSON::JSONNode* parse_string(struct Token &token);
     JSON::JSONNode* parse_number();
     JSON::JSONNode* parse_boolean();
     JSON::JSONNode* parse_null();

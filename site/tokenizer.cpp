@@ -5,10 +5,14 @@ Tokenizer::Tokenizer(uint8_t *arr, int size)
     , arrSize(size) {}
 
 bool Tokenizer::has_tokens() {
-    if(curPos < arrSize) {
-        return true;
+    if(this->curPos >= this->arrSize) {
+        return false;
     }
-    return false;
+    else if(this->char_array[this->curPos + 1] == '}') {
+        return false;
+    }
+
+    return true;
 }
 
 

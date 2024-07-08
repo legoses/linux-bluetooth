@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <cstring>
 
 namespace JSON {
     class JSONNode;
@@ -34,10 +35,17 @@ namespace JSON {
 
     public:
         void set_object(JSONObject* obj);
-        void set_string(std::string &str);
+        void set_string(std::string str);
         void set_list(JSONList* list);
         void set_float(float val);
         void set_bool(bool val);
+
+        JSON::JSONObject* get_object();
+        std::string* get_string();
+        JSON::JSONList* get_list();
+        float get_float();
+        bool get_bool();
+
 
     };
 
