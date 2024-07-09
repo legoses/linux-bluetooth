@@ -32,7 +32,6 @@ void JsonObject::parse() {
     while(this->validToken) {
         //tokenizer.get_token(); //skip over initial curley bracket
         if(tokenizer.has_tokens()) {
-            std::cout << "Token is valid\n";
             token = tokenizer.get_token(); //skip seperator like colon or comma
 
             switch(token.type) {
@@ -57,17 +56,21 @@ void JsonObject::parse() {
                 }
                 case (TOKEN::NUMBER): {
                     (*this->list)[key] = parse_number(token);
+                    //(*this->list)[key]->set_string(token.c);
                     std::cout << "NUBMER RECIEVED: " << (*this->list)[key]->get_float() << "\n";
                     this->setKey = true;
                     break;
                 }
                 case (TOKEN::BOOLEAN): {
-                   (*this->list)[key] = parse_boolean(token); 
+                    (*this->list)[key] = parse_boolean(token); 
+                    //(*this->list)[key]->set_string(token.c);
                     this->setKey = true;
                     std::cout << "bool test: " << (*this->list)[key]->get_string() << "\n";
                     break;
                 }
                 case (TOKEN::NULL_TYPE): {
+                    JSON::JSONNode *node = new JSON::JSONNode();
+                    node->set_string("null");
                     break;
                 }
                 default: {
@@ -86,26 +89,6 @@ void JsonObject::parse() {
                     }
                 }
             }
-/*
-            token = tokenizer.get_token();
-
-            //check for valid next characters
-            if(token.type == TOKEN::CURLEY_CLOSE) {
-                break;
-            }
-
-            if(!this->setKey) {
-                if(token.type != TOKEN::COLON) {
-                }
-            }
-            else if(this->setKey) {
-                if(token.type != TOKEN::COMMA) {
-                }
-            }
-            else {
-                std::cout << "Looks good\n";
-            }
-            */
         }
     }
 }
@@ -113,7 +96,6 @@ void JsonObject::parse() {
 
 JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
-    std::cout << "NUMBER VAL: " << token.c << "\n";
     node->set_string(token.c);
     node->set_float(std::stof(token.c));
     return node;
@@ -125,7 +107,6 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
     node->set_string(token.c);
 
     //string must be deleted on deconstruction
-    std::cout << "value: " << *node->get_string() << "\n";
     return node; 
 }
 
@@ -133,7 +114,7 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
 JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     if(token.c[0] == 't') {
-        node->set_string("true");
+        node->set_string(token.c);
         node->set_bool(true);
     }
     else if(token.c[0] == 'f') {
