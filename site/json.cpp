@@ -13,49 +13,99 @@ void JsonObject::printArr() {
 } 
 
 
+void JsonObject::throw_error(bool a, std::string &expected) {
+    if(a) {
+        std::cout << "Error: Expected ',', got: " << expected << "\n";
+    }
+    else {
+        std::cout << "Error: Expected ':', got: " << expected << "\n";
+    }
+}
+
+
 //handle getting key, will always be string in my current use case
 void JsonObject::parse() {
     std::string key;
+    struct Token token = tokenizer.get_token(); //key indicate if moving onto next key
     //tokenizer.get_token(); //skip seperator like colon or comma
     
-    while(tokenizer.has_tokens()) {
+    while(this->validToken) {
         //tokenizer.get_token(); //skip over initial curley bracket
-        struct Token token = tokenizer.get_token(); //key
-        
-        //indicate if moving onto next key
-        if(this->setKey) {
+        if(tokenizer.has_tokens()) {
+            std::cout << "Token is valid\n";
+            token = tokenizer.get_token(); //skip seperator like colon or comma
+
+            switch(token.type) {
+                case(TOKEN::CURLEY_OPEN): {
+                    //parse_object();
+                    break;
+                }
+                case (TOKEN::STRING): {
+                    if(this->setKey == true) {
+                        //token = tokenizer.get_token();
+                        key = token.c;
+                        this->setKey = false;
+                        //tokenizer.get_token(); //skip over :
+                        std::cout << "Setting key " << key << "\n";
+                    }
+                    else {
+                        (*this->list)[key] = parse_string(token);
+                        this->setKey = true;
+                    }
+                    std::cout << "recieved string " << token.c << "\n";
+                    break;
+                }
+                case (TOKEN::NUMBER): {
+                    (*this->list)[key] = parse_number(token);
+                    std::cout << "NUBMER RECIEVED: " << (*this->list)[key]->get_float() << "\n";
+                    this->setKey = true;
+                    break;
+                }
+                case (TOKEN::BOOLEAN): {
+                   (*this->list)[key] = parse_boolean(token); 
+                    this->setKey = true;
+                    std::cout << "bool test: " << (*this->list)[key]->get_string() << "\n";
+                    break;
+                }
+                case (TOKEN::NULL_TYPE): {
+                    break;
+                }
+                default: {
+                    if(token.type == TOKEN::CURLEY_CLOSE) {
+                        this->validToken = false;
+                    }
+                    else if(this->setKey && token.type == TOKEN::COMMA) {
+                        this->validToken = true;
+                    }
+                    else if(!this->setKey && token.type == TOKEN::COLON) {
+                        this->validToken = true;
+                    }
+                    else {
+                        throw_error(this->setKey, token.c);
+                        this->validToken = false;
+                    }
+                }
+            }
+/*
             token = tokenizer.get_token();
-            key = token.c;
-            std::cout << "Key is " << key << "\n";
-            this->setKey = false;
-            tokenizer.get_token(); //skip colon
-            token = tokenizer.get_token();
-        }
 
-        //token = tokenizer.get_token(); //check for value
-
-        switch(token.type) {
-            case(TOKEN::CURLEY_OPEN): {
-                //parse_object();
+            //check for valid next characters
+            if(token.type == TOKEN::CURLEY_CLOSE) {
                 break;
             }
-            case (TOKEN::STRING): {
-                (*this->list)[key] = parse_string(token);
-                this->setKey = true;
-                break;
-            }
-            case (TOKEN::NUMBER): {
-                (*this->list)[key] = parse_number(token); //oh man i dont know why this crashes
-                std::cout << "NUBMER RECIEVED: " << (*this->list)[key]->get_float() << "\n";
-                this->setKey = true;
-                break;
-            }
-            case (TOKEN::BOOLEAN): {
 
+            if(!this->setKey) {
+                if(token.type != TOKEN::COLON) {
+                }
             }
-            case (TOKEN::NULL_TYPE): {
-
+            else if(this->setKey) {
+                if(token.type != TOKEN::COMMA) {
+                }
             }
+            else {
+                std::cout << "Looks good\n";
+            }
+            */
         }
     }
 }
@@ -64,6 +114,7 @@ void JsonObject::parse() {
 JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     std::cout << "NUMBER VAL: " << token.c << "\n";
+    node->set_string(token.c);
     node->set_float(std::stof(token.c));
     return node;
 }
@@ -76,6 +127,21 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
     //string must be deleted on deconstruction
     std::cout << "value: " << *node->get_string() << "\n";
     return node; 
+}
+
+
+JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
+    JSON::JSONNode *node = new JSON::JSONNode();
+    if(token.c[0] == 't') {
+        node->set_string("true");
+        node->set_bool(true);
+    }
+    else if(token.c[0] == 'f') {
+        node->set_string("false");
+        node->set_bool(false);
+    }
+
+    return node;
 }
 
 /*

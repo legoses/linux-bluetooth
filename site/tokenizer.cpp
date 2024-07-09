@@ -19,13 +19,19 @@ bool Tokenizer::has_tokens() {
 //detect token type and create struct object
 struct Token Tokenizer::get_token() {
     struct Token token;
+    //int testNum = this->char_array[curPos] - 48;
+    uint8_t uLow = '0';
+    uint8_t uHigh = '9';
+    uint8_t uDash = '-';
 
     if(this->char_array[curPos] == '{') {
         token.type = TOKEN::CURLEY_OPEN;
+        token.c = '{';
         curPos++;
     }
     else if(this->char_array[curPos] == '}') {
         token.type = TOKEN::CURLEY_CLOSE;
+        token.c = '}';
         curPos++;
     }
     else if(this->char_array[curPos] == '"') {
@@ -40,21 +46,20 @@ struct Token Tokenizer::get_token() {
             token.c += this->char_array[curPos];
             curPos++;
         }
+        curPos++;
         //token.c = (char*)malloc(count*sizeof(str));
         //memcpy(token.c, &this->char_array[initPos], count);
         //token.charLen = count;
     }
     else if(this->char_array[curPos] == ':') {
         token.type = TOKEN::COLON;
+        token.c = ':';
         curPos++;
     }
-    else if(this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) { //value is number
-        while(this->char_array[curPos] == '-' || (this->char_array[curPos] >= 0 && this->char_array[curPos] <= 9)) {
-            std::cout << "loop\n";
-            std::cout << "tryinhg toadd " << this->char_array[curPos-2] << "\n";
+    else if(this->char_array[curPos] == uDash || (this->char_array[curPos] >= uLow && this->char_array[curPos] <= uHigh)) { //value is number
+        while(this->char_array[curPos] == uDash || (this->char_array[curPos] >= uLow && this->char_array[curPos] <= uHigh)) {
             //token.c += this->char_array[curPos];
-            uint8_t tst = 0;
-            token.c += tst;
+            token.c += this->char_array[curPos]; //convert to compatible format for string
             curPos++;
         }
         token.type = TOKEN::NUMBER;
@@ -63,10 +68,12 @@ struct Token Tokenizer::get_token() {
     }
     else if(this->char_array[curPos] == '[') {
         token.type = TOKEN::ARRAY_OPEN;
+        token.c = '[';
         curPos++;
     }
     else if(this->char_array[curPos] == ']') {
         token.type = TOKEN::ARRAY_CLOSE;
+        token.c = ']';
         curPos++;
     }
     else if(this->char_array[curPos] == 'f') {
@@ -85,6 +92,8 @@ struct Token Tokenizer::get_token() {
     }
     else if(this->char_array[curPos] == ',') {
         token.type = TOKEN::COMMA;
+        std::cout << "Got comma\n";
+        token.c = ',';
         curPos++;
     }
     else if(this->char_array[curPos] == 'n') {
@@ -94,6 +103,17 @@ struct Token Tokenizer::get_token() {
         //memcpy(token.c, "null", 3*sizeof(char));
         curPos += 3;
     }
+    else {
+        std::cout << "No valid option found for: " << this->char_array[curPos] << "\n";
+    }
 
+    return token;
+}
+
+
+struct Token Tokenizer::view_next_token() {
+    int prevPos = this->curPos;
+    struct Token token = get_token();
+    this->curPos = prevPos;
     return token;
 }

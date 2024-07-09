@@ -13,6 +13,7 @@ class JsonObject {
     int initArrSize;
     Tokenizer tokenizer;
     bool setKey = true;
+    bool validToken = true;
     //bool root = true; //indicate whether workign with key or value
 
     //main object to store parsed json
@@ -25,6 +26,7 @@ class JsonObject {
     JSON::JSONNode* parse_number(struct Token &token);
     JSON::JSONNode* parse_boolean(struct Token &token);
     JSON::JSONNode* parse_null(struct Token &token);
+    void throw_error(bool a, std::string &expected);
     
     
 

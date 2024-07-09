@@ -28,14 +28,13 @@ class Tokenizer {
     int curPos = 0;
     uint8_t *char_array;
 
-    //char char_array[];
-
 public:
     //when get token is called, will loop through file for length of single token
     //keep track of position so it can continue if called again
     Tokenizer(uint8_t *arr, int size);
 
     bool has_tokens();
+    struct Token view_next_token();
 
     struct Token get_token();
 
