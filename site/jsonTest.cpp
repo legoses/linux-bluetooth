@@ -6,5 +6,6 @@ int main() {
 
     JsonObject obj(jsonArr, sizeof(jsonArr));
     obj.printArr();
+    std::cout << "Get item test: " << *obj.get_item("Address")->get_string();
     return 0;
 }

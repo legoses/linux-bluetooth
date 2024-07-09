@@ -20,7 +20,7 @@ class JsonObject {
     JSON::JSONObject *list = new JSON::JSONObject();
 
     void parse();
-    JSON::JSONNode* parse_object(struct Token &token);
+    JSON::JSONNode* parse_object();
     JSON::JSONNode* parse_list(struct Token &token);
     JSON::JSONNode* parse_string(struct Token &token);
     JSON::JSONNode* parse_number(struct Token &token);
@@ -34,6 +34,7 @@ class JsonObject {
 public:
     JsonObject(uint8_t array[], int arrSize);
     void printArr();
+    JSON::JSONNode* get_item(const std::string &key);
 };
 
 
