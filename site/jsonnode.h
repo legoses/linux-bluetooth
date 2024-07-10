@@ -31,6 +31,7 @@ namespace JSON {
             std::string *s;
             float fVal;
             bool bVal;
+            Type type;
         } values;
 
     public:
@@ -39,12 +40,14 @@ namespace JSON {
         void set_list(JSONList* list);
         void set_float(float val);
         void set_bool(bool val);
+        void set_type(Type t);
 
         JSON::JSONObject* get_object();
         std::string* get_string();
         JSON::JSONList* get_list();
         float get_float();
         bool get_bool();
+        Type get_type();
 
 
     };

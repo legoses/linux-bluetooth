@@ -21,7 +21,7 @@ class JsonObject {
 
     void parse();
     JSON::JSONNode* parse_object();
-    JSON::JSONNode* parse_list(struct Token &token);
+    JSON::JSONNode* parse_array();
     JSON::JSONNode* parse_string(struct Token &token);
     JSON::JSONNode* parse_number(struct Token &token);
     JSON::JSONNode* parse_boolean(struct Token &token);

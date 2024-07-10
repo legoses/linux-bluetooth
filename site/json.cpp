@@ -8,6 +8,12 @@ JsonObject::JsonObject(uint8_t array[], int arrSize)
    parse(); 
 }
 
+/*
+JsonObject::~JsonObject() {
+
+}
+*/
+
 void JsonObject::printArr() {
     std::cout << this->initArr << "\n";
 } 
@@ -142,7 +148,7 @@ JSON::JSONNode* JsonObject::parse_object() {
 
             switch(token.type) {
                 case(TOKEN::CURLEY_OPEN): {
-                    //parse_object();
+                    (*obj)[key] = parse_object();
                     break;
                 }
                 case (TOKEN::STRING): {
@@ -178,6 +184,9 @@ JSON::JSONNode* JsonObject::parse_object() {
                     node->set_string("null");
                     break;
                 }
+                case (TOKEN::ARRAY_OPEN): {
+                    (*obj)[key] = parse_array();
+                }
                 default: {
                     if(token.type == TOKEN::CURLEY_CLOSE) {
                         this->validToken = false;
@@ -201,7 +210,7 @@ JSON::JSONNode* JsonObject::parse_object() {
 }
 
 //make sure array closes before a stray } is detected, and last value does not have a ,
-JSON::JSONNode JsonObject::parse_array() {
+JSON::JSONNode* JsonObject::parse_array() {
     
 }
 

@@ -21,6 +21,12 @@ void JSON::JSONNode::set_bool(bool val) {
     this->values.bVal = val;
 }
 
+
+void JSON::JSONNode::set_type(Type t) {
+    this->vales.type = t;
+}
+
+
 JSON::JSONObject* JSON::JSONNode::get_object() {
     return this->values.object;
 }
@@ -40,4 +46,9 @@ float JSON::JSONNode::get_float() {
 
 bool JSON::JSONNode::get_bool() {
     return this->values.bVal;
+}
+
+
+Type JSON::JSONNode::get_type() {
+    return->
 }
