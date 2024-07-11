@@ -106,6 +106,7 @@ JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     node->set_string(token.c);
     node->set_float(std::stof(token.c));
+    node->set_type(TOKEN::NUMBER);
     return node;
 }
 
@@ -113,6 +114,7 @@ JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
 JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     node->set_string(token.c);
+    node->set_type(TOKEN::STRING);
 
     //string must be deleted on deconstruction
     return node; 
@@ -129,6 +131,7 @@ JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
         node->set_string("false");
         node->set_bool(false);
     }
+    node->set_type(TOKEN::BOOLEAN);
 
     return node;
 }
@@ -205,12 +208,24 @@ JSON::JSONNode* JsonObject::parse_object() {
             }
         }
     }
+    node->set_type(TOKEN::OBJECT);
     node->set_object(obj);
     return node;
 }
 
 //make sure array closes before a stray } is detected, and last value does not have a ,
 JSON::JSONNode* JsonObject::parse_array() {
+    JSONNode *node = new JSONNode(); //will be parent node to store list
+    JSONList lst* = new JSONList();
+
+    bool cont = true;
+    struct Token token = tokenizer.get_token();
+    
+    while(true) {
+        switch(token.type) {
+            case :
+        }
+    }
     
 }
 
