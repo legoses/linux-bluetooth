@@ -11,6 +11,7 @@ JsonObject::JsonObject(uint8_t array[], int arrSize)
 /*
 JsonObject::~JsonObject() {
 
+   
 }
 */
 
@@ -24,14 +25,8 @@ JSON::JSONNode* JsonObject::detect_type(struct Token &token) {
             break;
         }
         case (TOKEN::STRING): {
-            if(!this->setKey) {
-                //token = tokenizer.get_token();
-                //tokenizer.get_token(); //skip over :
-            }
-            else {
-                node = parse_string(token);
+            node = parse_string(token);
                 //this->setKey = true;
-            }
             std::cout << "recieved string " << token.c << "\n";
             break;
         }
@@ -49,7 +44,7 @@ JSON::JSONNode* JsonObject::detect_type(struct Token &token) {
             break;
         }
         case (TOKEN::NULL_TYPE): {
-            //JSON::JSONNode *node = new JSON::JSONNode();
+            JSON::JSONNode *node = new JSON::JSONNode();
             node->set_string("null");
             break;
         }
@@ -80,108 +75,52 @@ void JsonObject::throw_error(bool a, std::string &expected) {
 //handle getting key, will always be string in my current use case
 void JsonObject::parse() {
     struct Token token = tokenizer.get_token(); //key indicate if moving onto next key
-    bool commaExists = false;
-    //tokenizer.get_token(); //skip seperator like colon or comma
+    struct Token token2; //will hold value
+    TOKEN lastSeperator = TOKEN::COMMA; //keep track of previous colon or comma
     
     while(this->validToken) {
-        //tokenizer.get_token(); //skip over initial curley bracket
         if(tokenizer.has_tokens()) {
-            std::string key;
-            token = tokenizer.get_token(); //skip seperator like colon or comma
+            token = tokenizer.get_token(); //should be key
+            token2 = tokenizer.get_token(); //should be a colon
 
-            JSON::JSONNode *node = detect_type(token);
-           
-            //key has not been set. Set it now
-            if(!this->setKey) {
-                key = token.c; 
-                this->setKey = true;
-            }
 
-            //wait for comma to move on to next entry. if no comma, expect bracket close
-            if(node == nullptr && this->setKey) {
-               if(token.type == TOKEN::COMMA) {
-                    commaExists = true;
-                    this->setKey = false;
-                } 
-                else if(token.type != TOKEN::COMMA) {
-                    commaExists = false;
+            if(token2.type == TOKEN::COLON && lastSeperator == TOKEN::COMMA) {
+                lastSeperator = token2.type;
+                token2 = tokenizer.get_token(); //get value
+            
+                (*this->list)[token.c] = detect_type(token2); //add to list
+                std::cout << "Added key: " << token.c << " value: " << token2.c << "\n";
+
+                //if a comma is not detected, end of json
+                if(tokenizer.get_token().type == TOKEN::COMMA) {
+                    lastSeperator = TOKEN::COMMA; //reset to comma
                 }
-
-                if(!commaExists && token.type != TOKEN::CURLEY_CLOSE) {
-                    throw_error(true, token.c);
+                else {
+                    this->validToken = false; //if a comma was not detected, end of JSON
                 }
             }
-            //(*this->list)[key] = detect_type(token);
-
-            /*
-            switch(token.type) {
-                case(TOKEN::CURLEY_OPEN): {
-                    (*this->list)[key] = parse_object();
-                    break;
-                }
-                case (TOKEN::STRING): {
-                    if(this->setKey == true) {
-                        //token = tokenizer.get_token();
-                        key = token.c;
-                        this->setKey = false;
-                        //tokenizer.get_token(); //skip over :
-                        std::cout << "Setting key " << key << "\n";
-                    }
-                    else {
-                        (*this->list)[key] = parse_string(token);
-                        this->setKey = true;
-                    }
-                    std::cout << "recieved string " << token.c << "\n";
-                    break;
-                }
-                case (TOKEN::NUMBER): {
-                    (*this->list)[key] = parse_number(token);
-                    //(*this->list)[key]->set_string(token.c);
-                    std::cout << "NUBMER RECIEVED: " << (*this->list)[key]->get_float() << "\n";
-                    this->setKey = true;
-                    break;
-                }
-                case (TOKEN::BOOLEAN): {
-                    (*this->list)[key] = parse_boolean(token); 
-                    //(*this->list)[key]->set_string(token.c);
-                    this->setKey = true;
-                    break;
-                }
-                case (TOKEN::NULL_TYPE): {
-                    JSON::JSONNode *node = new JSON::JSONNode();
-                    node->set_string("null");
-                    break;
-                }
-                case (TOKEN::ARRAY_OPEN): {
-                    (*this->list)[key] = parse_array();
-                }
-                default: {
-                    if(token.type == TOKEN::CURLEY_CLOSE) {
-                        this->validToken = false;
-                    }
-                    else if(this->setKey && token.type == TOKEN::COMMA) {
-                        this->validToken = true;
-                    }
-                    else if(!this->setKey && token.type == TOKEN::COLON) {
-                        this->validToken = true;
-                    }
-                    else {
-                        throw_error(this->setKey, token.c);
-                        this->validToken = false;
-                    }
-                }
+            else {
+                this->validToken = false; //stop execution if colon is not detected
+                throw_error(false, token2.c);
             }
-        */
         }
+        else {
+            this->validToken = false; //end execution if no more tokens
+        }
+    }
+
+    if(lastSeperator == TOKEN::COMMA) {
+        std::cout << "Warning: Stray comma detected\n";
     }
 }
 
 
 JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
-    node->set_string(token.c);
+    //node->set_string(token.c);
     node->set_float(std::stof(token.c));
-    node->set_type(JSON::Type::NUMBER);
+    //node->set_type(JSON::Type::NUMBER);
+
     return node;
 }
 
@@ -190,6 +129,7 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     node->set_string(token.c);
     node->set_type(JSON::Type::STRING);
+    //node->get_string();
 
     //string must be deleted on deconstruction
     return node; 
@@ -199,11 +139,9 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
 JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     if(token.c[0] == 't') {
-        node->set_string(token.c);
         node->set_bool(true);
     }
     else if(token.c[0] == 'f') {
-        node->set_string("false");
         node->set_bool(false);
     }
     node->set_type(JSON::Type::BOOLEAN);
@@ -213,150 +151,101 @@ JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
 
 
 JSON::JSONNode* JsonObject::parse_object() {
-    JSON::JSONNode *node = new JSON::JSONNode();
     JSON::JSONObject *obj = new JSON::JSONObject();
-    std::string key;
+    JSON::JSONNode *node = new JSON::JSONNode();
+
     struct Token token = tokenizer.get_token(); //key indicate if moving onto next key
-    //tokenizer.get_token(); //skip seperator like colon or comma
+    struct Token token2; //will hold value
+    TOKEN lastSeperator = TOKEN::COMMA; //keep track of previous colon or comma
     
     while(this->validToken) {
-        //tokenizer.get_token(); //skip over initial curley bracket
         if(tokenizer.has_tokens()) {
-            token = tokenizer.get_token(); //skip seperator like colon or comma
+            token = tokenizer.get_token(); //should be key
+            token2 = tokenizer.get_token(); //should be a colon
 
-            switch(token.type) {
-                case(TOKEN::CURLEY_OPEN): {
-                    (*obj)[key] = parse_object();
-                    break;
+
+            if(token2.type == TOKEN::COLON && lastSeperator == TOKEN::COMMA) {
+                lastSeperator = token2.type;
+                token2 = tokenizer.get_token(); //get value
+            
+                (*obj)[token.c] = detect_type(token2); //add to list
+                std::cout << "Added key: " << token.c << " value: " << token2.c << "\n";
+
+                //if a comma is not detected, end of json
+                if(tokenizer.get_token().type == TOKEN::COMMA) {
+                    lastSeperator = TOKEN::COMMA; //reset to comma
                 }
-                case (TOKEN::STRING): {
-                    if(this->setKey == true) {
-                        //token = tokenizer.get_token();
-                        key = token.c;
-                        this->setKey = false;
-                        //tokenizer.get_token(); //skip over :
-                        std::cout << "Setting key " << key << "\n";
-                    }
-                    else {
-                        (*obj)[key] = parse_string(token);
-                        this->setKey = true;
-                    }
-                    std::cout << "recieved string " << token.c << "\n";
-                    break;
-                }
-                case (TOKEN::NUMBER): {
-                    (*obj)[key] = parse_number(token);
-                    //(*obj)[key]->set_string(token.c);
-                    std::cout << "NUBMER RECIEVED: " << (*obj)[key]->get_float() << "\n";
-                    this->setKey = true;
-                    break;
-                }
-                case (TOKEN::BOOLEAN): {
-                    (*obj)[key] = parse_boolean(token); 
-                    //(*obj)[key]->set_string(token.c);
-                    this->setKey = true;
-                    break;
-                }
-                case (TOKEN::NULL_TYPE): {
-                    JSON::JSONNode *node = new JSON::JSONNode();
-                    node->set_string("null");
-                    break;
-                }
-                case (TOKEN::ARRAY_OPEN): {
-                    (*obj)[key] = parse_array();
-                }
-                default: {
-                    if(token.type == TOKEN::CURLEY_CLOSE) {
-                        this->validToken = false;
-                    }
-                    else if(this->setKey && token.type == TOKEN::COMMA) {
-                        this->validToken = true;
-                    }
-                    else if(!this->setKey && token.type == TOKEN::COLON) {
-                        this->validToken = true;
-                    }
-                    else {
-                        throw_error(this->setKey, token.c);
-                        this->validToken = false;
-                    }
+                else {
+                    this->validToken = false; //if a comma was not detected, end of JSON
                 }
             }
+            else {
+                this->validToken = false; //stop execution if colon is not detected
+                throw_error(false, token2.c);
+            }
+        }
+        else {
+            this->validToken = false; //end execution if no more tokens
         }
     }
-    node->set_type(JSON::Type::OBJECT);
+
+    if(lastSeperator == TOKEN::COMMA) {
+        std::cout << "Warning: Stray comma detected\n";
+    }
+
     node->set_object(obj);
     return node;
 }
+
 
 //make sure array closes before a stray } is detected, and last value does not have a ,
 JSON::JSONNode* JsonObject::parse_array() {
     JSON::JSONNode *node = new JSON::JSONNode(); //will be parent node to store list
     JSON::JSONList *lst = new JSON::JSONList();
-
     bool cont = true;
-    struct Token token = tokenizer.get_token();
-    
-    while(true) {
+
+    struct Token token; 
+    std::cout << "Array called\n";
+   
+    while(cont) {
+        cont = false;
+        if(!tokenizer.has_tokens()) {
+            break;
+        }
+
+        token = tokenizer.get_token();
+        std::cout << "List token: " << token.c << "\n";
+        if(token.type == TOKEN::ARRAY_CLOSE) {
+            std::cout << "Warning: Stray comma detected\n";
+            break;
+        }
+
+        lst->push_back(detect_type(token));
+        
+        token = tokenizer.get_token();
+
         switch(token.type) {
-            case(TOKEN::CURLEY_OPEN): {
-                (*lst)[key] = parse_array();
+            case(TOKEN::ARRAY_CLOSE): {
+                std::cout << "ARRAY CLOSED\n";
+                cont = false;
                 break;
             }
-            case (TOKEN::STRING): {
-                if(this->setKey == true) {
-                    //token = tokenizer.get_token();
-                    key = token.c;
-                    this->setKey = false;
-                    //tokenizer.get_token(); //skip over :
-                    std::cout << "Setting key " << key << "\n";
-                }
-                else {
-                    (*lst)[key] = parse_string(token);
-                    this->setKey = true;
-                }
-                std::cout << "recieved string " << token.c << "\n";
+            case(TOKEN::CURLEY_CLOSE): {
+                cont = false;
+                std::cout << "Error: Json end detected before array close\n";
                 break;
             }
-            case (TOKEN::NUMBER): {
-                (*lst)[key] = parse_number(token);
-                //(*lst)[key]->set_string(token.c);
-                std::cout << "NUBMER RECIEVED: " << (*lst)[key]->get_float() << "\n";
-                this->setKey = true;
+            case(TOKEN::COMMA): {
+                cont = true;
                 break;
-            }
-            case (TOKEN::BOOLEAN): {
-                (*lst)[key] = parse_boolean(token); 
-                //(*lst)[key]->set_string(token.c);
-                this->setKey = true;
-                break;
-            }
-            case (TOKEN::NULL_TYPE): {
-                JSON::JSONNode *node = new JSON::JSONNode();
-                node->set_string("null");
-                break;
-            }
-            case (TOKEN::ARRAY_OPEN): {
-                (*lst)[key] = parse_array();
-            }
-            default: {
-                if(token.type == TOKEN::CURLEY_CLOSE) {
-                    this->validToken = false;
-                }
-                else if(this->setKey && token.type == TOKEN::COMMA) {
-                    this->validToken = true;
-                }
-                else if(!this->setKey && token.type == TOKEN::COLON) {
-                    this->validToken = true;
-                }
-                else {
-                    throw_error(this->setKey, token.c);
-                    this->validToken = false;
-                }
             }
         }
     }
     
+    node->set_list(lst);
+    return node;
 }
+
 
 
 JSON::JSONNode* JsonObject::get_item(const std::string &key) {

@@ -92,7 +92,6 @@ struct Token Tokenizer::get_token() {
     }
     else if(this->char_array[curPos] == ',') {
         token.type = TOKEN::COMMA;
-        std::cout << "Got comma\n";
         token.c = ',';
         curPos++;
     }

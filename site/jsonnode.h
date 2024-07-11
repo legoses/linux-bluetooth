@@ -22,8 +22,6 @@ namespace JSON {
     };
 
     class JSONNode {
-
-
         //Creates an object that contains one of these values
         //only takes the space of the largest value
         union Values {
@@ -50,8 +48,6 @@ namespace JSON {
         float get_float();
         bool get_bool();
         Type get_type();
-
-
     };
 
 }

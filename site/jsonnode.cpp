@@ -9,21 +9,24 @@ void JSON::JSONNode::set_string(std::string str) {
     this->values.s = new std::string(str);
 }
 
+
 void JSON::JSONNode::set_list(JSONList* list) {
     this->values.list = list;
 }
 
+
 void JSON::JSONNode::set_float(float val) {
     this->values.fVal = val;
 }
+
 
 void JSON::JSONNode::set_bool(bool val) {
     this->values.bVal = val;
 }
 
 
-void JSON::JSONNode::set_type(JSON::JSONNode::Type t) {
-    this->vales.type = t;
+void JSON::JSONNode::set_type(JSON::Type t) {
+    this->type = t;
 }
 
 
@@ -49,6 +52,6 @@ bool JSON::JSONNode::get_bool() {
 }
 
 
-JSON::JSONNode::Type JSON::JSONNode::get_type() {
-    return->
+JSON::Type JSON::JSONNode::get_type() {
+    return this->type;
 }
