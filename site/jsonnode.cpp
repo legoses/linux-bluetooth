@@ -22,7 +22,7 @@ void JSON::JSONNode::set_bool(bool val) {
 }
 
 
-void JSON::JSONNode::set_type(Type t) {
+void JSON::JSONNode::set_type(JSON::JSONNode::Type t) {
     this->vales.type = t;
 }
 
@@ -49,6 +49,6 @@ bool JSON::JSONNode::get_bool() {
 }
 
 
-Type JSON::JSONNode::get_type() {
+JSON::JSONNode::Type JSON::JSONNode::get_type() {
     return->
 }

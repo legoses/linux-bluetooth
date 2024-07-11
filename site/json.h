@@ -26,6 +26,7 @@ class JsonObject {
     JSON::JSONNode* parse_number(struct Token &token);
     JSON::JSONNode* parse_boolean(struct Token &token);
     JSON::JSONNode* parse_null(struct Token &token);
+    JSON::JSONNode* detect_type(struct Token &token);
     void throw_error(bool a, std::string &expected);
     
     

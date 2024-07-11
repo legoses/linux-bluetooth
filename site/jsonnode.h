@@ -11,17 +11,18 @@ namespace JSON {
     class JSONNode;
     using JSONObject = std::map<std::string, JSONNode*>;
     using JSONList = std::vector<JSONNode*>; 
+    
+    enum class Type {
+        OBJECT,
+        LIST,
+        STRING,
+        BOOLEAN,
+        NULL_TYPE,
+        NUMBER
+    };
 
     class JSONNode {
 
-        enum class Type {
-            OBJECT,
-            LIST,
-            STRING,
-            BOOLEAN,
-            NULL_TYPE,
-            NUMBER
-        } type;
 
         //Creates an object that contains one of these values
         //only takes the space of the largest value
@@ -33,6 +34,7 @@ namespace JSON {
             bool bVal;
             Type type;
         } values;
+        Type type;
 
     public:
         void set_object(JSONObject* obj);
