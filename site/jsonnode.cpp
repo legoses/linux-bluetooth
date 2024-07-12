@@ -59,11 +59,23 @@ JSON::Type JSON::JSONNode::get_type() {
 
 std::string JSON::JSONNode::to_string() {
     switch(type) {
-       caType::OBJECT,
-       caType::LIST,
-       caType::STRING,
-       caType::BOOLEAN,
-       caType::NULL_TYPE,
-       caType::NUMBER
+        case(Type::STRING): {
+            return *this->values.s;
+        }
+        case(Type::BOOLEAN): {
+            if(this->values.bVal) {
+                return "true";
+            }
+            return "false";
+        }
+        case(Type::NULL_TYPE): {
+            return "null";
+        }
+        case(Type::NUMBER): {
+            return std::to_string(this->values.fVal);
+        }
+        default: {
+            return "Unable to convert object to string";
+        }
     }
 }

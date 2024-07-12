@@ -119,7 +119,7 @@ JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     //node->set_string(token.c);
     node->set_float(std::stof(token.c));
-    //node->set_type(JSON::Type::NUMBER);
+    node->set_type(JSON::Type::NUMBER);
 
     return node;
 }
@@ -194,6 +194,7 @@ JSON::JSONNode* JsonObject::parse_object() {
     }
 
     node->set_object(obj);
+    node->set_type(JSON::Type::OBJECT);
     return node;
 }
 
@@ -244,6 +245,7 @@ JSON::JSONNode* JsonObject::parse_array() {
     }
     
     node->set_list(lst);
+    node->set_type(JSON::Type::LIST);
     return node;
 }
 

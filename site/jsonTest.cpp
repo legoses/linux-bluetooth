@@ -8,5 +8,30 @@ int main() {
     obj.printArr();
     std::cout << "Get item test: " << obj.get_item("Selected")->get_float() << "\n";
     int i = obj.get_item("array")->get_list()->size();
+
+    std::string numType;
+    switch(obj.get_item("Selected")->get_type()) {
+        case(JSON::Type::OBJECT):
+            numType = "Object";
+            break;
+        case(JSON::Type::LIST):
+            numType = "List";
+            break;
+        case(JSON::Type::STRING):
+            numType = "string";
+            break;
+        case(JSON::Type::BOOLEAN):
+            numType = "booll";
+            break;
+        case(JSON::Type::NULL_TYPE):
+            numType = "null";
+            break;
+        case(JSON::Type::NUMBER):
+            numType = "number";
+            break;
+    }
+    std::cout << "type is: " << numType << "\n";
+    std::cout << "to string test: " << obj.get_item("Selected")->to_string() << "\n";
+    
     return 0;
 }
