@@ -6,7 +6,6 @@
 #include <map>
 #include "jsonnode.h"
 #include "tokenizer.h"
-#include "enum_types.h"
 
 class JsonObject {
     uint8_t *initArr;

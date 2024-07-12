@@ -1,4 +1,4 @@
-#include "jsonnode.h"
+#include <jsonnode.h>
 
 void JSON::JSONNode::set_object(JSON::JSONObject* obj) {
     this->values.object = obj;

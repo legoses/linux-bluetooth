@@ -7,6 +7,7 @@
 #include <local_adapter.h>
 #include <found_ble.h>
 #include <websocket.h>
+#include <json.h>
 //#include <encode.h>
 /*
  * TODO:
