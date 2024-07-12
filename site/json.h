@@ -12,9 +12,9 @@ class JsonObject {
     uint8_t *initArr;
     int initArrSize;
     Tokenizer tokenizer;
-    bool setKey = true;
+    //bool setKey = true;
     bool validToken = true;
-    //bool root = true; //indicate whether workign with key or value
+    bool debug = false;
 
     //main object to store parsed json
     JSON::JSONObject *list = new JSON::JSONObject();
@@ -28,6 +28,7 @@ class JsonObject {
     JSON::JSONNode* parse_null(struct Token &token);
     JSON::JSONNode* detect_type(struct Token &token);
     void throw_error(bool a, std::string &expected);
+    void print_output(const std::string &str);
     
     
 

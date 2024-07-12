@@ -34,20 +34,22 @@ JSON::JSONNode* JsonObject::detect_type(struct Token &token) {
         }
         case (TOKEN::STRING): {
             node = parse_string(token);
-                ////this->setKey = true;
+                //this->setKey = true;
             print_output("recieved string " + token.c);
 
             break;
         }
         case (TOKEN::NUMBER): {
             node = parse_number(token);
-            //this->setKey = true;
+            //->set_string(token.c);
+            print_output("NUBMER RECIEVED: " + (*this->list)[key]->get_float());
+            this->setKey = true;
             break;
         }
         case (TOKEN::BOOLEAN): {
             node = parse_boolean(token); 
             //(*this->list)[key]->set_string(token.c);
-            //this->setKey = true;
+            this->setKey = true;
             break;
         }
         case (TOKEN::NULL_TYPE): {
@@ -96,7 +98,7 @@ void JsonObject::parse() {
                 token2 = tokenizer.get_token(); //get value
             
                 (*this->list)[token.c] = detect_type(token2); //add to list
-                print_output("Added key: " + token.c + " value: " + token2.c);
+                std::cout << "Added key: " << token.c << " value: " << token2.c << "\n";
 
                 //if a comma is not detected, end of json
                 if(tokenizer.get_token().type == TOKEN::COMMA) {
@@ -176,7 +178,7 @@ JSON::JSONNode* JsonObject::parse_object() {
                 token2 = tokenizer.get_token(); //get value
             
                 (*obj)[token.c] = detect_type(token2); //add to list
-                print_output("Added key: " + token.c + " value: " + token2.c);
+                std::cout << "Added key: " << token.c << " value: " << token2.c << "\n";
 
                 //if a comma is not detected, end of json
                 if(tokenizer.get_token().type == TOKEN::COMMA) {
@@ -213,7 +215,7 @@ JSON::JSONNode* JsonObject::parse_array() {
     bool cont = true;
 
     struct Token token; 
-    print_output("Array called");
+    std::cout << "Array called\n";
    
     while(cont) {
         cont = false;
@@ -222,7 +224,7 @@ JSON::JSONNode* JsonObject::parse_array() {
         }
 
         token = tokenizer.get_token();
-        print_output("List token: " + token.c);
+        std::cout << "List token: " << token.c << "\n";
         if(token.type == TOKEN::ARRAY_CLOSE) {
             std::cout << "Warning: Stray comma detected\n";
             break;
@@ -234,7 +236,7 @@ JSON::JSONNode* JsonObject::parse_array() {
 
         switch(token.type) {
             case(TOKEN::ARRAY_CLOSE): {
-                print_output("ARRAY CLOSED");
+                std::cout << "ARRAY CLOSED\n";
                 cont = false;
                 break;
             }
@@ -244,7 +246,7 @@ JSON::JSONNode* JsonObject::parse_array() {
                 break;
             }
             case(TOKEN::COMMA): {
-                print_output("comma hara");
+                std::cout << "comma hara\n";
                 cont = true;
                 break;
             }
