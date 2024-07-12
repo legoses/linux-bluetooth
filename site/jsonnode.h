@@ -48,6 +48,8 @@ namespace JSON {
         float get_float();
         bool get_bool();
         Type get_type();
+
+        std::string to_string();
     };
 
 }

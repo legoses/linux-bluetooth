@@ -55,3 +55,15 @@ bool JSON::JSONNode::get_bool() {
 JSON::Type JSON::JSONNode::get_type() {
     return this->type;
 }
+
+
+std::string JSON::JSONNode::to_string() {
+    switch(type) {
+       caType::OBJECT,
+       caType::LIST,
+       caType::STRING,
+       caType::BOOLEAN,
+       caType::NULL_TYPE,
+       caType::NUMBER
+    }
+}

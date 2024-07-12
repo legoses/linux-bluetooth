@@ -236,6 +236,7 @@ JSON::JSONNode* JsonObject::parse_array() {
                 break;
             }
             case(TOKEN::COMMA): {
+                std::cout << "comma hara\n";
                 cont = true;
                 break;
             }

@@ -8,9 +8,9 @@ bool Tokenizer::has_tokens() {
     if(this->curPos >= this->arrSize) {
         return false;
     }
-    else if(this->char_array[this->curPos + 1] == '}') {
-        return false;
-    }
+    //else if(this->char_array[this->curPos + 1] == '}') {
+    //    return false;
+    //}
 
     return true;
 }
