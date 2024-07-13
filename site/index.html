@@ -189,6 +189,7 @@
 
             ws.onclose = (event) => {
                 console.log("Connection closed");
+                alert("Connection to program lost");
             }
             
             ws.onmessage = (event) => {

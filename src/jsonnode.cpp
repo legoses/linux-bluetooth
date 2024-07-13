@@ -1,5 +1,30 @@
 #include <jsonnode.h>
 
+
+//delete appears to call deconstructior
+JSONNode::~JSONNode() {
+    switch(this->type) {
+        case(JSON::Type::STRING):
+            delete this->type.s;
+            break;
+        case(JSON::Type::LIST):
+            
+
+            
+    }
+}
+
+
+//remove any objects with allocated memory
+void JSON::JSONNode::free_list(JSON::JSONList *lst) {
+    for(int i = 0; i < this->values.list->size(); i++) {
+        JSON::Type t = this->values.list[i].get_type();
+        if((t == JSON::Type::STRING) || (t == JSON::Type::OBJECT) || (t == JSON::Type::LIST)) {
+            delete this->values.list[i];
+        }
+    }
+}
+
 void JSON::JSONNode::set_object(JSON::JSONObject* obj) {
     this->values.object = obj;
 }
@@ -8,8 +33,7 @@ void JSON::JSONNode::set_object(JSON::JSONObject* obj) {
 void JSON::JSONNode::set_string(std::string str) {
     this->values.s = new std::string(str);
 }
-
-
+    
 void JSON::JSONNode::set_list(JSONList* list) {
     this->values.list = list;
 }

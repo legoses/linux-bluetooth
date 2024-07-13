@@ -9,13 +9,16 @@ JsonObject::JsonObject(uint8_t array[], int arrSize)
 }
 
 
-
 /*
+ * objects that need to be dealoocated
+ * JSONNode
+ * JSONObject
+ * JSONList
+ * Strings stored in json node
+ */
 JsonObject::~JsonObject() {
-
-   
+    std::cout << "Deleting json objects\n";
 }
-*/
 
 void JsonObject::print_output(const std::string &str) {
     if(this->debug) {

@@ -34,7 +34,11 @@ namespace JSON {
         } values;
         Type type;
 
+
+        void free_list(JSONList *lst);
+
     public:
+        ~JSONNode();
         void set_object(JSONObject* obj);
         void set_string(std::string str);
         void set_list(JSONList* list);

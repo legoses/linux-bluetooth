@@ -34,6 +34,7 @@ class JsonObject {
     //keep track of data type
 public:
     JsonObject(uint8_t array[], int arrSize);
+    ~JsonObject();
     void printArr();
     JSON::JSONNode* get_item(const std::string &key);
 };
