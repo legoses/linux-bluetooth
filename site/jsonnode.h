@@ -40,7 +40,7 @@ namespace JSON {
 
     public:
         ~JSONNode();
-        void set_object(JSONObject* obj);
+        void set_object(JSONObject *obj);
         void set_string(std::string str);
         void set_list(JSONList* list);
         void set_float(float val);
