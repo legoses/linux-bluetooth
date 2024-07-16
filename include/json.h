@@ -4,16 +4,15 @@
 #include <stdint.h>
 #include <iostream>
 #include <map>
-#include "jsonnode.h"
-#include "tokenizer.h"
+#include <jsonnode.h>
+#include <tokenizer.h>
 
 class JsonObject {
     uint8_t *initArr;
     int initArrSize;
     Tokenizer tokenizer;
-    //bool setKey = true;
     bool validToken = true;
-    bool debug = false;
+    bool debug = true;
 
     //main object to store parsed json
     JSON::JSONObject *list = new JSON::JSONObject();

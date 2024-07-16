@@ -6,6 +6,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <iostream>
 
 namespace JSON {
     class JSONNode;
@@ -35,12 +36,12 @@ namespace JSON {
         Type type;
 
 
-        void free_list();
-        void free_object();
+        void free_list(JSONList *list);
+        void free_object(JSONObject *obj);
 
     public:
         ~JSONNode();
-        void set_object(JSONObject* obj);
+        void set_object(JSONObject *obj);
         void set_string(std::string str);
         void set_list(JSONList* list);
         void set_float(float val);

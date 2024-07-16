@@ -1,4 +1,3 @@
-//#include <json.h>
 #include <json.h>
 
 JsonObject::JsonObject(uint8_t array[], int arrSize)
@@ -18,6 +17,14 @@ JsonObject::JsonObject(uint8_t array[], int arrSize)
  */
 JsonObject::~JsonObject() {
     std::cout << "Deleting json objects\n";
+    JSON::JSONObject::iterator beg = this->list->begin();
+    JSON::JSONObject::iterator end = this->list->end();
+    while(beg != end) {
+        std::cout << "Deleting: " << beg->first << "\n";
+        delete beg->second;
+        beg++;
+    }
+    delete this->list;
 }
 
 void JsonObject::print_output(const std::string &str) {
@@ -37,20 +44,16 @@ JSON::JSONNode* JsonObject::detect_type(struct Token &token) {
         }
         case (TOKEN::STRING): {
             node = parse_string(token);
-                ////this->setKey = true;
             print_output("recieved string " + token.c);
 
             break;
         }
         case (TOKEN::NUMBER): {
             node = parse_number(token);
-            //this->setKey = true;
             break;
         }
         case (TOKEN::BOOLEAN): {
             node = parse_boolean(token); 
-            //(*this->list)[key]->set_string(token.c);
-            //this->setKey = true;
             break;
         }
         case (TOKEN::NULL_TYPE): {
@@ -60,7 +63,12 @@ JSON::JSONNode* JsonObject::detect_type(struct Token &token) {
         }
         case (TOKEN::ARRAY_OPEN): {
             node = parse_array();
+            break;
         }
+    }
+    if(token.type == TOKEN::CURLEY_OPEN) {
+        std::cout << "TEST: " << *(*node->get_object())["string"]->get_string() << "\n";
+
     }
 
     return node;
@@ -91,15 +99,28 @@ void JsonObject::parse() {
     while(this->validToken) {
         if(tokenizer.has_tokens()) {
             token = tokenizer.get_token(); //should be key
+            
+            if(token.type == TOKEN::COMMA) {
+                token = tokenizer.get_token(); //should be key
+                token2 = tokenizer.get_token(); //should be key
+            }
+
             token2 = tokenizer.get_token(); //should be a colon
 
 
             if(token2.type == TOKEN::COLON && lastSeperator == TOKEN::COMMA) {
                 lastSeperator = token2.type;
                 token2 = tokenizer.get_token(); //get value
+                JSON::JSONNode *n = detect_type(token2);
             
-                (*this->list)[token.c] = detect_type(token2); //add to list
+                (*this->list)[token.c] = n;
+
+                if(n->get_type() == JSON::Type::OBJECT) {
+                    std::cout << "TEST2: " << *(*n->get_object())["string"]->get_string() << "\n";
+
+                }
                 print_output("Added key: " + token.c + " value: " + token2.c);
+
 
                 //if a comma is not detected, end of json
                 if(tokenizer.get_token().type == TOKEN::COMMA) {
@@ -127,7 +148,6 @@ void JsonObject::parse() {
 
 JSON::JSONNode* JsonObject::parse_number(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
-    //node->set_string(token.c);
     node->set_float(std::stof(token.c));
     node->set_type(JSON::Type::NUMBER);
 
@@ -139,7 +159,6 @@ JSON::JSONNode* JsonObject::parse_string(struct Token &token) {
     JSON::JSONNode *node = new JSON::JSONNode();
     node->set_string(token.c);
     node->set_type(JSON::Type::STRING);
-    //node->get_string();
 
     //string must be deleted on deconstruction
     return node; 
@@ -161,16 +180,23 @@ JSON::JSONNode* JsonObject::parse_boolean(struct Token &token) {
 
 
 JSON::JSONNode* JsonObject::parse_object() {
+    std::cout << "Parse object called\n";
     JSON::JSONObject *obj = new JSON::JSONObject();
     JSON::JSONNode *node = new JSON::JSONNode();
 
-    struct Token token = tokenizer.get_token(); //key indicate if moving onto next key
+    struct Token token;// = tokenizer.get_token(); //key indicate if moving onto next key
     struct Token token2; //will hold value
     TOKEN lastSeperator = TOKEN::COMMA; //keep track of previous colon or comma
     
     while(this->validToken) {
         if(tokenizer.has_tokens()) {
             token = tokenizer.get_token(); //should be key
+            
+            if(token.type == TOKEN::COMMA) {
+                token = tokenizer.get_token(); //should be key
+                token2 = tokenizer.get_token(); //should be key
+            }
+           
             token2 = tokenizer.get_token(); //should be a colon
 
 
@@ -200,11 +226,12 @@ JSON::JSONNode* JsonObject::parse_object() {
     }
 
     if(lastSeperator == TOKEN::COMMA) {
-        std::cout << "Warning: Stray comma detected\n";
+        std::cout << "Warning: Stray comma detected B\n";
     }
 
     node->set_object(obj);
     node->set_type(JSON::Type::OBJECT);
+    
     return node;
 }
 
@@ -253,12 +280,12 @@ JSON::JSONNode* JsonObject::parse_array() {
             }
         }
     }
-    
+   
+    print_output("Current list token " + token.c);
     node->set_list(lst);
     node->set_type(JSON::Type::LIST);
     return node;
 }
-
 
 
 JSON::JSONNode* JsonObject::get_item(const std::string &key) {

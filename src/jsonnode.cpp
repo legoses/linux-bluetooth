@@ -2,38 +2,55 @@
 
 
 //delete appears to call deconstructior
-JSONNode::~JSONNode() {
+JSON::JSONNode::~JSONNode() {
     switch(this->type) {
-        case(JSON::Type::STRING):
-            delete this->type.s;
+        case(JSON::Type::STRING): {
+            delete this->values.s;
             break;
-        case(JSON::Type::LIST):
-            free_list();
+        }
+        case(JSON::Type::LIST): {
+            free_list(this->values.list);
             break;
-        case(JSON::Type::OBJECT):
+        }
+        case(JSON::Type::OBJECT): {
             if(this->values.object != nullptr) {
-                delete this->values.object;
+                free_object(this->values.object);
                 this->values.object = nullptr;
             }
-            
+             
             break;
+        }
     }
 }
 
 
 //remove any objects with allocated memory
-void JSON::JSONNode::free_list() {
-    for(int i = 0; i < this->values.list->size(); i++) {
-        JSON::Type t = this->values.list[i].get_type();
-        if((t == JSON::Type::STRING) || (t == JSON::Type::OBJECT) || (t == JSON::Type::LIST)) {
-            delete this->values.list[i];
-        }
+void JSON::JSONNode::free_list(JSON::JSONList *list) {
+    for(int i = 0; i < list->size(); i++) {
+        delete (*list)[i];
     }
     delete this->values.list;
     this->values.list = nullptr;
 }
 
-void JSON::JSONNode::set_object(JSON::JSONObject* obj) {
+
+void JSON::JSONNode::free_object(JSON::JSONObject *obj) {
+    JSON::JSONObject::iterator start = obj->begin();
+    JSON::JSONObject::iterator end = obj->end();
+    
+    while(start != end) {
+        delete start->second;
+        start++;
+    }
+    
+
+    //delete this->values.object;
+    delete obj;
+}
+
+
+void JSON::JSONNode::set_object(JSON::JSONObject *obj) {
+    //already initialized before this is called
     this->values.object = obj;
 }
 
