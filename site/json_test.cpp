@@ -10,7 +10,11 @@ void create_json() {
     //std::cout << "test: " << *obj.get_item("hello")->get_string() << "\n";
     std::cout << "test\n";
     //JSON::JSONNode *jObj = (*obj.get_item("bewiobject")->get_object())["string"];
-    std::cout << "test: " << *(*obj.get_item("bewiobject")->get_object())["string"]->get_string() << "\n";
+    JSON::JSONObject *n = obj.get_item("bewiobejct")->get_object();
+    std::cout << "Get string test: " << *(*n)["string"]->get_string() << "\n";
+    //std::cout << "test2\n";
+    //std::cout << "test: " << *(*obj.get_item("bewiobject")->get_object())["string"]->get_string() << "\n";
+    //std::cout << "test: " << (*n)["string"]->get_string() << "\n";
 }
 
 int main() {
