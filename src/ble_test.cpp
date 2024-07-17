@@ -20,6 +20,7 @@
 typedef std::map<DBus::Path, std::map<std::string, std::map<std::string, DBus::Variant>>> BLEDeviceObject;
 //adapter for each path
 typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInterface;
+const int ATTACK_THREADS = 4;
 
 
 bool device_exists(std::vector<FoundBLE> &knownBleObj, std::string &address) {
@@ -396,7 +397,12 @@ int main() {
         while(mainRun) {
             int msgLen = server.get_command(buf);
 
-            int cmd = uint_to_int(buf[0]);
+            //int cmd = uint_to_int(buf[0]);
+            std::cout << "Buffer test: " << buf << "\n";
+            JsonObject jsonCmd(buf, msgLen);
+            int cmd = jsonCmd.get_item("command")->get_float();
+            //Find a way to created detached threads
+            ThreadPool pool(ATTACK_THREADS);
 
             //I think websocket is getting the command from the site incorrectly
             switch(cmd) {
@@ -420,7 +426,10 @@ int main() {
                     local.stop_scan();
                     break;
                 }
-                case 4: { //end program execution
+                case 4: { //start attack
+                    break;
+                }
+                case 5: { //end program execution
                     local.stop_scan();
                     mainRun = false;
                     std::cout << "Exiting program\n";

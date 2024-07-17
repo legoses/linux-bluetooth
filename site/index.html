@@ -103,7 +103,13 @@
            var ws = new WebSocket("ws://127.0.0.1:8080");
             
             function button_click(arg) {
-                ws.send(arg);
+                obj = {};
+                obj["command"] = arg;
+                cmd = JSON.stringify(obj);
+
+                console.log(cmd.command);
+                
+                ws.send(cmd);
                 console.log("Button pressed");
             }
 
