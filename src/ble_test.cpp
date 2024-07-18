@@ -393,6 +393,7 @@ int main() {
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
         //boolean that is meant to be written to and read from by different threads
         std::atomic_bool run = false;
+        std::atomic_bool attack = false;
         bool mainRun = true;
         while(mainRun) {
             int msgLen = server.get_command(buf);
@@ -427,6 +428,7 @@ int main() {
                     break;
                 }
                 case 4: { //start attack
+
                     break;
                 }
                 case 5: { //end program execution
