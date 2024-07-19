@@ -117,15 +117,21 @@
             function start_attack() {
                 //stop ble scanning
                 button_click(STOP_SCAN);
-                selectedDevices = [];
+                selectedDevices = {};
                 for(i = 0; i < jsonArr.length; i++) {
                     if(jsonArr[i].Selected == 1) {
-                        selectedDevices.push(jsonArr[i]);
+                        console.log("Device test");
+                        console.log(jsonArr[i]);
+                        //selectedDevices.push(jsonArr[i]);
+                        selectedDevices["Name"] = jsonArr[i].Name;
+                        selectedDevices["Path"] = jsonArr[i].Path;
+                        selectedDevices["command"] = 4;
                         numSelected++;
                     }
                 } 
+                console.log(selectedDevices);
 
-                ws.send();
+                ws.send(JSON.stringify(selectedDevices));
             }
 
             function toggle_item(pos) {
@@ -202,7 +208,15 @@
                 msg = event.data;
                 if(msg[0] == "{") {
                     obj = JSON.parse(msg);
+                    if(obj.add == "true") {
+                        //document.getElementById("testBox").innerHTML = "";
+                        bleLine = "<div class=\"bleitem\" id=\"ble" + i + "\" onclick=\"toggle_item(" + i + ")\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
+                            document.getElementById("testBox").innerHTML += bleLine;
+
+                    }
+                    /*
                     bleLine = "";
+
 
                     //get number of incoming devices
                     if('devices' in obj) {
@@ -230,7 +244,9 @@
                             document.getElementById("testBox").innerHTML += bleLine;
                         }
                     }
+                    */
                  }
+                 
                 console.log("MESSAGE: " + event.data);
             }
 

