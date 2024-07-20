@@ -67,11 +67,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
 }
 
 
-void update_site(std::mutex &mtx, Web::WebsocketServer &server) {
-
-}
-
-
 //check if recieved device is already known
 bool check_for_device(std::string &str, std::vector<std::string> &vect) {
     for(int i = 0; i < vect.size(); i++) {
@@ -85,50 +80,44 @@ bool check_for_device(std::string &str, std::vector<std::string> &vect) {
 
 
 //prepare json to send to websocket site
-int prepare_json(char arr[], const int size, BLEDeviceInterface &device, bool operation) {
-    char *address = device["Address"].to_string().c_str();
-    char *name = device["Name"].to_string().c_str();
-    int addrSize = sizeof(address) / sizeof(char);
-    int nameSize = sizeof(name) / sizeof(char);
-    int pos = 0;
+std::string prepare_json_add(BLEDeviceInterface &device, std::string &path) {
+    std::map<std::string, DBus::Variant> properties = device["org.bluez.Device1"];
+   
+    std::string jsonStr = "{\"Name\":\"" + properties["Name"].to_string() + 
+        "\",\"Address\":\"" + properties["Address"].to_string() + 
+        "\",\"Operation\":" + std::to_string(1) + 
+        ",\"Path\":\"" + path + "\"}";
+    std::cout << "add jsonstr test: " << jsonStr << "\n";
+    return jsonStr;
+}
 
-    arr[0] = '{';
-    arr[1] = '"';
 
-    memcpy(&arr[2], "Address", 7);
-    pos = 10;
-    arr[pos] = ':';
-    memcpy(&arr[pos], device["Address"], addrSize);
-    pos++;
-    arr[pos] = '"';
-    pos++;
-    arr[pos] = ':';
-    pos++;
-    arr[pos] = '"';
-    pos++;
-    memcpy(&arr[pos], "Name", 4);
-    pos+=4;
-    memcpy(&arr[pos], device["Name"], nameSize);
-    pos++;
-    pos+=nameSize;
-    arr[pos] = '"';
-    std::cout << "arr test: " << arr << "\n";
-    return pos;
+std::string prepare_json_remove(std::string &path) {
+    std::string jsonStr = "{\"Path\":\"" + path + "\",\"Operation\":" + std::to_string(0) + "}";
+    std::cout << "Removign jsonstr test: " << jsonStr << "\n";
+    return jsonStr;
 }
 
 
 void device_add(DBus::Path path, BLEDeviceInterface device, std::mutex &mtx, Web::WebsocketServer &server) {
     std::cout << "Device added at path: " << device["Address"] << "\n";
-    const int bufSize = 200
-    char data[bufSize];
-    int size = prepare_json(data, bufSize, device, true);
+    std::string jsonStr = prepare_json_add(device, path);
+    char data[jsonStr.size()];
+    memcpy(data, jsonStr.c_str(), jsonStr.size());
 
     //server.send_data(tst, sizeof(tst)/sizeof(char), false);
+    server.send_data(data, jsonStr.size(), false);
 }
 
 
 void device_remove(DBus::Path path, std::vector<std::string> devices, std::mutex &mtx, Web::WebsocketServer &server) {
-    std::cout << "Device removed\n";
+    std::cout << "Device removed at path: " << path << "\n";
+
+    std::string jsonStr = prepare_json_remove(path);
+    char data[jsonStr.size()];
+    memcpy(data, jsonStr.c_str(), jsonStr.size());
+
+    server.send_data(data, jsonStr.size(), false);
 }
 
 

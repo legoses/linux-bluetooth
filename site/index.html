@@ -134,16 +134,27 @@
                 ws.send(JSON.stringify(selectedDevices));
             }
 
-            function toggle_item(pos) {
-                console.log("Selected status = " + jsonArr[pos].Selected);
+            function toggle_item(htmlID) {
+                pos = 0;
+                console.log("Looking for " + htmlID);
+
+                for(i = 0; i < jsonArr.length; i++) {
+                    console.log(jsonArr[i].id);
+                    if(jsonArr[i].id == htmlID) {
+                        console.log("item found");
+                        pos = i;
+                        break;
+                    }
+                }
+                
                 if(jsonArr[pos].Selected == 0) {
                     jsonArr[pos].Selected = 1;
-                    document.getElementById("ble" + pos).style.background = "#353737";
+                    document.getElementById(htmlID).style.background = "#353737";
                     numSelected++;
                 }
                 else {
                     jsonArr[pos].Selected = 0;
-                    document.getElementById("ble" + pos).style.background = "#464949";
+                    document.getElementById(htmlID).style.background = "#464949";
                     numSelected--;
                 }
             }
@@ -193,6 +204,20 @@
                 }
             }
 
+            function remove_item(path) {
+                console.log("remove item test");
+                for(i = 0; i < jsonArr.length; i++) {
+                    console.log("Comarin: " + path + " to: " + jsonArr[i].Path);
+                    if(path == jsonArr[i].Path) {
+                        element = document.getElementById(jsonArr[i].id);
+                        element.remove();
+                        console.log("jsonarr size" + jsonArr.length);
+                        jsonArr.splice(i, 1);
+                        console.log("jsonarr size" + jsonArr.length);
+                    }
+                }
+            }
+
             ws.onopen = (event) => {
                 console.log("Websocket opened");
                 //ws.send("open");
@@ -208,41 +233,26 @@
                 msg = event.data;
                 if(msg[0] == "{") {
                     obj = JSON.parse(msg);
+                    
+                    if(obj.Operation == 1) {
+                        obj.Selected = 0;
+                        htmlID = "ble" + jsonArr.length.toString();
+                        obj.id = htmlID;
+                        jsonArr.push(obj);
+                        bleLine = "<div class=\"bleitem\" id=\"" + htmlID + "\" onclick=\"toggle_item('" + htmlID + "')\">Device Name: " + obj.Name + "    MAC: " + obj.Address + "</div>";
+                        document.getElementById("testBox").innerHTML += bleLine;
+
+                    }
+                    else {
+                        console.log("removign item");
+                        remove_item(obj.Path);
+                    }
+                    /*
                     if(obj.add == "true") {
                         //document.getElementById("testBox").innerHTML = "";
                         bleLine = "<div class=\"bleitem\" id=\"ble" + i + "\" onclick=\"toggle_item(" + i + ")\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
                             document.getElementById("testBox").innerHTML += bleLine;
 
-                    }
-                    /*
-                    bleLine = "";
-
-
-                    //get number of incoming devices
-                    if('devices' in obj) {
-                        recieving = obj.devices;
-                        recieved = 0;
-                        console.log("Detected " + recieving + " devices");
-                    }
-                    else if(recieving > 0 && recieved < recieving) {
-                        jsonBuff.push(obj);
-                        recieved++;
-                    }
-                    if(recieved >= recieving) {
-                        //while not recieveing, update ble list
-                        //find logner length of the json arrays
-                        //Loop based on length of one, in a single loop check if buf mac exists in dplsayed array
-                        //and if mac in displayed array does not exist in buff
-                        
-                        compare_mac();
-                        document.getElementById("testBox").innerHTML = "";
-                        jsonBuff = [];
-
-                        console.log("Updating list");
-                        for(i = 0; i < jsonArr.length; i++) {
-                            bleLine = "<div class=\"bleitem\" id=\"ble" + i + "\" onclick=\"toggle_item(" + i + ")\">Device Name: " + jsonArr[i].Name + "    MAC: " + jsonArr[i].Address + "</div>";
-                            document.getElementById("testBox").innerHTML += bleLine;
-                        }
                     }
                     */
                  }
