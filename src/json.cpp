@@ -289,6 +289,9 @@ JSON::JSONNode* JsonObject::parse_array() {
 
 
 JSON::JSONNode* JsonObject::get_item(const std::string &key) {
-    return (*this->list)[key];
+    if((*this->list).find(key) != (*this->list).end()) {
+        return (*this->list)[key];
+    }
+    return nullptr;
 }
 

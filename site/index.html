@@ -118,20 +118,26 @@
                 //stop ble scanning
                 button_click(STOP_SCAN);
                 selectedDevices = {};
-                for(i = 0; i < jsonArr.length; i++) {
+                itr = 0;
+                while(itr < numSelected) {
                     if(jsonArr[i].Selected == 1) {
                         console.log("Device test");
                         console.log(jsonArr[i]);
-                        //selectedDevices.push(jsonArr[i]);
                         selectedDevices["Name"] = jsonArr[i].Name;
                         selectedDevices["Path"] = jsonArr[i].Path;
-                        selectedDevices["command"] = 4;
-                        numSelected++;
+                        selectedDevices["command"] = 3;
+                        itr++;
                     }
                 } 
+                console.log("Priting selected devices");
                 console.log(selectedDevices);
 
-                ws.send(JSON.stringify(selectedDevices));
+                if(itr != 0) {
+                    ws.send(JSON.stringify(selectedDevices));
+                }
+                else {
+                    alert("No Devices Selected");
+                }
             }
 
             function toggle_item(htmlID) {

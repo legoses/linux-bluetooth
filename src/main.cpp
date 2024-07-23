@@ -10,7 +10,7 @@ typedef std::map<std::string, std::map<std::string, DBus::Variant>> BLEDeviceInt
 const int ATTACK_THREADS = 4;
 
 
-LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, std::vector<std::string> &paths, std::mutex &mtx, Web::WebsocketServer &server) {
+LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, BLEDeviceObject &devices, Web::WebsocketServer &server) {
     BLEDeviceObject::iterator it = devices.begin();
     BLEDeviceObject::iterator itEnd = devices.end();
 
@@ -27,12 +27,10 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
         BLEDeviceInterface::iterator itrEnd = it->second.end();
         std::cout << "adapter made with path: " << pth << "\n";
         adapterObject = connection->create_object_proxy("org.bluez", pth);
-        paths.push_back(pth);
 
         while(itr != itrEnd) {
             if(itr->first == adapterName) {
                 pth = (std::string) it->first;
-                paths.push_back(pth);
                 std::cout << "Adapter found\n";
                 break;
             }
@@ -99,7 +97,7 @@ std::string prepare_json_remove(std::string &path) {
 }
 
 
-void device_add(DBus::Path path, BLEDeviceInterface device, std::mutex &mtx, Web::WebsocketServer &server) {
+void device_add(DBus::Path path, BLEDeviceInterface device, Web::WebsocketServer &server) {
     std::cout << "Device added at path: " << device["Address"] << "\n";
     std::string jsonStr = prepare_json_add(device, path);
     char data[jsonStr.size()];
@@ -110,7 +108,7 @@ void device_add(DBus::Path path, BLEDeviceInterface device, std::mutex &mtx, Web
 }
 
 
-void device_remove(DBus::Path path, std::vector<std::string> devices, std::mutex &mtx, Web::WebsocketServer &server) {
+void device_remove(DBus::Path path, std::vector<std::string> devices, Web::WebsocketServer &server) {
     std::cout << "Device removed at path: " << path << "\n";
 
     std::string jsonStr = prepare_json_remove(path);
@@ -121,7 +119,7 @@ void device_remove(DBus::Path path, std::vector<std::string> devices, std::mutex
 }
 
 
-std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(std::shared_ptr<DBus::Connection> &connection, std::mutex &mtx, Web::WebsocketServer &server) {
+std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_for_device_added(std::shared_ptr<DBus::Connection> &connection, Web::WebsocketServer &server) {
      //Create a listener for the InterfacesAdded signal and call get_interface_added()
      std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> signal = connection->create_free_signal_proxy<void(DBus::Path, BLEDeviceInterface)>(
                     DBus::MatchRuleBuilder::create()
@@ -133,7 +131,7 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
     //Create callback function to be called when signal is recieved
     //sigc::bind allows me to pass an additional argument
     //std::ref must be used, otherwise a copy of vector will be passed, instead of a reference
-    signal->connect(sigc::bind(sigc::ptr_fun(&device_add), std::ref(mtx), std::ref(server)));
+    signal->connect(sigc::bind(sigc::ptr_fun(&device_add), std::ref(server)));
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -142,7 +140,6 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> listen_
 
 std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> listen_for_device_removed(
             std::shared_ptr<DBus::Connection> &connection,
-            std::mutex &mtx,
             Web::WebsocketServer &server) {
     //Create a listener for InterfacesRemoved signal and call get_interface_removed()
     std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> signal = 
@@ -156,7 +153,7 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
                 );
 
     //Create callback function to be called when signal is recieved
-    signal->connect(sigc::bind(sigc::ptr_fun(&device_remove), std::ref(mtx), std::ref(server)));
+    signal->connect(sigc::bind(sigc::ptr_fun(&device_remove), std::ref(server)));
 
     std::cout << "Running\n" << std::flush;
     return signal;
@@ -164,8 +161,6 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
 
 
 int main() {
-    //allocate memory for pointer vector
-    std::vector<std::string> paths;
     //create variable to hold commands from websocket site
     Web::WebsocketServer server(8080);
 
@@ -196,7 +191,7 @@ int main() {
     //return consists of dict of {object path, dict of {string, dict of {string, variant}}}
     DBus::MethodProxy<BLEDeviceObject()>& method_proxy = *(baseObject->create_method<BLEDeviceObject()>("org.freedesktop.DBus.ObjectManager", "GetManagedObjects"));
     BLEDeviceObject answer = method_proxy();
-    LocalAdapter local = parse_known_devices(connection, answer, paths, mtx, server);
+    LocalAdapter local = parse_known_devices(connection, answer, server);
 
     //Make sure a ble device is found
     if(local.get_path() != "") {
@@ -204,10 +199,10 @@ int main() {
 
         //create listener for device added
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, BLEDeviceInterface)>> addSignal = 
-            listen_for_device_added(connection, mtx, server);
+            listen_for_device_added(connection, server);
         //Add reciever to listen for device removed signal
         std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> removeSignal = 
-            listen_for_device_removed(connection, mtx, server); 
+            listen_for_device_removed(connection, server); 
 
 
         //create buffer to recieve messages from site
@@ -215,19 +210,62 @@ int main() {
         //listen for websocket events
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
         //boolean that is meant to be written to and read from by different threads
-        std::atomic_bool run = false;
+        std::atomic_bool scan = false;
         std::atomic_bool attack = false;
         bool mainRun = true;
-        if(local.get_path() != "") {
-            std::cout << "Scanning\n";
-            local.start_scan();
-            while(true) {
-                sleep(1);
+        
+        while(mainRun) {
+            int msgLen = server.get_command(buf);
+            std::cout << "Printing json string:\n";
+            for(int i = 0; i < msgLen; i++) {
+                std::cout << buf[i] << "\n";
             }
-            //sleep(5);
-            //std::cout << "Stopping scan\n";
-            //local.stop_scan();
+            std::cout << "\n\n";
+
+            JsonObject jsonCmd(buf, msgLen);
+            int cmd = jsonCmd.get_item("command")->get_float();
+            
+            //Find a way to created detached threads
+            ThreadPool pool(ATTACK_THREADS);
+
+            //I think websocket is getting the command from the site incorrectly
+            switch(cmd) {
+                //if I have the get_command function wait until a command is recieved, I will need to have the bluetooth scanner as its own thread, ar async?
+                case 1: { //start scanning
+                    local.start_scan();
+                    break;
+                }
+                case 2: { //stop scanning
+                    local.stop_scan();
+                    break;
+                }
+                case 3: { //start attack
+                    local.stop_scan();
+                    attack = true;
+                    for(int i = 0; i < ATTACK_THREADS; i++) {
+                        pool.enqueue([]{
+                            for(int i = 0; i < 10; i++) {
+                                std::cout << "Threaded loop test: " << i << "\n";
+                            }
+                        });
+                    }
+                    //start_attack(attack, jsonCmd, connection);
+                    break;
+                }
+                case 4: { //end program execution
+                    local.stop_scan();
+                    mainRun = false;
+                    std::cout << "Exiting program\n";
+                    break;
+                }
+            }
+            std::cout << "Main thread loop\n";
+            sleep(.1);
         }
+    }
+    else {
+        std::cout << "Error: Suitable Device not found\n";
+        return 1;
     }
     return 0;
 }
