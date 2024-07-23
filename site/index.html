@@ -87,6 +87,11 @@
         <button class="button" onclick="stop_attack()">Stop</button>
         <button class="button" onclick="button_click(EXIT)">Exit</button>
     </div>
+    <div class="banner">
+        <form action="cgi-bin/restart-program.cgi" method="post" accept-charset=utf-8>
+            <input class="button" type="submit" value="Restart Program">
+        </form>
+    </div>
 	<script>
             const START_SCAN = 1;
             const STOP_SCAN = 2;
@@ -138,6 +143,13 @@
                 else {
                     alert("No Devices Selected");
                 }
+            }
+
+            function stop_attack() {
+                console.log("Stopping attack");
+                jsonStr = {};
+                jsonStr["command"] = 4;
+                ws.send(JSON.stringify(jsonStr));
             }
 
             function toggle_item(htmlID) {

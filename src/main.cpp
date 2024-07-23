@@ -35,7 +35,6 @@ LocalAdapter parse_known_devices(std::shared_ptr<DBus::Connection> connection, B
                 break;
             }
             else if(itr->first == "org.bluez.Device1") {
-                //check_for_device(it->first, it->second, knownBleDevices, mtx, server);
                 break;
             }
             ++itr;
@@ -174,8 +173,6 @@ int main() {
     server.begin();
     sleep(1);
 
-    std::mutex mtx;
-
     std::cout << "Creating dispatcher\n";
     //The dispatcher is what reads from and write to the bus
     std::shared_ptr<DBus::Dispatcher> dispatcher = DBus::StandaloneDispatcher::create();
@@ -243,23 +240,29 @@ int main() {
                     local.stop_scan();
                     attack = true;
                     for(int i = 0; i < ATTACK_THREADS; i++) {
-                        pool.enqueue([]{
-                            for(int i = 0; i < 10; i++) {
-                                std::cout << "Threaded loop test: " << i << "\n";
+                        pool.enqueue([&attack, i] {
+                            while(attack) {
+                                std::cout << "Attack placeholder in thread: " << i << "\n";
+                                sleep((i+1)/2);
                             }
+                            std::cout << "Thread ended\n";
                         });
                     }
                     //start_attack(attack, jsonCmd, connection);
                     break;
                 }
-                case 4: { //end program execution
+                case 4: { //end attack
+                    std::cout << "Stopping attack\n";
+                    attack = false;
+                    break;
+                }
+                case 5: { //end program execution
                     local.stop_scan();
                     mainRun = false;
                     std::cout << "Exiting program\n";
                     break;
                 }
             }
-            std::cout << "Main thread loop\n";
             sleep(.1);
         }
     }
