@@ -215,9 +215,10 @@ int main() {
             int msgLen = server.get_command(buf);
             std::cout << "Printing json string:\n";
             for(int i = 0; i < msgLen; i++) {
-                std::cout << buf[i] << "\n";
+                std::cout << buf[i];
             }
             std::cout << "\n\n";
+            std::cout << "Atomic bool val: " << attack << "\n";
 
             JsonObject jsonCmd(buf, msgLen);
             int cmd = jsonCmd.get_item("command")->get_float();
@@ -239,10 +240,10 @@ int main() {
                 case 3: { //start attack
                     local.stop_scan();
                     attack = true;
+                    std::cout << "Origional Bool address: " << &attack << "\n";
                     for(int i = 0; i < ATTACK_THREADS; i++) {
                         pool.enqueue([&attack, i] {
                             while(attack) {
-                                std::cout << "Attack placeholder in thread: " << i << "\n";
                                 sleep((i+1)/2);
                             }
                             std::cout << "Thread ended\n";
