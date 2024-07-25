@@ -159,6 +159,33 @@ std::shared_ptr<DBus::SignalProxy<void(DBus::Path, std::vector<std::string>)>> l
 }
 
 
+void queue_thread(std::vector<std::thread*> &pool, int num_threads, std::atomic<bool> &attack) {
+    for(int i = 0; i < num_threads; i++) {
+        std::thread *t = new std::thread([&attack](){
+            while(attack) {
+                std::cout << "Attack val: " << &attack << "\n";
+                sleep(4);
+            }
+        });
+        t->detach();
+        pool.push_back(t);
+    }
+}
+
+
+void free_thread(std::vector<std::thread*> &pool) {
+    std::cout << "freeing memory\n";
+    int poolSize = pool.size();
+    for(int i = 0; i < poolSize; i+=2) {
+        free(pool[i]);
+        if(i+1 < poolSize) {
+            free(pool[i+1]);
+        }
+    }
+    pool.clear();
+}
+
+
 int main() {
     //create variable to hold commands from websocket site
     Web::WebsocketServer server(8080);
@@ -208,7 +235,9 @@ int main() {
         //rework listener so instead of just looping infinantly, use condition variable to wait for thread to return value
         //boolean that is meant to be written to and read from by different threads
         std::atomic_bool scan = false;
-        std::atomic_bool attack = false;
+        //std::atomic_bool attack = false;
+        //std::atomic<bool> attack = false;
+        std::atomic<bool> attack(false);
         bool mainRun = true;
         
         while(mainRun) {
@@ -224,7 +253,8 @@ int main() {
             int cmd = jsonCmd.get_item("command")->get_float();
             
             //Find a way to created detached threads
-            ThreadPool pool(ATTACK_THREADS);
+            //ThreadPool pool(ATTACK_THREADS);
+            std::vector<std::thread*> pool;
 
             //I think websocket is getting the command from the site incorrectly
             switch(cmd) {
@@ -239,22 +269,34 @@ int main() {
                 }
                 case 3: { //start attack
                     local.stop_scan();
-                    attack = true;
+                    attack.store(true);
                     std::cout << "Origional Bool address: " << &attack << "\n";
+                    queue_thread(pool, ATTACK_THREADS, std::ref(attack));
+                    /*
+                    std::thread tstThread([&attack](){
+                        while(attack) {
+                            std::cout << "Attack val: " << &attack << "\n";
+                            sleep(4);
+                        }
+                    });
+                    tstThread.detach();
                     for(int i = 0; i < ATTACK_THREADS; i++) {
-                        pool.enqueue([&attack, i] {
-                            while(attack) {
-                                sleep((i+1)/2);
+                        pool.enqueue([&attack, i]() {
+                            while(attack.load()) {
+                                std::cout << "Attack val: " << &attack << "\n";
+                                sleep(4);
                             }
                             std::cout << "Thread ended\n";
                         });
                     }
+                    */
                     //start_attack(attack, jsonCmd, connection);
                     break;
                 }
                 case 4: { //end attack
                     std::cout << "Stopping attack\n";
-                    attack = false;
+                    attack.store(false);
+                    free_thread(pool);
                     break;
                 }
                 case 5: { //end program execution

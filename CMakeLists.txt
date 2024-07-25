@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(dbus_ble)
 
+set(CMAKE_CXX_FLAGS "-ggdb")
 include(FindPkgConfig)
 pkg_check_modules(dbus-cxx REQUIRED dbus-cxx-2.0)
 

@@ -8,6 +8,7 @@
 #include <queue>
 #include <thread>
 #include <vector>
+#include <atomic>
 
 class ThreadPool {
     std::vector<std::thread> threads_;
